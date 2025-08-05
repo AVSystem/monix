@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-/*
 package monix.benchmarks
 
 import java.util.concurrent.TimeUnit
@@ -55,7 +54,7 @@ class TaskHandleErrorBenchmark {
       else
         Task.pure(i)
 
-    Await.result(loop(0).runAsync, Duration.Inf)
+    Await.result(loop(0).runToFuture, Duration.Inf)
   }
 
   @Benchmark
@@ -71,7 +70,6 @@ class TaskHandleErrorBenchmark {
       else
         Task.pure(i)
 
-    Await.result(loop(0).runAsync, Duration.Inf)
+    Await.result(loop(0).runToFuture, Duration.Inf)
   }
 }
-*/

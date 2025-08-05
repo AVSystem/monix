@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-/*
 package monix.benchmarks
 
 import java.util.concurrent.TimeUnit
@@ -51,7 +50,7 @@ class TaskAttemptBenchmark {
       if (i < size) Task.pure(i + 1).attempt.flatMap(_.fold(Task.raiseError, loop))
       else Task.pure(i)
 
-    Await.result(loop(0).runAsync, Duration.Inf)
+    Await.result(loop(0).runToFuture, Duration.Inf)
   }
 
   @Benchmark
@@ -68,7 +67,6 @@ class TaskAttemptBenchmark {
       else
         Task.pure(i)
 
-    Await.result(loop(0).runAsync, Duration.Inf)
+    Await.result(loop(0).runToFuture, Duration.Inf)
   }
 }
-*/
