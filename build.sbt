@@ -31,9 +31,9 @@ val reactiveStreams_Version   = "1.0.4"
 val macrotaskExecutor_Version = "1.0.0"
 val minitest_Version          = "2.9.6"
 val implicitBox_Version       = "0.3.4"
-val kindProjector_Version     = "0.13.2"
+val kindProjector_Version     = "0.13.3"
 val betterMonadicFor_Version  = "0.3.1"
-val silencer_Version          = "1.7.8"
+val silencer_Version          = "1.7.19"
 val scalaCompat_Version       = "2.7.0"
 
 // The Monix version with which we must keep binary compatibility.
@@ -168,15 +168,13 @@ lazy val sharedSettings = pgpSettings ++ Seq(
     else
       ver
   },
-  /*
   // Enable this to debug warnings...
   Compile / scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 13)) => Seq("-Wconf:any:warning-verbose")
+      case Some((2, 13)) => Seq("-Wconf:cat=other-implicit-type:silent")
       case _ => Seq.empty
     }
   },
-   */
 
   // Disabled from the sbt-tpolecat set
   Compile / scalacOptions --= Seq(
