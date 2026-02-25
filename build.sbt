@@ -196,6 +196,16 @@ lazy val sharedSettings = pgpSettings ++ Seq(
     "-Wunused:params",
     "-Xlint:infer-any"
   ),
+  // Disabled from tpolecat for test compilation:
+  // -Wunused:patvars triggers on for-comprehension loop vars in tests (pre-existing pattern)
+  // -Xlint:constant triggers on intentional overflow tests (e.g. Long.MaxValue + 1)
+  Test / scalacOptions --= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 13)) => Seq("-Wunused:patvars", "-Xlint:constant")
+      case Some((2, 12)) => Seq("-Ywarn-unused:patvars")
+      case _ => Seq.empty
+    }
+  },
   // Turning off fatal warnings for doc generation
   Compile / doc / tpolecatExcludeOptions ++= ScalacOptions.defaultConsoleExclude,
   // Silence everything in auto-generated files
