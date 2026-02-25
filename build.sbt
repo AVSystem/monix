@@ -172,7 +172,13 @@ lazy val sharedSettings = pgpSettings ++ Seq(
   // Enable this to debug warnings...
   Compile / scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 13)) => Seq("-Wconf:cat=other-implicit-type:silent")
+      case Some((2, 13)) => Seq(
+        "-Wconf:cat=other-implicit-type:silent",
+        // Silence -Wvalue-discard warnings: tpolecat 0.5.x enables -Wvalue-discard which
+        // catches discarded values (e.g. trySuccess/tryFailure returning Boolean). These are
+        // pre-existing patterns in the codebase and not bugs.
+        "-Wconf:msg=unused value of type:silent"
+      )
       case _ => Seq.empty
     }
   },
@@ -201,7 +207,9 @@ lazy val sharedSettings = pgpSettings ++ Seq(
   },
   scalacOptions --= {
     if (isDotty.value)
-      Seq("-Xfatal-warnings")
+      // tpolecat uses -Werror in Scala 3 (not -Xfatal-warnings); remove both to disable fatal warnings
+      // so that pre-existing value-discard and similar patterns don't break Scala 3 builds
+      Seq("-Xfatal-warnings", "-Werror")
     else
       Seq()
   },
