@@ -79,5 +79,34 @@ object TracingSuite extends BaseTestSuite {
 
   }
 
+  testAsync("Task.start starts a new stack trace") { _ =>
+    val task = for {
+      _ <- Task.pure(1)
+      _ <- Task.pure(1)
+      fiber <- Task.pure(1).flatMap(_ => Task.trace).start
+      trace <- fiber.join
+    } yield trace
+
+    for (r <- task.runToFuture) yield {
+      assert(r.captured <= 2, s"Expected a new stack trace, but got ${r.captured} events")
+    }
+  }
+
+  testAsync("Task.startAndForget starts a new stack trace") { _ =>
+    var trace: TaskTrace = null
+    val task = for {
+      _ <- Task.pure(1)
+      _ <- Task.pure(1)
+      _ <- Task.pure(1).flatMap(_ => Task.trace.map(t => trace = t)).startAndForget
+      _ <- Task.shift
+    } yield ()
+
+    for (_ <- task.runToFuture) yield {
+      if (trace != null) {
+        assert(trace.captured <= 2, s"Expected a new stack trace for startAndForget, but got ${trace.captured} events")
+      }
+    }
+  }
+
   class EmptyException extends NoStackTrace
 }

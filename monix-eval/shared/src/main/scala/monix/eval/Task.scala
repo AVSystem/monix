@@ -4611,7 +4611,13 @@ object Task extends TaskInstancesLevel1 {
   }
 
   private[eval] object Context {
-    // TODO: Should Task.start / startAndForget start a new stack trace?
+    /**
+      * Implementation for [[Task.Context]].
+      *
+      * NOTE: Task.start / startAndForget start a new stack trace. This is intentional,
+      * as fibers are concurrent and sharing the StackTracedContext would be
+      * thread-unsafe and expensive.
+      */
     def apply(scheduler: Scheduler, options: Options): Context =
       apply(scheduler, options, TaskConnection(), new StackTracedContext)
 
