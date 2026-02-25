@@ -3,6 +3,7 @@ import sbt.{ Def, Global, Tags }
 
 import scala.collection.immutable.SortedSet
 import MonixBuildUtils._
+import org.typelevel.scalacoptions.ScalacOptions
 
 val benchmarkProjects = List(
   "benchmarksPrev",
