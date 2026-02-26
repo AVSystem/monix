@@ -6,7 +6,7 @@ Modernize Monix's build infrastructure, resolve accumulated technical debt, and 
 
 ## Phases
 
-- [ ] **Phase 1: Infrastructure Modernization** - Update SBT, Scala versions, and build plugins to latest stable releases
+- [x] **Phase 1: Infrastructure Modernization** - Update SBT, Scala versions, and build plugins to latest stable releases
 - [ ] **Phase 2: Task Stack Traces** - Address stack trace management technical debt in monix-eval
 - [ ] **Phase 3: Observable Doctests** - Implement missing doctests in monix-reactive Observable
 - [ ] **Phase 4: JDK 25 Compatibility** - Verify and fix JDK 25 compatibility issues
@@ -26,8 +26,8 @@ Modernize Monix's build infrastructure, resolve accumulated technical debt, and 
 **Plans:** 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Complete sbt-tpolecat migration to org.typelevel 0.5.3
-- [ ] 01-02-PLAN.md — Cross-version build verification (compile, test, MiMa)
+- [x] 01-01-PLAN.md — Complete sbt-tpolecat migration to org.typelevel 0.5.3
+- [x] 01-02-PLAN.md — Cross-version build verification (compile, test, MiMa)
 
 ### Phase 2: Task Stack Traces
 **Goal**: Address stack trace management in `Task.start` and `Task.startAndForget`
@@ -74,7 +74,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Infrastructure Modernization | 0/2 | Planned | - |
+| 1. Infrastructure Modernization | 2/2 | Complete | 2026-02-26 |
 | 2. Task Stack Traces | 0/1 | Not started | - |
 | 3. Observable Doctests | 0/1 | Not started | - |
 | 4. JDK 25 Compatibility | 0/2 | Not started | - |

@@ -7,7 +7,7 @@
 
 ### Infrastructure Updates
 
-- [ ] **UP-01**: Scala versions updated to latest patches (2.12.20, 2.13.16, 3.3.5)
+- [x] **UP-01**: Scala versions updated to latest patches (2.12.20, 2.13.16, 3.3.5)
 - [x] **UP-02**: SBT and core build plugins updated to latest stable versions
 
 ### JDK Compatibility
@@ -31,7 +31,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UP-01 | Phase 1 | Pending |
+| UP-01 | Phase 1 | Complete |
 | UP-02 | Phase 1 | Complete |
 | DEBT-01 | Phase 2 | Pending |
 | DEBT-02 | Phase 3 | Pending |
