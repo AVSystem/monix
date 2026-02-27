@@ -108,6 +108,16 @@ object MimaFilters {
     ),
     exclude[IncompatibleMethTypeProblem](
       "monix.execution.schedulers.TrampolineExecutionContext#JVMOptimalTrampoline.startLoop"
+    ),
+    // drop JDK 7 support (internal API)
+    exclude[DirectMissingMethodProblem](
+      "monix.execution.internal.atomic.Factory.newBoxedObject"
+    ),
+    exclude[DirectMissingMethodProblem](
+      "monix.execution.internal.atomic.Factory.newBoxedInt"
+    ),
+    exclude[DirectMissingMethodProblem](
+      "monix.execution.internal.atomic.Factory.newBoxedLong"
     )
   )
 }
