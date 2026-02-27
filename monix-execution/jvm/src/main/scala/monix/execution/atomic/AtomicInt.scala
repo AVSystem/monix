@@ -18,7 +18,7 @@
 package monix.execution.atomic
 
 import monix.execution.atomic.PaddingStrategy.NoPadding
-import monix.execution.internal.atomic.{BoxedInt, Factory}
+import monix.execution.internal.atomic.{ BoxedInt, Factory }
 
 /** Atomic references wrapping `Int` values.
   *
@@ -103,7 +103,7 @@ object AtomicInt {
     * @param padding is the [[PaddingStrategy]] to apply
     */
   def withPadding(initialValue: Int, padding: PaddingStrategy): AtomicInt =
-    create(initialValue, padding, allowPlatformIntrinsics = true)
+    create(initialValue, padding)
 
   /** $createDesc
     *
@@ -113,19 +113,20 @@ object AtomicInt {
     *
     * @param initialValue is the initial value with which to initialize the atomic
     * @param padding is the [[PaddingStrategy]] to apply
-    * @param allowPlatformIntrinsics is a boolean parameter that specifies whether
-    *        the instance is allowed to use the Java 8 optimized operations
-    *        for `getAndSet` and for `getAndAdd`
     */
-  def create(initialValue: Int, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicInt = {
+  def create(initialValue: Int, padding: PaddingStrategy): AtomicInt = {
     new AtomicInt(
       Factory.newBoxedInt(
         initialValue,
         boxStrategyToPaddingStrategy(padding),
         true, // allowUnsafe
-        allowPlatformIntrinsics
-      ))
+      )
+    )
   }
+
+  @deprecated("Use create(initialValue, padding) instead", "3.4.0-avs6")
+  def create(initialValue: Int, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicInt =
+    create(initialValue, padding)
 
   /** $createDesc
     *
@@ -148,7 +149,7 @@ object AtomicInt {
         initialValue,
         boxStrategyToPaddingStrategy(padding),
         false, // allowUnsafe
-        false // allowJava8Intrinsics
-      ))
+      )
+    )
   }
 }

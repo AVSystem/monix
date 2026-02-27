@@ -77,7 +77,7 @@ object AtomicBoolean {
     * @param padding is the [[PaddingStrategy]] to apply
     */
   def withPadding(initialValue: Boolean, padding: PaddingStrategy): AtomicBoolean =
-    create(initialValue, padding, allowPlatformIntrinsics = true)
+    create(initialValue, padding)
 
   /** $createDesc
     *
@@ -87,18 +87,18 @@ object AtomicBoolean {
     *
     * @param initialValue is the initial value with which to initialize the atomic
     * @param padding is the [[PaddingStrategy]] to apply
-    * @param allowPlatformIntrinsics is a boolean parameter that specifies whether
-    *        the instance is allowed to use the Java 8 optimized operations
-    *        for `getAndSet` and for `getAndAdd`
     */
-  def create(initialValue: Boolean, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicBoolean = {
+  def create(initialValue: Boolean, padding: PaddingStrategy): AtomicBoolean = {
     new AtomicBoolean(
       Factory.newBoxedInt(
         if (initialValue) 1 else 0,
         boxStrategyToPaddingStrategy(padding),
         true, // allowUnsafe
-        allowPlatformIntrinsics))
+    ))
   }
+
+  @deprecated("Use create(initialValue, padding) instead", "3.4.0-avs6")
+  def create(initialValue: Boolean, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicBoolean = create(initialValue, padding)
 
   /** $createDesc
     *
@@ -121,7 +121,6 @@ object AtomicBoolean {
         if (initialValue) 1 else 0,
         boxStrategyToPaddingStrategy(padding),
         false, // allowUnsafe
-        false // allowJava8Intrinsics
       ))
   }
 }

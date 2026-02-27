@@ -19,6 +19,7 @@ package monix.execution.atomic
 
 import monix.execution.atomic.PaddingStrategy.NoPadding
 import monix.execution.internal.atomic.{BoxedObject, Factory}
+
 import scala.annotation.tailrec
 
 /** Atomic references wrapping any values implementing
@@ -163,7 +164,7 @@ object AtomicNumberAny {
     * @param padding is the [[PaddingStrategy]] to apply
     */
   def withPadding[A <: AnyRef: Numeric](initialValue: A, padding: PaddingStrategy): AtomicNumberAny[A] =
-    create(initialValue, padding, allowPlatformIntrinsics = true)
+    create(initialValue, padding)
 
   /** $createDesc
     *
@@ -173,22 +174,26 @@ object AtomicNumberAny {
     *
     * @param initialValue is the initial value with which to initialize the atomic
     * @param padding is the [[PaddingStrategy]] to apply
-    * @param allowPlatformIntrinsics is a boolean parameter that specifies whether
-    *        the instance is allowed to use the Java 8 optimized operations
-    *        for `getAndSet` and for `getAndAdd`
     */
   def create[A <: AnyRef: Numeric](
     initialValue: A,
     padding: PaddingStrategy,
-    allowPlatformIntrinsics: Boolean): AtomicNumberAny[A] = {
+  ): AtomicNumberAny[A] = {
     new AtomicNumberAny[A](
       Factory.newBoxedObject(
         initialValue,
         boxStrategyToPaddingStrategy(padding),
         true, // allowUnsafe
-        allowPlatformIntrinsics
-      ))
+      )
+    )
   }
+
+  @deprecated("Use create(initialValue, padding) instead", "3.4.0-avs6")
+  def create[A <: AnyRef: Numeric](
+    initialValue: A,
+    padding: PaddingStrategy,
+    allowPlatformIntrinsics: Boolean
+  ): AtomicNumberAny[A] = create(initialValue, padding)
 
   /** $createDesc
     *
@@ -211,6 +216,6 @@ object AtomicNumberAny {
         initialValue,
         boxStrategyToPaddingStrategy(padding),
         false, // allowUnsafe
-        false // allowPlatformIntrinsics
-      ))
+      )
+    )
 }

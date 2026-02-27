@@ -18,8 +18,8 @@
 package monix.execution.internal.collection.queues
 
 import java.util.concurrent.ConcurrentLinkedQueue
-import monix.execution.{BufferCapacity, ChannelType}
-import monix.execution.ChannelType.{MPMC, MPSC, SPMC, SPSC}
+import monix.execution.{ BufferCapacity, ChannelType }
+import monix.execution.ChannelType.{ MPMC, MPSC, SPMC, SPSC }
 import monix.execution.internal.Platform
 import monix.execution.internal.atomic.UnsafeAccess
 import monix.execution.internal.collection.LowLevelConcurrentQueue
@@ -41,8 +41,7 @@ private[internal] trait LowLevelConcurrentQueueBuilders {
     */
   private def bounded[A](capacity: Int, ct: ChannelType, fenced: Boolean): LowLevelConcurrentQueue[A] =
     if (UnsafeAccess.IS_OPENJDK_COMPATIBLE) {
-      // Support for memory fences in Unsafe is only available in Java 8+
-      if (UnsafeAccess.HAS_JAVA8_INTRINSICS || !fenced)
+      if (!fenced)
         ct match {
           case MPMC => FromCircularQueue[A](new MpmcArrayQueue[A](capacity), ct)
           case MPSC => FromCircularQueue[A](new MpscArrayQueue[A](capacity), ct)
@@ -53,7 +52,7 @@ private[internal] trait LowLevelConcurrentQueueBuilders {
         // Without support for Unsafe.fullFence, falling back to a MPMC queue
         FromCircularQueue[A](new MpmcArrayQueue[A](capacity), ct)
       }
-    } else if (UnsafeAccess.HAS_JAVA8_INTRINSICS || !fenced) {
+    } else if (!fenced) {
       ct match {
         case MPMC => FromMessagePassingQueue[A](new MpmcAtomicArrayQueue[A](capacity), ct)
         case MPSC => FromMessagePassingQueue[A](new MpscAtomicArrayQueue[A](capacity), ct)
@@ -72,8 +71,7 @@ private[internal] trait LowLevelConcurrentQueueBuilders {
     val chunk = chunkSize.getOrElse(Platform.recommendedBufferChunkSize)
 
     if (UnsafeAccess.IS_OPENJDK_COMPATIBLE) {
-      // Support for memory fences in Unsafe is only available in Java 8+
-      if (UnsafeAccess.HAS_JAVA8_INTRINSICS || !fenced) {
+      if (!fenced) {
         ct match {
           case MPSC => FromMessagePassingQueue[A](new MpscUnboundedArrayQueue(chunk), ct)
           case SPSC => FromMessagePassingQueue[A](new SpscUnboundedArrayQueue(chunk), ct)
@@ -83,7 +81,7 @@ private[internal] trait LowLevelConcurrentQueueBuilders {
         // Without support for Unsafe.fullFence, falling back to a MPMC queue
         new FromJavaQueue[A](new ConcurrentLinkedQueue[A]())
       }
-    } else if (UnsafeAccess.HAS_JAVA8_INTRINSICS || !fenced) {
+    } else if (!fenced) {
       ct match {
         case MPSC => FromMessagePassingQueue[A](new MpscUnboundedAtomicArrayQueue(chunk), ct)
         case SPSC => FromMessagePassingQueue[A](new SpscUnboundedAtomicArrayQueue(chunk), ct)

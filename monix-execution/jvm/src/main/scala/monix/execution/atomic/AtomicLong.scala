@@ -70,16 +70,16 @@ final class AtomicLong private (private[this] val ref: BoxedLong) extends Atomic
   def subtractAndGet(v: Long): Long =
     addAndGet(-v)
 
-  def decrement(v: Int = 1): Unit = 
+  def decrement(v: Int = 1): Unit =
     increment(-v)
 
-  def decrementAndGet(v: Int = 1): Long = 
+  def decrementAndGet(v: Int = 1): Long =
     incrementAndGet(-v)
 
-  def getAndDecrement(v: Int = 1): Long = 
+  def getAndDecrement(v: Int = 1): Long =
     getAndIncrement(-v)
 
-  override def toString: String = 
+  override def toString: String =
     s"AtomicLong(${ref.volatileGet()})"
 }
 
@@ -109,7 +109,7 @@ object AtomicLong {
     * @param padding is the [[PaddingStrategy]] to apply
     */
   def withPadding(initialValue: Long, padding: PaddingStrategy): AtomicLong =
-    create(initialValue, padding, allowPlatformIntrinsics = true)
+    create(initialValue, padding)
 
   /** $createDesc
     *
@@ -119,19 +119,20 @@ object AtomicLong {
     *
     * @param initialValue is the initial value with which to initialize the atomic
     * @param padding is the [[PaddingStrategy]] to apply
-    * @param allowPlatformIntrinsics is a boolean parameter that specifies whether
-    *        the instance is allowed to use the Java 8 optimized operations
-    *        for `getAndSet` and for `getAndAdd`
     */
-  def create(initialValue: Long, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicLong = {
+  def create(initialValue: Long, padding: PaddingStrategy): AtomicLong = {
     new AtomicLong(
       Factory.newBoxedLong(
         initialValue,
         boxStrategyToPaddingStrategy(padding),
         true, // allowUnsafe
-        allowPlatformIntrinsics
-      ))
+      )
+    )
   }
+
+  @deprecated("Use create(initialValue, padding) instead", "3.4.0-avs6")
+  def create(initialValue: Long, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicLong =
+    create(initialValue, padding)
 
   /** $createDesc
     *
@@ -154,7 +155,7 @@ object AtomicLong {
         initialValue,
         boxStrategyToPaddingStrategy(padding),
         false, // allowUnsafe
-        false // allowPlatformIntrinsics
-      ))
+      )
+    )
   }
 }

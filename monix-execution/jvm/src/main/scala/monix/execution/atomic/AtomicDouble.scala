@@ -18,9 +18,10 @@
 package monix.execution.atomic
 
 import monix.execution.atomic.PaddingStrategy.NoPadding
+import monix.execution.internal.atomic.{ BoxedLong, Factory }
+
+import java.lang.Double.{ doubleToLongBits, longBitsToDouble }
 import scala.annotation.tailrec
-import java.lang.Double.{doubleToLongBits, longBitsToDouble}
-import monix.execution.internal.atomic.{BoxedLong, Factory}
 
 /** Atomic references wrapping `Double` values.
   *
@@ -162,7 +163,7 @@ object AtomicDouble {
     * @param padding is the [[PaddingStrategy]] to apply
     */
   def withPadding(initialValue: Double, padding: PaddingStrategy): AtomicDouble =
-    create(initialValue, padding, allowPlatformIntrinsics = true)
+    create(initialValue, padding)
 
   /** $createDesc
     *
@@ -172,19 +173,20 @@ object AtomicDouble {
     *
     * @param initialValue is the initial value with which to initialize the atomic
     * @param padding is the [[PaddingStrategy]] to apply
-    * @param allowPlatformIntrinsics is a boolean parameter that specifies whether
-    *        the instance is allowed to use the Java 8 optimized operations
-    *        for `getAndSet` and for `getAndAdd`
     */
-  def create(initialValue: Double, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicDouble = {
+  def create(initialValue: Double, padding: PaddingStrategy): AtomicDouble = {
     new AtomicDouble(
       Factory.newBoxedLong(
         doubleToLongBits(initialValue),
         boxStrategyToPaddingStrategy(padding),
         true, // allowIntrinsics
-        allowPlatformIntrinsics
-      ))
+      )
+    )
   }
+
+  @deprecated("Use create(initialValue, padding) instead", "3.4.0-avs6")
+  def create(initialValue: Double, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicDouble =
+    create(initialValue, padding)
 
   /** $createDesc
     *
@@ -207,7 +209,7 @@ object AtomicDouble {
         doubleToLongBits(initialValue),
         boxStrategyToPaddingStrategy(padding),
         false, // allowUnsafe
-        false // allowJava8Intrinsics
-      ))
+      )
+    )
   }
 }

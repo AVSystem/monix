@@ -18,7 +18,7 @@
 package monix.execution.atomic
 
 import monix.execution.atomic.PaddingStrategy.NoPadding
-import monix.execution.internal.atomic.{BoxedInt, Factory}
+import monix.execution.internal.atomic.{ BoxedInt, Factory }
 
 /** Atomic references wrapping `Short` values.
   *
@@ -28,10 +28,10 @@ import monix.execution.internal.atomic.{BoxedInt, Factory}
 final class AtomicShort private (private[this] val ref: BoxedInt) extends AtomicNumber[Short] {
   private[this] val mask = 255 + 255 * 256
 
-  def get(): Short = 
+  def get(): Short =
     (ref.volatileGet() & mask).asInstanceOf[Short]
 
-  def set(update: Short): Unit = 
+  def set(update: Short): Unit =
     ref.volatileSet(update.asInstanceOf[Int])
 
   def lazySet(update: Short): Unit =
@@ -107,7 +107,7 @@ object AtomicShort {
     * @param padding is the [[PaddingStrategy]] to apply
     */
   def withPadding(initialValue: Short, padding: PaddingStrategy): AtomicShort =
-    create(initialValue, padding, allowPlatformIntrinsics = true)
+    create(initialValue, padding)
 
   /** $createDesc
     *
@@ -117,19 +117,20 @@ object AtomicShort {
     *
     * @param initialValue is the initial value with which to initialize the atomic
     * @param padding is the [[PaddingStrategy]] to apply
-    * @param allowPlatformIntrinsics is a boolean parameter that specifies whether
-    *        the instance is allowed to use the Java 8 optimized operations
-    *        for `getAndSet` and for `getAndAdd`
     */
-  def create(initialValue: Short, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicShort = {
+  def create(initialValue: Short, padding: PaddingStrategy): AtomicShort = {
     new AtomicShort(
       Factory.newBoxedInt(
         initialValue.toInt,
         boxStrategyToPaddingStrategy(padding),
         true, // allowUnsafe
-        allowPlatformIntrinsics
-      ))
+      )
+    )
   }
+
+  @deprecated("Use create(initialValue, padding) instead", "3.4.0-avs6")
+  def create(initialValue: Short, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicShort =
+    create(initialValue, padding)
 
   /** $createDesc
     *
@@ -152,7 +153,7 @@ object AtomicShort {
         initialValue.toInt,
         boxStrategyToPaddingStrategy(padding),
         false, // allowUnsafe
-        false // allowJava8Intrinsics
-      ))
+      )
+    )
   }
 }

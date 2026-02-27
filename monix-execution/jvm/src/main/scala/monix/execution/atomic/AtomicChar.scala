@@ -18,7 +18,7 @@
 package monix.execution.atomic
 
 import monix.execution.atomic.PaddingStrategy.NoPadding
-import monix.execution.internal.atomic.{BoxedInt, Factory}
+import monix.execution.internal.atomic.{ BoxedInt, Factory }
 
 /** Atomic references wrapping `Char` values.
   *
@@ -28,10 +28,10 @@ import monix.execution.internal.atomic.{BoxedInt, Factory}
 final class AtomicChar private (private[this] val ref: BoxedInt) extends AtomicNumber[Char] {
   private[this] val mask = 255 + 255 * 256
 
-  def get(): Char = 
+  def get(): Char =
     (ref.volatileGet() & mask).asInstanceOf[Char]
 
-  def set(update: Char): Unit = 
+  def set(update: Char): Unit =
     ref.volatileSet(update.asInstanceOf[Int])
 
   def lazySet(update: Char): Unit =
@@ -107,7 +107,7 @@ object AtomicChar {
     * @param padding is the [[PaddingStrategy]] to apply
     */
   def withPadding(initialValue: Char, padding: PaddingStrategy): AtomicChar =
-    create(initialValue, padding, allowPlatformIntrinsics = true)
+    create(initialValue, padding)
 
   /** $createDesc
     *
@@ -117,19 +117,20 @@ object AtomicChar {
     *
     * @param initialValue is the initial value with which to initialize the atomic
     * @param padding is the [[PaddingStrategy]] to apply
-    * @param allowPlatformIntrinsics is a boolean parameter that specifies whether
-    *        the instance is allowed to use the Java 8 optimized operations
-    *        for `getAndSet` and for `getAndAdd`
     */
-  def create(initialValue: Char, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicChar = {
+  def create(initialValue: Char, padding: PaddingStrategy): AtomicChar = {
     new AtomicChar(
       Factory.newBoxedInt(
         initialValue.toInt,
         boxStrategyToPaddingStrategy(padding),
         true, // allowUnsafe
-        allowPlatformIntrinsics
-      ))
+      )
+    )
   }
+
+  @deprecated("Use create(initialValue, padding) instead", "3.4.0-avs6")
+  def create(initialValue: Char, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicChar =
+    create(initialValue, padding)
 
   /** $createDesc
     *
@@ -152,7 +153,7 @@ object AtomicChar {
         initialValue.toInt,
         boxStrategyToPaddingStrategy(padding),
         false, // allowUnsafe
-        false // allowJava8Intrinsics
-      ))
+      )
+    )
   }
 }

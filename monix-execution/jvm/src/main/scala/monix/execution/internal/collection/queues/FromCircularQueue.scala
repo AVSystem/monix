@@ -23,6 +23,7 @@ import monix.execution.internal.atomic.UnsafeAccess
 import monix.execution.internal.collection.LowLevelConcurrentQueue
 import monix.execution.internal.jctools.queues.MessagePassingQueue
 import sun.misc.Unsafe
+
 import scala.collection.mutable
 
 private[internal] abstract class FromCircularQueue[A](queue: MessagePassingQueue[A])
@@ -59,14 +60,11 @@ private[internal] object FromCircularQueue {
       case ChannelType.MPMC =>
         new MPMC[A](queue)
       case ChannelType.MPSC =>
-        if (UnsafeAccess.HAS_JAVA8_INTRINSICS) new Java8MPSC[A](queue)
-        else new Java7[A](queue, ct)
+        new Java8MPSC[A](queue)
       case ChannelType.SPMC =>
-        if (UnsafeAccess.HAS_JAVA8_INTRINSICS) new Java8SPMC[A](queue)
-        else new Java7[A](queue, ct)
+        new Java8SPMC[A](queue)
       case ChannelType.SPSC =>
-        if (UnsafeAccess.HAS_JAVA8_INTRINSICS) new Java8SPSC[A](queue)
-        else new Java7[A](queue, ct)
+        new Java8SPSC[A](queue)
     }
 
   private final class MPMC[A](queue: MessagePassingQueue[A]) extends FromCircularQueue[A](queue) {
@@ -100,23 +98,5 @@ private[internal] object FromCircularQueue {
 
     def fenceOffer(): Unit = UNSAFE.fullFence()
     def fencePoll(): Unit = UNSAFE.fullFence()
-  }
-
-  private final class Java7[A](queue: MessagePassingQueue[A], ct: ChannelType)
-    extends FromCircularQueue[A](queue) {
-
-    def fenceOffer(): Unit =
-      if (ct.producerType == SingleProducer) {
-        raise()
-      }
-
-    def fencePoll(): Unit =
-      if (ct.consumerType == SingleConsumer) {
-        raise()
-      }
-
-    private def raise(): Unit = {
-      throw new IllegalAccessException("Unsafe.fullFence not supported on this platform! (please report bug)")
-    }
   }
 }

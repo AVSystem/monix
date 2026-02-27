@@ -18,9 +18,10 @@
 package monix.execution.atomic
 
 import monix.execution.atomic.PaddingStrategy.NoPadding
+import monix.execution.internal.atomic.{ BoxedInt, Factory }
+
+import java.lang.Float.{ floatToIntBits, intBitsToFloat }
 import scala.annotation.tailrec
-import java.lang.Float.{floatToIntBits, intBitsToFloat}
-import monix.execution.internal.atomic.{BoxedInt, Factory}
 
 /** Atomic references wrapping `Float` values.
   *
@@ -162,7 +163,7 @@ object AtomicFloat {
     * @param padding is the [[PaddingStrategy]] to apply
     */
   def withPadding(initialValue: Float, padding: PaddingStrategy): AtomicFloat =
-    create(initialValue, padding, allowPlatformIntrinsics = true)
+    create(initialValue, padding)
 
   /** $createDesc
     *
@@ -172,19 +173,20 @@ object AtomicFloat {
     *
     * @param initialValue is the initial value with which to initialize the atomic
     * @param padding is the [[PaddingStrategy]] to apply
-    * @param allowPlatformIntrinsics is a boolean parameter that specifies whether
-    *        the instance is allowed to use the Java 8 optimized operations
-    *        for `getAndSet` and for `getAndAdd`
     */
-  def create(initialValue: Float, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicFloat = {
+  def create(initialValue: Float, padding: PaddingStrategy): AtomicFloat = {
     new AtomicFloat(
       Factory.newBoxedInt(
         floatToIntBits(initialValue),
         boxStrategyToPaddingStrategy(padding),
         true, // allowUnsafe
-        allowPlatformIntrinsics
-      ))
+      )
+    )
   }
+
+  @deprecated("Use create(initialValue, padding) instead", "3.4.0-avs6")
+  def create(initialValue: Float, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicFloat =
+    create(initialValue, padding)
 
   /** $createDesc
     *
@@ -207,7 +209,7 @@ object AtomicFloat {
         floatToIntBits(initialValue),
         boxStrategyToPaddingStrategy(padding),
         false, // allowUnsafe
-        false // allowJava8Intrinsics
-      ))
+      )
+    )
   }
 }

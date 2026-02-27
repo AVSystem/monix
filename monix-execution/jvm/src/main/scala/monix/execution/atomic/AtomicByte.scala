@@ -18,7 +18,7 @@
 package monix.execution.atomic
 
 import monix.execution.atomic.PaddingStrategy.NoPadding
-import monix.execution.internal.atomic.{BoxedInt, Factory}
+import monix.execution.internal.atomic.{ BoxedInt, Factory }
 
 /** Atomic references wrapping `Byte` values.
   *
@@ -29,10 +29,10 @@ final class AtomicByte private (private[this] val ref: BoxedInt) extends AtomicN
 
   private[this] val mask = 255
 
-  def get(): Byte = 
+  def get(): Byte =
     (ref.volatileGet() & mask).asInstanceOf[Byte]
 
-  def set(update: Byte): Unit = 
+  def set(update: Byte): Unit =
     ref.volatileSet(update.asInstanceOf[Int])
 
   def lazySet(update: Byte): Unit =
@@ -108,7 +108,7 @@ object AtomicByte {
     * @param padding is the [[PaddingStrategy]] to apply
     */
   def withPadding(initialValue: Byte, padding: PaddingStrategy): AtomicByte =
-    create(initialValue, padding, allowPlatformIntrinsics = true)
+    create(initialValue, padding)
 
   /** $createDesc
     *
@@ -118,19 +118,19 @@ object AtomicByte {
     *
     * @param initialValue is the initial value with which to initialize the atomic
     * @param padding is the [[PaddingStrategy]] to apply
-    * @param allowPlatformIntrinsics is a boolean parameter that specifies whether
-    *        the instance is allowed to use the Java 8 optimized operations
-    *        for `getAndSet` and for `getAndAdd`
     */
-  def create(initialValue: Byte, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicByte =
+  def create(initialValue: Byte, padding: PaddingStrategy): AtomicByte =
     new AtomicByte(
       Factory.newBoxedInt(
         initialValue.toInt,
         boxStrategyToPaddingStrategy(padding),
         true, // allowUnsafe
-        allowPlatformIntrinsics
-      ))
+      )
+    )
 
+  @deprecated("Use create(initialValue, padding) instead", "3.4.0-avs6")
+  def create(initialValue: Byte, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicByte =
+    create(initialValue, padding)
   /** $createDesc
     *
     * This builder guarantees to construct a safe atomic reference that
@@ -152,7 +152,7 @@ object AtomicByte {
         initialValue.toInt,
         boxStrategyToPaddingStrategy(padding),
         false, // allowUnsafe
-        false // allowJava8Intrinsics
-      ))
+      )
+    )
   }
 }
