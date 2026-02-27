@@ -152,7 +152,7 @@ object Atomic {
     *        best reference possible, based on our `initialValue`
     */
   inline def apply[A, R <: Atomic[A]](initialValue: A)(implicit builder: AtomicBuilder[A, R]): R =
-    builder.buildInstance(initialValue, PaddingStrategy.NoPadding, allowPlatformIntrinsics = true)
+    builder.buildInstance(initialValue, PaddingStrategy.NoPadding)
 
   /** Constructs an `Atomic[A]` reference, applying the provided
     * [[PaddingStrategy]] in order to counter the "false sharing"

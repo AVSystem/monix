@@ -359,7 +359,7 @@ object Atomic {
       builder: c.Expr[AtomicBuilder[A, R]]): c.Expr[R] = {
 
       val expr = reify {
-        builder.splice.buildInstance(initialValue.splice, NoPadding, allowPlatformIntrinsics = true)
+        builder.splice.buildInstance(initialValue.splice, NoPadding)
       }
 
       inlineAndReset[R](expr.tree)
@@ -370,7 +370,7 @@ object Atomic {
       padding: c.Expr[PaddingStrategy])(builder: c.Expr[AtomicBuilder[A, R]]): c.Expr[R] = {
 
       val expr = reify {
-        builder.splice.buildInstance(initialValue.splice, padding.splice, allowPlatformIntrinsics = true)
+        builder.splice.buildInstance(initialValue.splice, padding.splice)
       }
 
       inlineAndReset[R](expr.tree)

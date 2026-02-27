@@ -119,6 +119,15 @@ object MimaFilters {
     ),
     exclude[DirectMissingMethodProblem](
       "monix.execution.internal.atomic.Factory.newBoxedLong"
+    ),
+    exclude[MissingClassProblem](
+      "monix.execution.internal.collection.queues.FromCircularQueue$Java7"
+    ),
+    exclude[MissingClassProblem](
+      "monix.execution.internal.collection.queues.FromMessagePassingQueue$Java7"
+    ),
+    exclude[ReversedMissingMethodProblem](
+      "monix.execution.atomic.AtomicBuilder.buildInstance"
     )
   )
 }

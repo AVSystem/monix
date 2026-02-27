@@ -24,7 +24,10 @@ package monix.execution.atomic
   * driven by implicits.
   */
 trait AtomicBuilder[A, R <: Atomic[A]] extends Serializable {
-  def buildInstance(initialValue: A, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): R
+  @deprecated("Use buildInstance(initialValue, padding) instead", "3.4.0-avs6")
+  def buildInstance(initialValue: A, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): R =
+    buildInstance(initialValue, padding)
+  def buildInstance(initialValue: A, padding: PaddingStrategy): R
 
   def buildSafeInstance(initialValue: A, padding: PaddingStrategy): R
 }
@@ -35,7 +38,7 @@ private[atomic] object Implicits {
     implicit def AtomicRefBuilder[A <: AnyRef]: AtomicBuilder[A, AtomicAny[A]] =
       new AtomicBuilder[A, AtomicAny[A]] {
         @deprecated("Use buildInstance(initialValue, padding) instead", "3.4.0-avs6")
-        def buildInstance(initialValue: A, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean) =
+        override def buildInstance(initialValue: A, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean) =
           buildInstance(initialValue, padding)
 
         def buildInstance(initialValue: A, padding: PaddingStrategy) =
@@ -51,7 +54,7 @@ private[atomic] object Implicits {
     implicit def AtomicNumberBuilder[A <: AnyRef: Numeric]: AtomicBuilder[A, AtomicNumberAny[A]] =
       new AtomicBuilder[A, AtomicNumberAny[A]] {
         @deprecated("Use buildInstance(initialValue, padding) instead", "3.4.0-avs6")
-        def buildInstance(initialValue: A, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean) =
+        override def buildInstance(initialValue: A, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean) =
           buildInstance(initialValue, padding)
 
         def buildInstance(initialValue: A, padding: PaddingStrategy) =
@@ -67,7 +70,11 @@ object AtomicBuilder extends Implicits.Level2 {
   /** Provides an [[AtomicBuilder]] instance for [[AtomicInt]]. */
   implicit object AtomicIntBuilder extends AtomicBuilder[Int, AtomicInt] {
     @deprecated("Use buildInstance(initialValue, padding) instead", "3.4.0-avs6")
-    def buildInstance(initialValue: Int, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicInt =
+    override def buildInstance(
+      initialValue: Int,
+      padding: PaddingStrategy,
+      allowPlatformIntrinsics: Boolean
+    ): AtomicInt =
       buildInstance(initialValue, padding)
     def buildInstance(initialValue: Int, padding: PaddingStrategy): AtomicInt =
       AtomicInt.create(initialValue, padding)
@@ -79,7 +86,11 @@ object AtomicBuilder extends Implicits.Level2 {
   /** Provides an [[AtomicBuilder]] instance for [[AtomicLong]]. */
   implicit object AtomicLongBuilder extends AtomicBuilder[Long, AtomicLong] {
     @deprecated("Use buildInstance(initialValue, padding) instead", "3.4.0-avs6")
-    def buildInstance(initialValue: Long, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicLong =
+    override def buildInstance(
+      initialValue: Long,
+      padding: PaddingStrategy,
+      allowPlatformIntrinsics: Boolean
+    ): AtomicLong =
       buildInstance(initialValue, padding)
 
     def buildInstance(initialValue: Long, padding: PaddingStrategy): AtomicLong =
@@ -91,7 +102,7 @@ object AtomicBuilder extends Implicits.Level2 {
   /** Provides an [[AtomicBuilder]] instance for [[AtomicBoolean]]. */
   implicit object AtomicBooleanBuilder extends AtomicBuilder[Boolean, AtomicBoolean] {
     @deprecated("Use buildInstance(initialValue, padding) instead", "3.4.0-avs6")
-    def buildInstance(initialValue: Boolean, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean) =
+    override def buildInstance(initialValue: Boolean, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean) =
       buildInstance(initialValue, padding)
     def buildInstance(initialValue: Boolean, padding: PaddingStrategy) =
       AtomicBoolean.create(initialValue, padding)
@@ -103,7 +114,11 @@ object AtomicBuilder extends Implicits.Level2 {
   /** Provides an [[AtomicBuilder]] instance for [[AtomicByte]]. */
   implicit object AtomicByteBuilder extends AtomicBuilder[Byte, AtomicByte] {
     @deprecated("Use buildInstance(initialValue, padding) instead", "3.4.0-avs6")
-    def buildInstance(initialValue: Byte, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicByte =
+    override def buildInstance(
+      initialValue: Byte,
+      padding: PaddingStrategy,
+      allowPlatformIntrinsics: Boolean
+    ): AtomicByte =
       buildInstance(initialValue, padding)
 
     def buildInstance(initialValue: Byte, padding: PaddingStrategy): AtomicByte =
@@ -116,7 +131,11 @@ object AtomicBuilder extends Implicits.Level2 {
   /** Provides an [[AtomicBuilder]] instance for [[AtomicChar]]. */
   implicit object AtomicCharBuilder extends AtomicBuilder[Char, AtomicChar] {
     @deprecated("Use buildInstance(initialValue, padding) instead", "3.4.0-avs6")
-    def buildInstance(initialValue: Char, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicChar =
+    override def buildInstance(
+      initialValue: Char,
+      padding: PaddingStrategy,
+      allowPlatformIntrinsics: Boolean
+    ): AtomicChar =
       buildInstance(initialValue, padding)
 
     def buildInstance(initialValue: Char, padding: PaddingStrategy): AtomicChar =
@@ -129,7 +148,11 @@ object AtomicBuilder extends Implicits.Level2 {
   /** Provides an [[AtomicBuilder]] instance for [[AtomicShort]]. */
   implicit object AtomicShortBuilder extends AtomicBuilder[Short, AtomicShort] {
     @deprecated("Use buildInstance(initialValue, padding) instead", "3.4.0-avs6")
-    def buildInstance(initialValue: Short, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicShort =
+    override def buildInstance(
+      initialValue: Short,
+      padding: PaddingStrategy,
+      allowPlatformIntrinsics: Boolean
+    ): AtomicShort =
       buildInstance(initialValue, padding)
 
     def buildInstance(initialValue: Short, padding: PaddingStrategy): AtomicShort =
@@ -142,7 +165,11 @@ object AtomicBuilder extends Implicits.Level2 {
   /** Provides an [[AtomicBuilder]] instance for [[AtomicFloat]]. */
   implicit object AtomicFloatBuilder extends AtomicBuilder[Float, AtomicFloat] {
     @deprecated("Use buildInstance(initialValue, padding) instead", "3.4.0-avs6")
-    def buildInstance(initialValue: Float, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicFloat =
+    override def buildInstance(
+      initialValue: Float,
+      padding: PaddingStrategy,
+      allowPlatformIntrinsics: Boolean
+    ): AtomicFloat =
       buildInstance(initialValue, padding)
 
     def buildInstance(initialValue: Float, padding: PaddingStrategy): AtomicFloat =
@@ -155,7 +182,11 @@ object AtomicBuilder extends Implicits.Level2 {
   /** Provides an [[AtomicBuilder]] instance for [[AtomicDouble]]. */
   implicit object AtomicDoubleBuilder extends AtomicBuilder[Double, AtomicDouble] {
     @deprecated("Use buildInstance(initialValue, padding) instead", "3.4.0-avs6")
-    def buildInstance(initialValue: Double, padding: PaddingStrategy, allowPlatformIntrinsics: Boolean): AtomicDouble =
+    override def buildInstance(
+      initialValue: Double,
+      padding: PaddingStrategy,
+      allowPlatformIntrinsics: Boolean
+    ): AtomicDouble =
       buildInstance(initialValue, padding)
 
     def buildInstance(initialValue: Double, padding: PaddingStrategy): AtomicDouble =
