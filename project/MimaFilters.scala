@@ -103,11 +103,8 @@ object MimaFilters {
 
   lazy val changesFor_avs = Seq(
     // TrampolineExecutionContext signature tweaks (internal API)
-    exclude[IncompatibleMethTypeProblem](
-      "monix.execution.schedulers.TrampolineExecutionContext#JVMNormalTrampoline.startLoop"
-    ),
-    exclude[IncompatibleMethTypeProblem](
-      "monix.execution.schedulers.TrampolineExecutionContext#JVMOptimalTrampoline.startLoop"
-    )
+    exclude[IncompatibleMethTypeProblem]("monix.execution.schedulers.TrampolineExecutionContext#JVMNormalTrampoline.startLoop"),
+    exclude[IncompatibleMethTypeProblem]("monix.execution.schedulers.TrampolineExecutionContext#JVMOptimalTrampoline.startLoop"),
+    exclude[IncompatibleMethTypeProblem]("monix.execution.schedulers.TrampolineExecutionContext.this")
   )
 }
