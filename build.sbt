@@ -32,7 +32,7 @@ val reactiveStreams_Version   = "1.0.4"
 val macrotaskExecutor_Version = "1.0.0"
 val minitest_Version          = "2.9.6"
 val implicitBox_Version       = "0.3.4"
-val kindProjector_Version     = "0.13.3"
+val kindProjector_Version     = "0.13.4"
 val betterMonadicFor_Version  = "0.3.1"
 val silencer_Version          = "1.7.19"
 val scalaCompat_Version       = "2.7.0"
@@ -169,16 +169,19 @@ lazy val sharedSettings = pgpSettings ++ Seq(
     else
       ver
   },
+  /*
   // Enable this to debug warnings...
   Compile / scalacOptions ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 13)) => Seq(
-        "-Wconf:cat=other-implicit-type:silent",
-        // Silence -Wvalue-discard warnings: tpolecat 0.5.x enables -Wvalue-discard which
-        // catches discarded values (e.g. trySuccess/tryFailure returning Boolean). These are
-        // pre-existing patterns in the codebase and not bugs.
-        "-Wconf:msg=unused value of type:silent"
-      )
+      case Some((2, 13)) => Seq("-Wconf:any:warning-verbose")
+      case _ => Seq.empty
+    }
+  },
+   */
+  // Auto-fix implicit type warnings instead of silencing them
+  Compile / scalacOptions ++= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 13)) => Seq("-quickfix:cat=other-implicit-type")
       case _ => Seq.empty
     }
   },
@@ -194,7 +197,8 @@ lazy val sharedSettings = pgpSettings ++ Seq(
     "-Wunused:explicits",
     "-Ywarn-unused:params",
     "-Wunused:params",
-    "-Xlint:infer-any"
+    "-Xlint:infer-any",
+    "-Wnonunit-statement"
   ),
   // Disabled from tpolecat for test compilation:
   // -Wunused:patvars triggers on for-comprehension loop vars in tests (pre-existing pattern)
@@ -217,9 +221,9 @@ lazy val sharedSettings = pgpSettings ++ Seq(
   },
   scalacOptions --= {
     if (isDotty.value)
-      // tpolecat uses -Werror in Scala 3 (not -Xfatal-warnings); remove both to disable fatal warnings
+      // tpolecat uses -Werror in Scala 3; disable fatal warnings
       // so that pre-existing value-discard and similar patterns don't break Scala 3 builds
-      Seq("-Xfatal-warnings", "-Werror")
+      Seq("-Werror")
     else
       Seq()
   },

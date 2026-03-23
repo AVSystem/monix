@@ -242,7 +242,7 @@ object CancelablePromise {
             }
             if (errors ne null) {
               // Throws all errors as a composite
-              val x :: xs = errors.toList: @unchecked
+              val x :: xs = errors.toList
               throw Platform.composeErrors(x, xs: _*)
             }
             true
