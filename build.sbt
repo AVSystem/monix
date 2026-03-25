@@ -178,13 +178,6 @@ lazy val sharedSettings = pgpSettings ++ Seq(
     }
   },
    */
-  // Auto-fix implicit type warnings instead of silencing them
-  Compile / scalacOptions ++= {
-    CrossVersion.partialVersion(scalaVersion.value) match {
-      case Some((2, 13)) => Seq("-quickfix:cat=other-implicit-type")
-      case _ => Seq.empty
-    }
-  },
 
   // Disabled from the sbt-tpolecat set
   Compile / scalacOptions --= Seq(
