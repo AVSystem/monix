@@ -28,6 +28,7 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
+      - uses: sbt/setup-sbt@v1
 
       - name: Cache ivy2
         uses: actions/cache@v4
@@ -77,6 +78,7 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
+      - uses: sbt/setup-sbt@v1
 
       - name: Cache ivy2
         uses: actions/cache@v4
@@ -127,6 +129,7 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
+      - uses: sbt/setup-sbt@v1
 
       - name: Cache ivy2
         uses: actions/cache@v4
@@ -171,6 +174,7 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
+      - uses: sbt/setup-sbt@v1
 
       - name: Cache ivy2
         uses: actions/cache@v4
@@ -222,6 +226,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 8
+      - uses: sbt/setup-sbt@v1
 
       - name: Install GnuPG2
         run: |
