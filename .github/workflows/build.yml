@@ -10,7 +10,7 @@ on:
 jobs:
   jvm-tests:
     name: JVM / scala ${{ matrix.scala }}, jdk ${{ matrix.java }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu
     strategy:
       fail-fast: false
       matrix:
