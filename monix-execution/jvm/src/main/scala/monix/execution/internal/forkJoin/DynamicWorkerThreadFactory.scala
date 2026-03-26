@@ -20,6 +20,7 @@ package monix.execution.internal.forkJoin
 import java.util.concurrent.ForkJoinPool.{ForkJoinWorkerThreadFactory, ManagedBlocker}
 import java.util.concurrent.{ForkJoinPool, ForkJoinWorkerThread, ThreadFactory}
 
+import monix.execution.internal.ThreadCompat.ThreadCompatOps
 import monix.execution.internal.forkJoin.DynamicWorkerThreadFactory.EmptyBlockContext
 
 import scala.concurrent.{BlockContext, CanAwait}
@@ -36,7 +37,7 @@ private[monix] final class DynamicWorkerThreadFactory(
   def wire[T <: Thread](thread: T): T = {
     thread.setDaemon(daemonic)
     thread.setUncaughtExceptionHandler(uncaught)
-    thread.setName(prefix + "-" + thread.getId)
+    thread.setName(prefix + "-" + thread.threadIdCompat)
     thread
   }
 

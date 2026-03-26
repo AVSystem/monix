@@ -282,7 +282,7 @@ abstract class GenericAtomicSuite[A, R <: Atomic[A]](
   }
 }
 
-// -- NoPadding (Java 8)
+// -- NoPadding
 
 object GenericAtomicAnyNoPadding
   extends GenericAtomicSuite[String, AtomicAny[String]](
@@ -374,7 +374,7 @@ object GenericAtomicLongNoPadding
     allowUnsafe = true
   )
 
-// -- Left64 (Java 8)
+// -- Left64
 
 object GenericAtomicAnyLeft64
   extends GenericAtomicSuite[String, AtomicAny[String]](
@@ -466,7 +466,7 @@ object GenericAtomicLongLeft64
     allowUnsafe = true
   )
 
-// -- Right64 (Java 8)
+// -- Right64
 
 object GenericAtomicAnyRight64
   extends GenericAtomicSuite[String, AtomicAny[String]](
@@ -558,7 +558,7 @@ object GenericAtomicLongRight64
     allowUnsafe = true
   )
 
-// -- LeftRight128 (Java 8)
+// -- LeftRight128
 
 object GenericAtomicAnyLeftRight128
   extends GenericAtomicSuite[String, AtomicAny[String]](
@@ -650,7 +650,7 @@ object GenericAtomicLongLeftRight128
     allowUnsafe = true
   )
 
-// -- Left128 (Java 8)
+// -- Left128
 
 object GenericAtomicAnyLeft128
   extends GenericAtomicSuite[String, AtomicAny[String]](
@@ -742,7 +742,7 @@ object GenericAtomicLongLeft128
     allowUnsafe = true
   )
 
-// -- Right128 (Java 8)
+// -- Right128
 
 object GenericAtomicAnyRight128
   extends GenericAtomicSuite[String, AtomicAny[String]](
@@ -834,7 +834,7 @@ object GenericAtomicLongRight128
     allowUnsafe = true
   )
 
-// -- LeftRight256 (Java 8)
+// -- LeftRight256
 
 object GenericAtomicAnyLeftRight256
   extends GenericAtomicSuite[String, AtomicAny[String]](

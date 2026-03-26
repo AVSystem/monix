@@ -103,7 +103,7 @@ abstract class ConcurrentAtomicNumberSuite[A, R <: AtomicNumber[A]](
   }
 }
 
-//-- NoPadding (Java 8)
+//-- NoPadding
 
 object ConcurrentAtomicNumberDoubleNoPaddingSuite
   extends ConcurrentAtomicNumberSuite[Double, AtomicDouble](
@@ -185,7 +185,7 @@ object ConcurrentAtomicNumberNumberAnyNoPaddingSuite
     BigInt(Long.MinValue),
   )
 
-//--Left64 (Java 8)
+//--Left64
 
 object ConcurrentAtomicNumberDoubleLeft64Suite
   extends ConcurrentAtomicNumberSuite[Double, AtomicDouble](
@@ -267,7 +267,7 @@ object ConcurrentAtomicNumberNumberAnyLeft64Suite
     BigInt(Long.MinValue),
   )
 
-//-- Right64 (Java 8)
+//-- Right64
 
 object ConcurrentAtomicNumberDoubleRight64Suite
   extends ConcurrentAtomicNumberSuite[Double, AtomicDouble](
@@ -349,7 +349,7 @@ object ConcurrentAtomicNumberNumberAnyRight64Suite
     BigInt(Long.MinValue),
   )
 
-//-- LeftRight128 (Java 8)
+//-- LeftRight128
 
 object ConcurrentAtomicNumberDoubleLeftRight128Suite
   extends ConcurrentAtomicNumberSuite[Double, AtomicDouble](
@@ -431,7 +431,7 @@ object ConcurrentAtomicNumberNumberAnyLeftRight128Suite
     BigInt(Long.MinValue),
   )
 
-//--Left128 (Java 8)
+//--Left128
 
 object ConcurrentAtomicNumberDoubleLeft128Suite
   extends ConcurrentAtomicNumberSuite[Double, AtomicDouble](
@@ -513,7 +513,7 @@ object ConcurrentAtomicNumberNumberAnyLeft128Suite
     BigInt(Long.MinValue),
   )
 
-//-- Right128 (Java 8)
+//-- Right128
 
 object ConcurrentAtomicNumberDoubleRight128Suite
   extends ConcurrentAtomicNumberSuite[Double, AtomicDouble](
@@ -595,7 +595,7 @@ object ConcurrentAtomicNumberNumberAnyRight128Suite
     BigInt(Long.MinValue),
   )
 
-//-- LeftRight256 (Java 8)
+//-- LeftRight256
 
 object ConcurrentAtomicNumberDoubleLeftRight256Suite
   extends ConcurrentAtomicNumberSuite[Double, AtomicDouble](

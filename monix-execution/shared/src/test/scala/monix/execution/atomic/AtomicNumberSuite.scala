@@ -377,7 +377,7 @@ abstract class AtomicFloatSuite(strategy: PaddingStrategy, allowUnsafe: Boolean)
   }
 }
 
-// -- NoPadding (Java 8)
+// -- NoPadding
 
 object AtomicDoubleNoPaddingSuite
   extends AtomicDoubleSuite(NoPadding, allowUnsafe = true)
@@ -443,7 +443,7 @@ object AtomicNumberAnyNoPaddingSuite
     allowUnsafe = true
   )
 
-// -- Left64 (Java 8)
+// -- Left64
 
 object AtomicDoubleLeft64Suite extends AtomicDoubleSuite(Left64, allowUnsafe = true)
 object AtomicFloatLeft64Suite extends AtomicFloatSuite(Left64, allowUnsafe = true)
@@ -508,7 +508,7 @@ object AtomicNumberAnyLeft64Suite
     allowUnsafe = true
   )
 
-// -- Right64 (Java 8)
+// -- Right64
 
 object AtomicDoubleRight64Suite extends AtomicDoubleSuite(Right64, allowUnsafe = true)
 object AtomicFloatRight64Suite extends AtomicFloatSuite(Right64, allowUnsafe = true)
@@ -573,7 +573,7 @@ object AtomicNumberAnyRight64Suite
     allowUnsafe = true
   )
 
-// -- LeftRight128 (Java 8)
+// -- LeftRight128
 
 object AtomicDoubleLeftRight128Suite
   extends AtomicDoubleSuite(LeftRight128, allowUnsafe = true)
@@ -640,7 +640,7 @@ object AtomicNumberAnyLeftRight128Suite
     allowUnsafe = true
   )
 
-// -- Left128 (Java 8)
+// -- Left128
 
 object AtomicDoubleLeft128Suite extends AtomicDoubleSuite(Left128, allowUnsafe = true)
 object AtomicFloatLeft128Suite extends AtomicFloatSuite(Left128, allowUnsafe = true)
@@ -705,7 +705,7 @@ object AtomicNumberAnyLeft128Suite
     allowUnsafe = true
   )
 
-// -- Right128 (Java 8)
+// -- Right128
 
 object AtomicDoubleRight128Suite extends AtomicDoubleSuite(Right128, allowUnsafe = true)
 object AtomicFloatRight128Suite extends AtomicFloatSuite(Right128, allowUnsafe = true)
@@ -770,7 +770,7 @@ object AtomicNumberAnyRight128Suite
     allowUnsafe = true
   )
 
-// -- LeftRight256 (Java 8)
+// -- LeftRight256
 
 object AtomicDoubleLeftRight256Suite
   extends AtomicDoubleSuite(LeftRight256, allowUnsafe = true)

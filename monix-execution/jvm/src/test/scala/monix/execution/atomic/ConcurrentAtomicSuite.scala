@@ -92,7 +92,7 @@ abstract class ConcurrentAtomicBooleanSuite(strategy: PaddingStrategy)
   }
 }
 
-// -- NoPadding (Java 8)
+// -- NoPadding
 
 object ConcurrentAtomicAnyNoPaddingSuite
   extends ConcurrentAtomicSuite[String, AtomicAny[String]](
@@ -168,7 +168,7 @@ object ConcurrentAtomicLongNoPaddingSuite
     x => x.toInt,
   )
 
-// -- Left64 (Java 8)
+// -- Left64
 
 object ConcurrentAtomicAnyLeft64Suite
   extends ConcurrentAtomicSuite[String, AtomicAny[String]](
@@ -244,7 +244,7 @@ object ConcurrentAtomicLongLeft64Suite
     x => x.toInt,
   )
 
-// -- Right64 (Java 8)
+// -- Right64
 
 object ConcurrentAtomicAnyRight64Suite
   extends ConcurrentAtomicSuite[String, AtomicAny[String]](
@@ -320,7 +320,7 @@ object ConcurrentAtomicLongRight64Suite
     x => x.toInt,
   )
 
-// -- LeftRight128 (Java 8)
+// -- LeftRight128
 
 object ConcurrentAtomicAnyLeftRight128Suite
   extends ConcurrentAtomicSuite[String, AtomicAny[String]](
@@ -396,7 +396,7 @@ object ConcurrentAtomicLongLeftRight128Suite
     x => x.toInt,
   )
 
-// -- Left128 (Java 8)
+// -- Left128
 
 object ConcurrentAtomicAnyLeft128Suite
   extends ConcurrentAtomicSuite[String, AtomicAny[String]](
@@ -472,7 +472,7 @@ object ConcurrentAtomicLongLeft128Suite
     x => x.toInt,
   )
 
-// -- Right128 (Java 8)
+// -- Right128
 
 object ConcurrentAtomicAnyRight128Suite
   extends ConcurrentAtomicSuite[String, AtomicAny[String]](
@@ -548,7 +548,7 @@ object ConcurrentAtomicLongRight128Suite
     x => x.toInt,
   )
 
-// -- LeftRight256 (Java 8)
+// -- LeftRight256
 
 object ConcurrentAtomicAnyLeftRight256Suite
   extends ConcurrentAtomicSuite[String, AtomicAny[String]](

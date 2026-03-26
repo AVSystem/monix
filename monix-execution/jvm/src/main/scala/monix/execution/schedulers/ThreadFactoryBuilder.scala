@@ -19,6 +19,7 @@ package monix.execution.schedulers
 
 import java.util.concurrent.ThreadFactory
 import monix.execution.UncaughtExceptionReporter
+import monix.execution.internal.ThreadCompat.ThreadCompatOps
 
 private[schedulers] object ThreadFactoryBuilder {
   /** Constructs a ThreadFactory using the provided name prefix and appending
@@ -32,7 +33,7 @@ private[schedulers] object ThreadFactoryBuilder {
     new ThreadFactory {
       def newThread(r: Runnable) = {
         val thread = new Thread(r)
-        thread.setName(name + "-" + thread.getId)
+        thread.setName(name + "-" + thread.threadIdCompat)
         thread.setDaemon(daemonic)
         thread.setUncaughtExceptionHandler(reporter.asJava)
         thread

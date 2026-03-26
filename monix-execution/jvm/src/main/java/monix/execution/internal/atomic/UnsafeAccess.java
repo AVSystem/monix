@@ -19,11 +19,10 @@ package monix.execution.internal.atomic;
 
 import monix.execution.internal.InternalApi;
 import scala.util.control.NonFatal;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 
 /**
- * INTERNAL API — Provides access to `sun.misc.Unsafe`.
+ * INTERNAL API — used by queue builders to detect OpenJDK compatibility.
  *
  * Being internal it can always change between minor versions,
  * providing no backwards compatibility guarantees and is only public
@@ -31,95 +30,31 @@ import java.lang.reflect.Field;
  * "internal" to a package and all its sub-packages.
  */
 @InternalApi public final class UnsafeAccess {
-  private static final Object UNSAFE;
-
-  /** True in case the underlying platform supports
-   * `sun.misc.Unsafe`, `false` otherwise.
-   *
-   * In case [[IS_ALLOWED]] is set to `false`, then
-   * [[IS_AVAILABLE]] is also going to be set to `false`.
-   */
-  public static final boolean IS_AVAILABLE;
-
-  /**
-   * True in case the `sun.misc.Unsafe` usage is disabled
-   * by means of setting `-Dmonix.environment.canUseUnsafe=false`.
-   *
-   * In case this is set to `false`, then [[IS_AVAILABLE]] is
-   * also going to be set to `false`.
-   */
-  public static final boolean IS_ALLOWED;
 
   /**
    * Some platforms do not expose a `theUnsafe` private reference
-   * to a `sun.misc.Unsafe` instance, but unfortunately some libraries
-   * (notably version 2.0 of JCTools) depends on this.
+   * to a `sun.misc.Unsafe` instance, but some libraries
+   * (notably JCTools) depend on this.
    *
    * This reference is set to `true` in case `Unsafe.theUnsafe` exists,
    * or `false` otherwise.
    */
   public static final boolean IS_OPENJDK_COMPATIBLE;
 
-  /**
-   * Returns a reusable reference for `sun.misc.Unsafe`.
-   */
-  public static Object getInstance() {
-    if (UNSAFE == null)
-      throw new AssertionError(
-        "Platform does not support sun.misc.Unsafe, " +
-        "please file a bug report for the Monix project " +
-        "(see https://monix.io)"
-      );
-
-    return UNSAFE;
-  }
-
-  private static boolean isUnsafeAllowed() {
-    String env = System.getProperty("monix.environment.canUseUnsafe", "").trim().toLowerCase();
-    boolean disabled = env.equals("no") || env.equals("false") || env.equals("0");
-    return !disabled;
-  }
-
   static {
-    Object instance = null;
-    boolean isAllowed = false;
     boolean isOpenJDKCompatible = false;
 
     try {
-      isAllowed = isUnsafeAllowed();
-
-      if (isAllowed) {
-        Class<?> cls = Class.forName("sun.misc.Unsafe", true, UnsafeAccess.class.getClassLoader());
-        try {
-          Field field = cls.getDeclaredField("theUnsafe");
-          field.setAccessible(true);
-          instance = field.get(null);
-          if (instance == null) throw null;
-          isOpenJDKCompatible = true;
-        }
-        catch (Exception ex) {
-          if (!NonFatal.apply(ex)) {
-            throw ex;
-          }
-          else {
-            // Workaround for older Android versions or other non-OpenJDK
-            // implementations that may not have a `theUnsafe` instance
-            Constructor<?> c = cls.getDeclaredConstructor();
-            c.setAccessible(true);
-            instance = c.newInstance();
-          }
-        }
-      }
+      Class<?> cls = Class.forName("sun.misc.Unsafe", true, UnsafeAccess.class.getClassLoader());
+      Field field = cls.getDeclaredField("theUnsafe");
+      field.setAccessible(true);
+      Object instance = field.get(null);
+      isOpenJDKCompatible = instance != null;
     }
     catch (Exception ex) {
-      instance = null;
-      if (!NonFatal.apply(ex))
-        throw new RuntimeException(ex);
+      if (!NonFatal.apply(ex)) throw new RuntimeException(ex);
     }
     finally {
-      UNSAFE = instance;
-      IS_AVAILABLE = instance != null;
-      IS_ALLOWED = isAllowed;
       IS_OPENJDK_COMPATIBLE = isOpenJDKCompatible;
     }
   }

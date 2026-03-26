@@ -19,6 +19,7 @@ package monix.execution.internal.forkJoin
 
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory
 import java.util.concurrent.{ForkJoinPool, ForkJoinWorkerThread, ThreadFactory}
+import monix.execution.internal.ThreadCompat.ThreadCompatOps
 
 private[monix] final class StandardWorkerThreadFactory(
   prefix: String,
@@ -29,7 +30,7 @@ private[monix] final class StandardWorkerThreadFactory(
   def wire[T <: Thread](thread: T): T = {
     thread.setDaemon(daemonic)
     thread.setUncaughtExceptionHandler(uncaught)
-    thread.setName(prefix + "-" + thread.getId)
+    thread.setName(prefix + "-" + thread.threadIdCompat)
     thread
   }
 

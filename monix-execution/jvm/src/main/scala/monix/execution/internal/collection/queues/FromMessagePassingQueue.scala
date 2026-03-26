@@ -19,10 +19,9 @@ package monix.execution.internal.collection.queues
 
 import monix.execution.ChannelType
 import monix.execution.ChannelType.{SingleConsumer, SingleProducer}
-import monix.execution.internal.atomic.UnsafeAccess
+import java.lang.invoke.VarHandle
 import monix.execution.internal.collection.LowLevelConcurrentQueue
 import monix.execution.internal.jctools.queues.MessagePassingQueue
-import sun.misc.Unsafe
 import scala.collection.mutable
 
 private[internal] abstract class FromMessagePassingQueue[A](queue: MessagePassingQueue[A])
@@ -56,43 +55,30 @@ private[internal] object FromMessagePassingQueue {
       case ChannelType.MPMC =>
         new MPMC[A](queue)
       case ChannelType.MPSC =>
-        new Java8MPSC[A](queue)
+        new FencedMPSC[A](queue)
       case ChannelType.SPMC =>
-        new Java8SPMC[A](queue)
+        new FencedSPMC[A](queue)
       case ChannelType.SPSC =>
-        new Java8SPSC[A](queue)
+        new FencedSPSC[A](queue)
     }
 
   private final class MPMC[A](queue: MessagePassingQueue[A]) extends FromMessagePassingQueue[A](queue) {
-
     def fenceOffer(): Unit = ()
     def fencePoll(): Unit = ()
   }
 
-  private final class Java8SPMC[A](queue: MessagePassingQueue[A]) extends FromMessagePassingQueue[A](queue) {
-
-    private[this] val UNSAFE =
-      UnsafeAccess.getInstance().asInstanceOf[Unsafe]
-
-    def fenceOffer(): Unit = UNSAFE.fullFence()
+  private final class FencedSPMC[A](queue: MessagePassingQueue[A]) extends FromMessagePassingQueue[A](queue) {
+    def fenceOffer(): Unit = VarHandle.fullFence()
     def fencePoll(): Unit = ()
   }
 
-  private final class Java8MPSC[A](queue: MessagePassingQueue[A]) extends FromMessagePassingQueue[A](queue) {
-
-    private[this] val UNSAFE =
-      UnsafeAccess.getInstance().asInstanceOf[Unsafe]
-
+  private final class FencedMPSC[A](queue: MessagePassingQueue[A]) extends FromMessagePassingQueue[A](queue) {
     def fenceOffer(): Unit = ()
-    def fencePoll(): Unit = UNSAFE.fullFence()
+    def fencePoll(): Unit = VarHandle.fullFence()
   }
 
-  private final class Java8SPSC[A](queue: MessagePassingQueue[A]) extends FromMessagePassingQueue[A](queue) {
-
-    private[this] val UNSAFE =
-      UnsafeAccess.getInstance().asInstanceOf[Unsafe]
-
-    def fenceOffer(): Unit = UNSAFE.fullFence()
-    def fencePoll(): Unit = UNSAFE.fullFence()
+  private final class FencedSPSC[A](queue: MessagePassingQueue[A]) extends FromMessagePassingQueue[A](queue) {
+    def fenceOffer(): Unit = VarHandle.fullFence()
+    def fencePoll(): Unit = VarHandle.fullFence()
   }
 }

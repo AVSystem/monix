@@ -17,6 +17,7 @@
 
 package monix.execution.internal
 
+import monix.execution.internal.ThreadCompat.ThreadCompatOps
 import monix.execution.schedulers.CanBlock
 import scala.concurrent.{Await, Awaitable}
 import scala.concurrent.duration.Duration
@@ -176,7 +177,7 @@ private[monix] object Platform {
     * in JavaScript this always returns the same value.
     */
   def currentThreadId(): Long = {
-    Thread.currentThread().getId
+    Thread.currentThread().threadIdCompat
   }
 
   /**

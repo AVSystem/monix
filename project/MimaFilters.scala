@@ -131,6 +131,39 @@ object MimaFilters {
     ),
     exclude[MissingFieldProblem](
       "monix.execution.internal.atomic.UnsafeAccess.HAS_JAVA8_INTRINSICS"
-    )
+    ),
+    // drop JDK 8 support — remove Java8* atomic implementations (internal API)
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.NormalJava8BoxedInt"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.NormalJava8BoxedLong"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.NormalJava8BoxedObject"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.Left64Java8BoxedInt"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.Left64Java8BoxedLong"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.Left64Java8BoxedObject"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.Right64Java8BoxedInt"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.Right64Java8BoxedLong"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.Right64Java8BoxedObject"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.LeftRight128Java8BoxedInt"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.LeftRight128Java8BoxedLong"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.LeftRight128Java8BoxedObject"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.Left128Java8BoxedInt"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.Left128Java8BoxedLong"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.Left128Java8BoxedObject"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.Right128Java8BoxedInt"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.Right128Java8BoxedLong"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.Right128Java8BoxedObject"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.LeftRight256Java8BoxedInt"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.LeftRight256Java8BoxedLong"),
+    exclude[MissingClassProblem]("monix.execution.internal.atomic.LeftRight256Java8BoxedObject"),
+    // UnsafeAccess simplification — removed fields and methods
+    exclude[MissingFieldProblem]("monix.execution.internal.atomic.UnsafeAccess.IS_AVAILABLE"),
+    exclude[MissingFieldProblem]("monix.execution.internal.atomic.UnsafeAccess.IS_ALLOWED"),
+    exclude[DirectMissingMethodProblem]("monix.execution.internal.atomic.UnsafeAccess.getInstance"),
+    // Queue fencing inner class renames (internal API)
+    exclude[MissingClassProblem]("monix.execution.internal.collection.queues.FromCircularQueue$Java8SPMC"),
+    exclude[MissingClassProblem]("monix.execution.internal.collection.queues.FromCircularQueue$Java8MPSC"),
+    exclude[MissingClassProblem]("monix.execution.internal.collection.queues.FromCircularQueue$Java8SPSC"),
+    exclude[MissingClassProblem]("monix.execution.internal.collection.queues.FromMessagePassingQueue$Java8SPMC"),
+    exclude[MissingClassProblem]("monix.execution.internal.collection.queues.FromMessagePassingQueue$Java8MPSC"),
+    exclude[MissingClassProblem]("monix.execution.internal.collection.queues.FromMessagePassingQueue$Java8SPSC")
   )
 }

@@ -31,106 +31,64 @@ import scala.MatchError;
  */
 @InternalApi
 public final class Factory {
-    public static BoxedObject newBoxedObject(Object initial, BoxPaddingStrategy padding, boolean allowUnsafe) {
+    public static BoxedObject newBoxedObject(Object initial, BoxPaddingStrategy padding) {
         switch (padding) {
             case NO_PADDING:
-                if (allowUnsafe) return new NormalJava8BoxedObject(initial);
-                else return new NormalJavaXBoxedObject(initial);
-
+                return new NormalJavaXBoxedObject(initial);
             case LEFT_64:
-                if (allowUnsafe) return new Left64Java8BoxedObject(initial);
-                else return new Left64JavaXBoxedObject(initial);
-
+                return new Left64JavaXBoxedObject(initial);
             case RIGHT_64:
-                if (allowUnsafe) return new Right64Java8BoxedObject(initial);
-                else return new Right64JavaXBoxedObject(initial);
-
+                return new Right64JavaXBoxedObject(initial);
             case LEFT_RIGHT_128:
-                if (allowUnsafe) return new LeftRight128Java8BoxedObject(initial);
-                else return new LeftRight128JavaXBoxedObject(initial);
-
+                return new LeftRight128JavaXBoxedObject(initial);
             case LEFT_128:
-                if (allowUnsafe) return new Left128Java8BoxedObject(initial);
-                else return new Left128JavaXBoxedObject(initial);
-
+                return new Left128JavaXBoxedObject(initial);
             case RIGHT_128:
-                if (allowUnsafe) return new Right128Java8BoxedObject(initial);
-                else return new Right128JavaXBoxedObject(initial);
-
+                return new Right128JavaXBoxedObject(initial);
             case LEFT_RIGHT_256:
-                if (allowUnsafe) return new LeftRight256Java8BoxedObject(initial);
-                else return new LeftRight256JavaXBoxedObject(initial);
-
+                return new LeftRight256JavaXBoxedObject(initial);
             default:
                 throw new MatchError(padding);
         }
     }
 
-    public static BoxedInt newBoxedInt(int initial, BoxPaddingStrategy padding, boolean allowUnsafe) {
+    public static BoxedInt newBoxedInt(int initial, BoxPaddingStrategy padding) {
         switch (padding) {
             case NO_PADDING:
-                if (allowUnsafe) return new NormalJava8BoxedInt(initial);
-                else return new NormalJavaXBoxedInt(initial);
-
+                return new NormalJavaXBoxedInt(initial);
             case LEFT_64:
-                if (allowUnsafe) return new Left64Java8BoxedInt(initial);
-                else return new Left64JavaXBoxedInt(initial);
-
+                return new Left64JavaXBoxedInt(initial);
             case RIGHT_64:
-                if (allowUnsafe) return new Right64Java8BoxedInt(initial);
-                else return new Right64JavaXBoxedInt(initial);
-
+                return new Right64JavaXBoxedInt(initial);
             case LEFT_RIGHT_128:
-                if (allowUnsafe) return new LeftRight128Java8BoxedInt(initial);
-                else return new LeftRight128JavaXBoxedInt(initial);
-
+                return new LeftRight128JavaXBoxedInt(initial);
             case LEFT_128:
-                if (allowUnsafe) return new Left128Java8BoxedInt(initial);
-                else return new Left128JavaXBoxedInt(initial);
-
+                return new Left128JavaXBoxedInt(initial);
             case RIGHT_128:
-                if (allowUnsafe) return new Right128Java8BoxedInt(initial);
-                else return new Right128JavaXBoxedInt(initial);
-
+                return new Right128JavaXBoxedInt(initial);
             case LEFT_RIGHT_256:
-                if (allowUnsafe) return new LeftRight256Java8BoxedInt(initial);
-                else return new LeftRight256JavaXBoxedInt(initial);
-
+                return new LeftRight256JavaXBoxedInt(initial);
             default:
                 throw new MatchError(padding);
         }
     }
 
-    public static BoxedLong newBoxedLong(long initial, BoxPaddingStrategy padding, boolean allowUnsafe) {
+    public static BoxedLong newBoxedLong(long initial, BoxPaddingStrategy padding) {
         switch (padding) {
             case NO_PADDING:
-                if (allowUnsafe) return new NormalJava8BoxedLong(initial);
-                else return new NormalJavaXBoxedLong(initial);
-
+                return new NormalJavaXBoxedLong(initial);
             case LEFT_64:
-                if (allowUnsafe) return new Left64Java8BoxedLong(initial);
-                else return new Left64JavaXBoxedLong(initial);
-
+                return new Left64JavaXBoxedLong(initial);
             case RIGHT_64:
-                if (allowUnsafe) return new Right64Java8BoxedLong(initial);
-                else return new Right64JavaXBoxedLong(initial);
-
+                return new Right64JavaXBoxedLong(initial);
             case LEFT_RIGHT_128:
-                if (allowUnsafe) return new LeftRight128Java8BoxedLong(initial);
-                else return new LeftRight128JavaXBoxedLong(initial);
-
+                return new LeftRight128JavaXBoxedLong(initial);
             case LEFT_128:
-                if (allowUnsafe) return new Left128Java8BoxedLong(initial);
-                else return new Left128JavaXBoxedLong(initial);
-
+                return new Left128JavaXBoxedLong(initial);
             case RIGHT_128:
-                if (allowUnsafe) return new Right128Java8BoxedLong(initial);
-                else return new Right128JavaXBoxedLong(initial);
-
+                return new Right128JavaXBoxedLong(initial);
             case LEFT_RIGHT_256:
-                if (allowUnsafe) return new LeftRight256Java8BoxedLong(initial);
-                else return new LeftRight256JavaXBoxedLong(initial);
-
+                return new LeftRight256JavaXBoxedLong(initial);
             default:
                 throw new MatchError(padding);
         }
