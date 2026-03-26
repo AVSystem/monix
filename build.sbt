@@ -311,7 +311,6 @@ lazy val crossVersionSourcesSettings: Seq[Setting[_]] =
     (sc / unmanagedSourceDirectories) ++= {
       (sc / unmanagedSourceDirectories).value.flatMap { dir =>
         scalaPartV.value match {
-          case Some((2, 12)) => Seq(new File(dir.getPath + "_2.13-"), new File(dir.getPath + "_3.0-"))
           case Some((3, _)) => Seq(new File(dir.getPath + "_3.0"))
           case _ => Seq(new File(dir.getPath + "_2.13+"), new File(dir.getPath + "_3.0-"))
         }
@@ -390,7 +389,8 @@ def mimaSettings(projectName: String) = Seq(
   mimaBinaryIssueFilters ++= MimaFilters.changesFor_3_0_1,
   mimaBinaryIssueFilters ++= MimaFilters.changesFor_3_2_0,
   mimaBinaryIssueFilters ++= MimaFilters.changesFor_3_3_0,
-  mimaBinaryIssueFilters ++= MimaFilters.changesFor_3_4_0
+  mimaBinaryIssueFilters ++= MimaFilters.changesFor_3_4_0,
+  mimaBinaryIssueFilters ++= MimaFilters.changesFor_avs
 )
 
 lazy val doctestTestSettings = Seq(
