@@ -108,8 +108,8 @@ private[monix] object Platform {
     * error suppression, due to a second error being triggered, is not
     * acceptable.
     *
-    * On top of the JVM this function uses `Throwable#addSuppressed`,
-    * available since Java 7. On top of JavaScript the function would return
+    * On top of the JVM this function uses `Throwable#addSuppressed`.
+    * On top of JavaScript the function would return
     * a `CompositeException`.
     */
   def composeErrors(first: Throwable, rest: Throwable*): Throwable =

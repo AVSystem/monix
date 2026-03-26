@@ -681,7 +681,7 @@ object ConcurrentAtomicNumberNumberAnyLeftRight256Suite
 
 //-- NoPadding (Java 7)
 
-object ConcurrentAtomicNumberDoubleNoPaddingJava7Suite
+object ConcurrentAtomicNumberDoubleNoPaddingSafeSuite
   extends ConcurrentAtomicNumberSuite[Double, AtomicDouble](
     Atomic.builderFor(0.0),
     NoPadding,
@@ -691,7 +691,7 @@ object ConcurrentAtomicNumberDoubleNoPaddingJava7Suite
     Double.MinValue,
   )
 
-object ConcurrentAtomicNumberFloatNoPaddingJava7Suite
+object ConcurrentAtomicNumberFloatNoPaddingSafeSuite
   extends ConcurrentAtomicNumberSuite[Float, AtomicFloat](
     Atomic.builderFor(0.0f),
     NoPadding,
@@ -701,7 +701,7 @@ object ConcurrentAtomicNumberFloatNoPaddingJava7Suite
     Float.MinValue,
   )
 
-object ConcurrentAtomicNumberLongNoPaddingJava7Suite
+object ConcurrentAtomicNumberLongNoPaddingSafeSuite
   extends ConcurrentAtomicNumberSuite[Long, AtomicLong](
     Atomic.builderFor(0L),
     NoPadding,
@@ -711,7 +711,7 @@ object ConcurrentAtomicNumberLongNoPaddingJava7Suite
     Long.MinValue,
   )
 
-object ConcurrentAtomicNumberIntNoPaddingJava7Suite
+object ConcurrentAtomicNumberIntNoPaddingSafeSuite
   extends ConcurrentAtomicNumberSuite[Int, AtomicInt](
     Atomic.builderFor(0),
     NoPadding,
@@ -721,7 +721,7 @@ object ConcurrentAtomicNumberIntNoPaddingJava7Suite
     Int.MinValue,
   )
 
-object ConcurrentAtomicNumberShortNoPaddingJava7Suite
+object ConcurrentAtomicNumberShortNoPaddingSafeSuite
   extends ConcurrentAtomicNumberSuite[Short, AtomicShort](
     Atomic.builderFor(0.toShort),
     NoPadding,
@@ -731,7 +731,7 @@ object ConcurrentAtomicNumberShortNoPaddingJava7Suite
     Short.MinValue,
   )
 
-object ConcurrentAtomicNumberByteNoPaddingJava7Suite
+object ConcurrentAtomicNumberByteNoPaddingSafeSuite
   extends ConcurrentAtomicNumberSuite[Byte, AtomicByte](
     Atomic.builderFor(0.toByte),
     NoPadding,
@@ -741,7 +741,7 @@ object ConcurrentAtomicNumberByteNoPaddingJava7Suite
     Byte.MinValue,
   )
 
-object ConcurrentAtomicNumberCharNoPaddingJava7Suite
+object ConcurrentAtomicNumberCharNoPaddingSafeSuite
   extends ConcurrentAtomicNumberSuite[Char, AtomicChar](
     Atomic.builderFor(0.toChar),
     NoPadding,
@@ -751,7 +751,7 @@ object ConcurrentAtomicNumberCharNoPaddingJava7Suite
     Char.MinValue,
   )
 
-object ConcurrentAtomicNumberNumberAnyNoPaddingJava7Suite
+object ConcurrentAtomicNumberNumberAnyNoPaddingSafeSuite
   extends ConcurrentAtomicNumberSuite[BigInt, AtomicNumberAny[BigInt]](
     Atomic.builderFor(BigInt(0)),
     NoPadding,
@@ -763,7 +763,7 @@ object ConcurrentAtomicNumberNumberAnyNoPaddingJava7Suite
 
 //--Left64 (Java 7)
 
-object ConcurrentAtomicNumberDoubleLeft64Java7Suite
+object ConcurrentAtomicNumberDoubleLeft64SafeSuite
   extends ConcurrentAtomicNumberSuite[Double, AtomicDouble](
     Atomic.builderFor(0.0),
     Left64,
@@ -773,7 +773,7 @@ object ConcurrentAtomicNumberDoubleLeft64Java7Suite
     Double.MinValue,
   )
 
-object ConcurrentAtomicNumberFloatLeft64Java7Suite
+object ConcurrentAtomicNumberFloatLeft64SafeSuite
   extends ConcurrentAtomicNumberSuite[Float, AtomicFloat](
     Atomic.builderFor(0.0f),
     Left64,
@@ -783,7 +783,7 @@ object ConcurrentAtomicNumberFloatLeft64Java7Suite
     Float.MinValue,
   )
 
-object ConcurrentAtomicNumberLongLeft64Java7Suite
+object ConcurrentAtomicNumberLongLeft64SafeSuite
   extends ConcurrentAtomicNumberSuite[Long, AtomicLong](
     Atomic.builderFor(0L),
     Left64,
@@ -793,7 +793,7 @@ object ConcurrentAtomicNumberLongLeft64Java7Suite
     Long.MinValue,
   )
 
-object ConcurrentAtomicNumberIntLeft64Java7Suite
+object ConcurrentAtomicNumberIntLeft64SafeSuite
   extends ConcurrentAtomicNumberSuite[Int, AtomicInt](
     Atomic.builderFor(0),
     Left64,
@@ -803,7 +803,7 @@ object ConcurrentAtomicNumberIntLeft64Java7Suite
     Int.MinValue,
   )
 
-object ConcurrentAtomicNumberShortLeft64Java7Suite
+object ConcurrentAtomicNumberShortLeft64SafeSuite
   extends ConcurrentAtomicNumberSuite[Short, AtomicShort](
     Atomic.builderFor(0.toShort),
     Left64,
@@ -813,7 +813,7 @@ object ConcurrentAtomicNumberShortLeft64Java7Suite
     Short.MinValue,
   )
 
-object ConcurrentAtomicNumberByteLeft64Java7Suite
+object ConcurrentAtomicNumberByteLeft64SafeSuite
   extends ConcurrentAtomicNumberSuite[Byte, AtomicByte](
     Atomic.builderFor(0.toByte),
     Left64,
@@ -823,7 +823,7 @@ object ConcurrentAtomicNumberByteLeft64Java7Suite
     Byte.MinValue,
   )
 
-object ConcurrentAtomicNumberCharLeft64Java7Suite
+object ConcurrentAtomicNumberCharLeft64SafeSuite
   extends ConcurrentAtomicNumberSuite[Char, AtomicChar](
     Atomic.builderFor(0.toChar),
     Left64,
@@ -833,7 +833,7 @@ object ConcurrentAtomicNumberCharLeft64Java7Suite
     Char.MinValue,
   )
 
-object ConcurrentAtomicNumberNumberAnyLeft64Java7Suite
+object ConcurrentAtomicNumberNumberAnyLeft64SafeSuite
   extends ConcurrentAtomicNumberSuite[BigInt, AtomicNumberAny[BigInt]](
     Atomic.builderFor(BigInt(0)),
     Left64,
@@ -845,7 +845,7 @@ object ConcurrentAtomicNumberNumberAnyLeft64Java7Suite
 
 //-- Right64 (Java 7)
 
-object ConcurrentAtomicNumberDoubleRight64Java7Suite
+object ConcurrentAtomicNumberDoubleRight64SafeSuite
   extends ConcurrentAtomicNumberSuite[Double, AtomicDouble](
     Atomic.builderFor(0.0),
     Right64,
@@ -855,7 +855,7 @@ object ConcurrentAtomicNumberDoubleRight64Java7Suite
     Double.MinValue,
   )
 
-object ConcurrentAtomicNumberFloatRight64Java7Suite
+object ConcurrentAtomicNumberFloatRight64SafeSuite
   extends ConcurrentAtomicNumberSuite[Float, AtomicFloat](
     Atomic.builderFor(0.0f),
     Right64,
@@ -865,7 +865,7 @@ object ConcurrentAtomicNumberFloatRight64Java7Suite
     Float.MinValue,
   )
 
-object ConcurrentAtomicNumberLongRight64Java7Suite
+object ConcurrentAtomicNumberLongRight64SafeSuite
   extends ConcurrentAtomicNumberSuite[Long, AtomicLong](
     Atomic.builderFor(0L),
     Right64,
@@ -875,7 +875,7 @@ object ConcurrentAtomicNumberLongRight64Java7Suite
     Long.MinValue,
   )
 
-object ConcurrentAtomicNumberIntRight64Java7Suite
+object ConcurrentAtomicNumberIntRight64SafeSuite
   extends ConcurrentAtomicNumberSuite[Int, AtomicInt](
     Atomic.builderFor(0),
     Right64,
@@ -885,7 +885,7 @@ object ConcurrentAtomicNumberIntRight64Java7Suite
     Int.MinValue,
   )
 
-object ConcurrentAtomicNumberShortRight64Java7Suite
+object ConcurrentAtomicNumberShortRight64SafeSuite
   extends ConcurrentAtomicNumberSuite[Short, AtomicShort](
     Atomic.builderFor(0.toShort),
     Right64,
@@ -895,7 +895,7 @@ object ConcurrentAtomicNumberShortRight64Java7Suite
     Short.MinValue,
   )
 
-object ConcurrentAtomicNumberByteRight64Java7Suite
+object ConcurrentAtomicNumberByteRight64SafeSuite
   extends ConcurrentAtomicNumberSuite[Byte, AtomicByte](
     Atomic.builderFor(0.toByte),
     Right64,
@@ -905,7 +905,7 @@ object ConcurrentAtomicNumberByteRight64Java7Suite
     Byte.MinValue,
   )
 
-object ConcurrentAtomicNumberCharRight64Java7Suite
+object ConcurrentAtomicNumberCharRight64SafeSuite
   extends ConcurrentAtomicNumberSuite[Char, AtomicChar](
     Atomic.builderFor(0.toChar),
     Right64,
@@ -915,7 +915,7 @@ object ConcurrentAtomicNumberCharRight64Java7Suite
     Char.MinValue,
   )
 
-object ConcurrentAtomicNumberNumberAnyRight64Java7Suite
+object ConcurrentAtomicNumberNumberAnyRight64SafeSuite
   extends ConcurrentAtomicNumberSuite[BigInt, AtomicNumberAny[BigInt]](
     Atomic.builderFor(BigInt(0)),
     Right64,
@@ -927,7 +927,7 @@ object ConcurrentAtomicNumberNumberAnyRight64Java7Suite
 
 //-- LeftRight128 (Java 7)
 
-object ConcurrentAtomicNumberDoubleLeftRight128Java7Suite
+object ConcurrentAtomicNumberDoubleLeftRight128SafeSuite
   extends ConcurrentAtomicNumberSuite[Double, AtomicDouble](
     Atomic.builderFor(0.0),
     LeftRight128,
@@ -937,7 +937,7 @@ object ConcurrentAtomicNumberDoubleLeftRight128Java7Suite
     Double.MinValue,
   )
 
-object ConcurrentAtomicNumberFloatLeftRight128Java7Suite
+object ConcurrentAtomicNumberFloatLeftRight128SafeSuite
   extends ConcurrentAtomicNumberSuite[Float, AtomicFloat](
     Atomic.builderFor(0.0f),
     LeftRight128,
@@ -947,7 +947,7 @@ object ConcurrentAtomicNumberFloatLeftRight128Java7Suite
     Float.MinValue,
   )
 
-object ConcurrentAtomicNumberLongLeftRight128Java7Suite
+object ConcurrentAtomicNumberLongLeftRight128SafeSuite
   extends ConcurrentAtomicNumberSuite[Long, AtomicLong](
     Atomic.builderFor(0L),
     LeftRight128,
@@ -957,7 +957,7 @@ object ConcurrentAtomicNumberLongLeftRight128Java7Suite
     Long.MinValue,
   )
 
-object ConcurrentAtomicNumberIntLeftRight128Java7Suite
+object ConcurrentAtomicNumberIntLeftRight128SafeSuite
   extends ConcurrentAtomicNumberSuite[Int, AtomicInt](
     Atomic.builderFor(0),
     LeftRight128,
@@ -967,7 +967,7 @@ object ConcurrentAtomicNumberIntLeftRight128Java7Suite
     Int.MinValue,
   )
 
-object ConcurrentAtomicNumberShortLeftRight128Java7Suite
+object ConcurrentAtomicNumberShortLeftRight128SafeSuite
   extends ConcurrentAtomicNumberSuite[Short, AtomicShort](
     Atomic.builderFor(0.toShort),
     LeftRight128,
@@ -977,7 +977,7 @@ object ConcurrentAtomicNumberShortLeftRight128Java7Suite
     Short.MinValue,
   )
 
-object ConcurrentAtomicNumberByteLeftRight128Java7Suite
+object ConcurrentAtomicNumberByteLeftRight128SafeSuite
   extends ConcurrentAtomicNumberSuite[Byte, AtomicByte](
     Atomic.builderFor(0.toByte),
     LeftRight128,
@@ -987,7 +987,7 @@ object ConcurrentAtomicNumberByteLeftRight128Java7Suite
     Byte.MinValue,
   )
 
-object ConcurrentAtomicNumberCharLeftRight128Java7Suite
+object ConcurrentAtomicNumberCharLeftRight128SafeSuite
   extends ConcurrentAtomicNumberSuite[Char, AtomicChar](
     Atomic.builderFor(0.toChar),
     LeftRight128,
@@ -997,7 +997,7 @@ object ConcurrentAtomicNumberCharLeftRight128Java7Suite
     Char.MinValue,
   )
 
-object ConcurrentAtomicNumberNumberAnyLeftRight128Java7Suite
+object ConcurrentAtomicNumberNumberAnyLeftRight128SafeSuite
   extends ConcurrentAtomicNumberSuite[BigInt, AtomicNumberAny[BigInt]](
     Atomic.builderFor(BigInt(0)),
     LeftRight128,
@@ -1009,7 +1009,7 @@ object ConcurrentAtomicNumberNumberAnyLeftRight128Java7Suite
 
 //--Left128 (Java 7)
 
-object ConcurrentAtomicNumberDoubleLeft128Java7Suite
+object ConcurrentAtomicNumberDoubleLeft128SafeSuite
   extends ConcurrentAtomicNumberSuite[Double, AtomicDouble](
     Atomic.builderFor(0.0),
     Left128,
@@ -1019,7 +1019,7 @@ object ConcurrentAtomicNumberDoubleLeft128Java7Suite
     Double.MinValue,
   )
 
-object ConcurrentAtomicNumberFloatLeft128Java7Suite
+object ConcurrentAtomicNumberFloatLeft128SafeSuite
   extends ConcurrentAtomicNumberSuite[Float, AtomicFloat](
     Atomic.builderFor(0.0f),
     Left128,
@@ -1029,7 +1029,7 @@ object ConcurrentAtomicNumberFloatLeft128Java7Suite
     Float.MinValue,
   )
 
-object ConcurrentAtomicNumberLongLeft128Java7Suite
+object ConcurrentAtomicNumberLongLeft128SafeSuite
   extends ConcurrentAtomicNumberSuite[Long, AtomicLong](
     Atomic.builderFor(0L),
     Left128,
@@ -1039,7 +1039,7 @@ object ConcurrentAtomicNumberLongLeft128Java7Suite
     Long.MinValue,
   )
 
-object ConcurrentAtomicNumberIntLeft128Java7Suite
+object ConcurrentAtomicNumberIntLeft128SafeSuite
   extends ConcurrentAtomicNumberSuite[Int, AtomicInt](
     Atomic.builderFor(0),
     Left128,
@@ -1049,7 +1049,7 @@ object ConcurrentAtomicNumberIntLeft128Java7Suite
     Int.MinValue,
   )
 
-object ConcurrentAtomicNumberShortLeft128Java7Suite
+object ConcurrentAtomicNumberShortLeft128SafeSuite
   extends ConcurrentAtomicNumberSuite[Short, AtomicShort](
     Atomic.builderFor(0.toShort),
     Left128,
@@ -1059,7 +1059,7 @@ object ConcurrentAtomicNumberShortLeft128Java7Suite
     Short.MinValue,
   )
 
-object ConcurrentAtomicNumberByteLeft128Java7Suite
+object ConcurrentAtomicNumberByteLeft128SafeSuite
   extends ConcurrentAtomicNumberSuite[Byte, AtomicByte](
     Atomic.builderFor(0.toByte),
     Left128,
@@ -1069,7 +1069,7 @@ object ConcurrentAtomicNumberByteLeft128Java7Suite
     Byte.MinValue,
   )
 
-object ConcurrentAtomicNumberCharLeft128Java7Suite
+object ConcurrentAtomicNumberCharLeft128SafeSuite
   extends ConcurrentAtomicNumberSuite[Char, AtomicChar](
     Atomic.builderFor(0.toChar),
     Left128,
@@ -1079,7 +1079,7 @@ object ConcurrentAtomicNumberCharLeft128Java7Suite
     Char.MinValue,
   )
 
-object ConcurrentAtomicNumberNumberAnyLeft128Java7Suite
+object ConcurrentAtomicNumberNumberAnyLeft128SafeSuite
   extends ConcurrentAtomicNumberSuite[BigInt, AtomicNumberAny[BigInt]](
     Atomic.builderFor(BigInt(0)),
     Left128,
@@ -1091,7 +1091,7 @@ object ConcurrentAtomicNumberNumberAnyLeft128Java7Suite
 
 //-- Right128 (Java 7)
 
-object ConcurrentAtomicNumberDoubleRight128Java7Suite
+object ConcurrentAtomicNumberDoubleRight128SafeSuite
   extends ConcurrentAtomicNumberSuite[Double, AtomicDouble](
     Atomic.builderFor(0.0),
     Right128,
@@ -1101,7 +1101,7 @@ object ConcurrentAtomicNumberDoubleRight128Java7Suite
     Double.MinValue,
   )
 
-object ConcurrentAtomicNumberFloatRight128Java7Suite
+object ConcurrentAtomicNumberFloatRight128SafeSuite
   extends ConcurrentAtomicNumberSuite[Float, AtomicFloat](
     Atomic.builderFor(0.0f),
     Right128,
@@ -1111,7 +1111,7 @@ object ConcurrentAtomicNumberFloatRight128Java7Suite
     Float.MinValue,
   )
 
-object ConcurrentAtomicNumberLongRight128Java7Suite
+object ConcurrentAtomicNumberLongRight128SafeSuite
   extends ConcurrentAtomicNumberSuite[Long, AtomicLong](
     Atomic.builderFor(0L),
     Right128,
@@ -1121,7 +1121,7 @@ object ConcurrentAtomicNumberLongRight128Java7Suite
     Long.MinValue,
   )
 
-object ConcurrentAtomicNumberIntRight128Java7Suite
+object ConcurrentAtomicNumberIntRight128SafeSuite
   extends ConcurrentAtomicNumberSuite[Int, AtomicInt](
     Atomic.builderFor(0),
     Right128,
@@ -1131,7 +1131,7 @@ object ConcurrentAtomicNumberIntRight128Java7Suite
     Int.MinValue,
   )
 
-object ConcurrentAtomicNumberShortRight128Java7Suite
+object ConcurrentAtomicNumberShortRight128SafeSuite
   extends ConcurrentAtomicNumberSuite[Short, AtomicShort](
     Atomic.builderFor(0.toShort),
     Right128,
@@ -1141,7 +1141,7 @@ object ConcurrentAtomicNumberShortRight128Java7Suite
     Short.MinValue,
   )
 
-object ConcurrentAtomicNumberByteRight128Java7Suite
+object ConcurrentAtomicNumberByteRight128SafeSuite
   extends ConcurrentAtomicNumberSuite[Byte, AtomicByte](
     Atomic.builderFor(0.toByte),
     Right128,
@@ -1151,7 +1151,7 @@ object ConcurrentAtomicNumberByteRight128Java7Suite
     Byte.MinValue,
   )
 
-object ConcurrentAtomicNumberCharRight128Java7Suite
+object ConcurrentAtomicNumberCharRight128SafeSuite
   extends ConcurrentAtomicNumberSuite[Char, AtomicChar](
     Atomic.builderFor(0.toChar),
     Right128,
@@ -1161,7 +1161,7 @@ object ConcurrentAtomicNumberCharRight128Java7Suite
     Char.MinValue,
   )
 
-object ConcurrentAtomicNumberNumberAnyRight128Java7Suite
+object ConcurrentAtomicNumberNumberAnyRight128SafeSuite
   extends ConcurrentAtomicNumberSuite[BigInt, AtomicNumberAny[BigInt]](
     Atomic.builderFor(BigInt(0)),
     Right128,
@@ -1173,7 +1173,7 @@ object ConcurrentAtomicNumberNumberAnyRight128Java7Suite
 
 //-- LeftRight256 (Java 7)
 
-object ConcurrentAtomicNumberDoubleLeftRight256Java7Suite
+object ConcurrentAtomicNumberDoubleLeftRight256SafeSuite
   extends ConcurrentAtomicNumberSuite[Double, AtomicDouble](
     Atomic.builderFor(0.0),
     LeftRight256,
@@ -1183,7 +1183,7 @@ object ConcurrentAtomicNumberDoubleLeftRight256Java7Suite
     Double.MinValue,
   )
 
-object ConcurrentAtomicNumberFloatLeftRight256Java7Suite
+object ConcurrentAtomicNumberFloatLeftRight256SafeSuite
   extends ConcurrentAtomicNumberSuite[Float, AtomicFloat](
     Atomic.builderFor(0.0f),
     LeftRight256,
@@ -1193,7 +1193,7 @@ object ConcurrentAtomicNumberFloatLeftRight256Java7Suite
     Float.MinValue,
   )
 
-object ConcurrentAtomicNumberLongLeftRight256Java7Suite
+object ConcurrentAtomicNumberLongLeftRight256SafeSuite
   extends ConcurrentAtomicNumberSuite[Long, AtomicLong](
     Atomic.builderFor(0L),
     LeftRight256,
@@ -1203,7 +1203,7 @@ object ConcurrentAtomicNumberLongLeftRight256Java7Suite
     Long.MinValue,
   )
 
-object ConcurrentAtomicNumberIntLeftRight256Java7Suite
+object ConcurrentAtomicNumberIntLeftRight256SafeSuite
   extends ConcurrentAtomicNumberSuite[Int, AtomicInt](
     Atomic.builderFor(0),
     LeftRight256,
@@ -1213,7 +1213,7 @@ object ConcurrentAtomicNumberIntLeftRight256Java7Suite
     Int.MinValue,
   )
 
-object ConcurrentAtomicNumberShortLeftRight256Java7Suite
+object ConcurrentAtomicNumberShortLeftRight256SafeSuite
   extends ConcurrentAtomicNumberSuite[Short, AtomicShort](
     Atomic.builderFor(0.toShort),
     LeftRight256,
@@ -1223,7 +1223,7 @@ object ConcurrentAtomicNumberShortLeftRight256Java7Suite
     Short.MinValue,
   )
 
-object ConcurrentAtomicNumberByteLeftRight256Java7Suite
+object ConcurrentAtomicNumberByteLeftRight256SafeSuite
   extends ConcurrentAtomicNumberSuite[Byte, AtomicByte](
     Atomic.builderFor(0.toByte),
     LeftRight256,
@@ -1233,7 +1233,7 @@ object ConcurrentAtomicNumberByteLeftRight256Java7Suite
     Byte.MinValue,
   )
 
-object ConcurrentAtomicNumberCharLeftRight256Java7Suite
+object ConcurrentAtomicNumberCharLeftRight256SafeSuite
   extends ConcurrentAtomicNumberSuite[Char, AtomicChar](
     Atomic.builderFor(0.toChar),
     LeftRight256,
@@ -1243,7 +1243,7 @@ object ConcurrentAtomicNumberCharLeftRight256Java7Suite
     Char.MinValue,
   )
 
-object ConcurrentAtomicNumberNumberAnyLeftRight256Java7Suite
+object ConcurrentAtomicNumberNumberAnyLeftRight256SafeSuite
   extends ConcurrentAtomicNumberSuite[BigInt, AtomicNumberAny[BigInt]](
     Atomic.builderFor(BigInt(0)),
     LeftRight256,
