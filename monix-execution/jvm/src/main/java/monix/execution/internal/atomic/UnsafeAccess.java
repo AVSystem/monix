@@ -21,7 +21,6 @@ import monix.execution.internal.InternalApi;
 import scala.util.control.NonFatal;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 
 /**
  * INTERNAL API — Provides access to `sun.misc.Unsafe`.
@@ -50,12 +49,6 @@ import java.lang.reflect.Method;
    * also going to be set to `false`.
    */
   public static final boolean IS_ALLOWED;
-
-  /**
-   * True in case the underlying platform supports Java 8's
-   * `Unsafe` features for platform intrinsics.
-   */
-  public static final boolean HAS_JAVA8_INTRINSICS;
 
   /**
    * Some platforms do not expose a `theUnsafe` private reference
@@ -89,7 +82,6 @@ import java.lang.reflect.Method;
 
   static {
     Object instance = null;
-    boolean isJava8 = false;
     boolean isAllowed = false;
     boolean isOpenJDKCompatible = false;
 
@@ -117,52 +109,10 @@ import java.lang.reflect.Method;
             instance = c.newInstance();
           }
         }
-
-        boolean supportsGetAndSet = false;
-        try {
-          cls.getMethod("getAndSetObject", Object.class, Long.TYPE, Object.class);
-          supportsGetAndSet = true;
-        }
-        catch (Exception e) {
-          if (!NonFatal.apply(e)) throw e;
-        }
-
-        boolean supportsGetAndAddInt = false;
-        try {
-          cls.getMethod("getAndAddInt", Object.class, Long.TYPE, Integer.TYPE);
-          supportsGetAndAddInt = true;
-        }
-        catch (Exception e) {
-          if (!NonFatal.apply(e)) throw e;
-        }
-
-        boolean supportsGetAndAddLong = false;
-        try {
-          cls.getMethod("getAndAddLong", Object.class, Long.TYPE, Long.TYPE);
-          supportsGetAndAddLong = true;
-        }
-        catch (Exception e) {
-          if (!NonFatal.apply(e)) throw e;
-        }
-
-        boolean supportsMemoryFences = false;
-        try {
-          Method m = cls.getDeclaredMethod("fullFence");
-          supportsMemoryFences = m != null;
-        }
-        catch (Exception e) {
-          if (!NonFatal.apply(e)) throw e;
-        }
-
-        isJava8 = supportsGetAndSet &&
-          supportsGetAndAddInt &&
-          supportsGetAndAddLong &&
-          supportsMemoryFences;
       }
     }
     catch (Exception ex) {
       instance = null;
-      isJava8 = false;
       if (!NonFatal.apply(ex))
         throw new RuntimeException(ex);
     }
@@ -170,7 +120,6 @@ import java.lang.reflect.Method;
       UNSAFE = instance;
       IS_AVAILABLE = instance != null;
       IS_ALLOWED = isAllowed;
-      HAS_JAVA8_INTRINSICS = isJava8;
       IS_OPENJDK_COMPATIBLE = isOpenJDKCompatible;
     }
   }

@@ -128,6 +128,9 @@ object MimaFilters {
     ),
     exclude[ReversedMissingMethodProblem](
       "monix.execution.atomic.AtomicBuilder.buildInstance"
+    ),
+    exclude[MissingFieldProblem](
+      "monix.execution.internal.atomic.UnsafeAccess.HAS_JAVA8_INTRINSICS"
     )
   )
 }

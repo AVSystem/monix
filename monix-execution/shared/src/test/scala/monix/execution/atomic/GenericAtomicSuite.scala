@@ -930,7 +930,7 @@ object GenericAtomicLongLeftRight256
 
 // -- NoPadding (Java 7)
 
-object GenericAtomicAnyNoPaddingJava7Suite
+object GenericAtomicAnyNoPaddingSafeSuite
   extends GenericAtomicSuite[String, AtomicAny[String]](
     Atomic.builderFor(""),
     NoPadding,
@@ -939,7 +939,7 @@ object GenericAtomicAnyNoPaddingJava7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicBooleanNoPaddingJava7Suite
+object GenericAtomicBooleanNoPaddingSafeSuite
   extends GenericAtomicSuite[Boolean, AtomicBoolean](
     Atomic.builderFor(true),
     NoPadding,
@@ -948,7 +948,7 @@ object GenericAtomicBooleanNoPaddingJava7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicNumberAnyNoPaddingJava7Suite
+object GenericAtomicNumberAnyNoPaddingSafeSuite
   extends GenericAtomicSuite[BoxedLong, AtomicNumberAny[BoxedLong]](
     AtomicBuilder.AtomicNumberBuilder[BoxedLong],
     NoPadding,
@@ -957,7 +957,7 @@ object GenericAtomicNumberAnyNoPaddingJava7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicFloatNoPaddingJava7Suite
+object GenericAtomicFloatNoPaddingSafeSuite
   extends GenericAtomicSuite[Float, AtomicFloat](
     Atomic.builderFor(0.0f),
     NoPadding,
@@ -966,7 +966,7 @@ object GenericAtomicFloatNoPaddingJava7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicDoubleNoPaddingJava7Suite
+object GenericAtomicDoubleNoPaddingSafeSuite
   extends GenericAtomicSuite[Double, AtomicDouble](
     Atomic.builderFor(0.toDouble),
     NoPadding,
@@ -975,7 +975,7 @@ object GenericAtomicDoubleNoPaddingJava7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicShortNoPaddingJava7Suite
+object GenericAtomicShortNoPaddingSafeSuite
   extends GenericAtomicSuite[Short, AtomicShort](
     Atomic.builderFor(0.toShort),
     NoPadding,
@@ -984,7 +984,7 @@ object GenericAtomicShortNoPaddingJava7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicByteNoPaddingJava7Suite
+object GenericAtomicByteNoPaddingSafeSuite
   extends GenericAtomicSuite[Byte, AtomicByte](
     Atomic.builderFor(0.toByte),
     NoPadding,
@@ -993,7 +993,7 @@ object GenericAtomicByteNoPaddingJava7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicCharNoPaddingJava7Suite
+object GenericAtomicCharNoPaddingSafeSuite
   extends GenericAtomicSuite[Char, AtomicChar](
     Atomic.builderFor(0.toChar),
     NoPadding,
@@ -1002,7 +1002,7 @@ object GenericAtomicCharNoPaddingJava7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicIntNoPaddingJava7Suite
+object GenericAtomicIntNoPaddingSafeSuite
   extends GenericAtomicSuite[Int, AtomicInt](
     Atomic.builderFor(0),
     NoPadding,
@@ -1011,7 +1011,7 @@ object GenericAtomicIntNoPaddingJava7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicLongNoPaddingJava7Suite
+object GenericAtomicLongNoPaddingSafeSuite
   extends GenericAtomicSuite[Long, AtomicLong](
     Atomic.builderFor(0.toLong),
     NoPadding,
@@ -1022,7 +1022,7 @@ object GenericAtomicLongNoPaddingJava7Suite
 
 // -- Left64 (Java 7)
 
-object GenericAtomicAnyLeft64Java7Suite
+object GenericAtomicAnyLeft64SafeSuite
   extends GenericAtomicSuite[String, AtomicAny[String]](
     Atomic.builderFor(""),
     Left64,
@@ -1031,7 +1031,7 @@ object GenericAtomicAnyLeft64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicBooleanLeft64Java7Suite
+object GenericAtomicBooleanLeft64SafeSuite
   extends GenericAtomicSuite[Boolean, AtomicBoolean](
     Atomic.builderFor(true),
     Left64,
@@ -1040,7 +1040,7 @@ object GenericAtomicBooleanLeft64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicNumberAnyLeft64Java7Suite
+object GenericAtomicNumberAnyLeft64SafeSuite
   extends GenericAtomicSuite[BoxedLong, AtomicNumberAny[BoxedLong]](
     AtomicBuilder.AtomicNumberBuilder[BoxedLong],
     Left64,
@@ -1049,7 +1049,7 @@ object GenericAtomicNumberAnyLeft64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicFloatLeft64Java7Suite
+object GenericAtomicFloatLeft64SafeSuite
   extends GenericAtomicSuite[Float, AtomicFloat](
     Atomic.builderFor(0.0f),
     Left64,
@@ -1058,7 +1058,7 @@ object GenericAtomicFloatLeft64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicDoubleLeft64Java7Suite
+object GenericAtomicDoubleLeft64SafeSuite
   extends GenericAtomicSuite[Double, AtomicDouble](
     Atomic.builderFor(0.toDouble),
     Left64,
@@ -1067,7 +1067,7 @@ object GenericAtomicDoubleLeft64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicShortLeft64Java7Suite
+object GenericAtomicShortLeft64SafeSuite
   extends GenericAtomicSuite[Short, AtomicShort](
     Atomic.builderFor(0.toShort),
     Left64,
@@ -1076,7 +1076,7 @@ object GenericAtomicShortLeft64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicByteLeft64Java7Suite
+object GenericAtomicByteLeft64SafeSuite
   extends GenericAtomicSuite[Byte, AtomicByte](
     Atomic.builderFor(0.toByte),
     Left64,
@@ -1085,7 +1085,7 @@ object GenericAtomicByteLeft64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicCharLeft64Java7Suite
+object GenericAtomicCharLeft64SafeSuite
   extends GenericAtomicSuite[Char, AtomicChar](
     Atomic.builderFor(0.toChar),
     Left64,
@@ -1094,7 +1094,7 @@ object GenericAtomicCharLeft64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicIntLeft64Java7Suite
+object GenericAtomicIntLeft64SafeSuite
   extends GenericAtomicSuite[Int, AtomicInt](
     Atomic.builderFor(0),
     Left64,
@@ -1103,7 +1103,7 @@ object GenericAtomicIntLeft64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicLongLeft64Java7Suite
+object GenericAtomicLongLeft64SafeSuite
   extends GenericAtomicSuite[Long, AtomicLong](
     Atomic.builderFor(0.toLong),
     Left64,
@@ -1114,7 +1114,7 @@ object GenericAtomicLongLeft64Java7Suite
 
 // -- Right64 (Java 7)
 
-object GenericAtomicAnyRight64Java7Suite
+object GenericAtomicAnyRight64SafeSuite
   extends GenericAtomicSuite[String, AtomicAny[String]](
     Atomic.builderFor(""),
     Right64,
@@ -1123,7 +1123,7 @@ object GenericAtomicAnyRight64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicBooleanRight64Java7Suite
+object GenericAtomicBooleanRight64SafeSuite
   extends GenericAtomicSuite[Boolean, AtomicBoolean](
     Atomic.builderFor(true),
     Right64,
@@ -1132,7 +1132,7 @@ object GenericAtomicBooleanRight64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicNumberAnyRight64Java7Suite
+object GenericAtomicNumberAnyRight64SafeSuite
   extends GenericAtomicSuite[BoxedLong, AtomicNumberAny[BoxedLong]](
     AtomicBuilder.AtomicNumberBuilder[BoxedLong],
     Right64,
@@ -1141,7 +1141,7 @@ object GenericAtomicNumberAnyRight64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicFloatRight64Java7Suite
+object GenericAtomicFloatRight64SafeSuite
   extends GenericAtomicSuite[Float, AtomicFloat](
     Atomic.builderFor(0.0f),
     Right64,
@@ -1150,7 +1150,7 @@ object GenericAtomicFloatRight64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicDoubleRight64Java7Suite
+object GenericAtomicDoubleRight64SafeSuite
   extends GenericAtomicSuite[Double, AtomicDouble](
     Atomic.builderFor(0.toDouble),
     Right64,
@@ -1159,7 +1159,7 @@ object GenericAtomicDoubleRight64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicShortRight64Java7Suite
+object GenericAtomicShortRight64SafeSuite
   extends GenericAtomicSuite[Short, AtomicShort](
     Atomic.builderFor(0.toShort),
     Right64,
@@ -1168,7 +1168,7 @@ object GenericAtomicShortRight64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicByteRight64Java7Suite
+object GenericAtomicByteRight64SafeSuite
   extends GenericAtomicSuite[Byte, AtomicByte](
     Atomic.builderFor(0.toByte),
     Right64,
@@ -1177,7 +1177,7 @@ object GenericAtomicByteRight64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicCharRight64Java7Suite
+object GenericAtomicCharRight64SafeSuite
   extends GenericAtomicSuite[Char, AtomicChar](
     Atomic.builderFor(0.toChar),
     Right64,
@@ -1186,7 +1186,7 @@ object GenericAtomicCharRight64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicIntRight64Java7Suite
+object GenericAtomicIntRight64SafeSuite
   extends GenericAtomicSuite[Int, AtomicInt](
     Atomic.builderFor(0),
     Right64,
@@ -1195,7 +1195,7 @@ object GenericAtomicIntRight64Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicLongRight64Java7Suite
+object GenericAtomicLongRight64SafeSuite
   extends GenericAtomicSuite[Long, AtomicLong](
     Atomic.builderFor(0.toLong),
     Right64,
@@ -1206,7 +1206,7 @@ object GenericAtomicLongRight64Java7Suite
 
 // -- LeftRight128 (Java 7)
 
-object GenericAtomicAnyLeftRight128Java7Suite
+object GenericAtomicAnyLeftRight128SafeSuite
   extends GenericAtomicSuite[String, AtomicAny[String]](
     Atomic.builderFor(""),
     LeftRight128,
@@ -1215,7 +1215,7 @@ object GenericAtomicAnyLeftRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicBooleanLeftRight128Java7Suite
+object GenericAtomicBooleanLeftRight128SafeSuite
   extends GenericAtomicSuite[Boolean, AtomicBoolean](
     Atomic.builderFor(true),
     LeftRight128,
@@ -1224,7 +1224,7 @@ object GenericAtomicBooleanLeftRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicNumberAnyLeftRight128Java7Suite
+object GenericAtomicNumberAnyLeftRight128SafeSuite
   extends GenericAtomicSuite[BoxedLong, AtomicNumberAny[BoxedLong]](
     AtomicBuilder.AtomicNumberBuilder[BoxedLong],
     LeftRight128,
@@ -1233,7 +1233,7 @@ object GenericAtomicNumberAnyLeftRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicFloatLeftRight128Java7Suite
+object GenericAtomicFloatLeftRight128SafeSuite
   extends GenericAtomicSuite[Float, AtomicFloat](
     Atomic.builderFor(0.0f),
     LeftRight128,
@@ -1242,7 +1242,7 @@ object GenericAtomicFloatLeftRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicDoubleLeftRight128Java7Suite
+object GenericAtomicDoubleLeftRight128SafeSuite
   extends GenericAtomicSuite[Double, AtomicDouble](
     Atomic.builderFor(0.toDouble),
     LeftRight128,
@@ -1251,7 +1251,7 @@ object GenericAtomicDoubleLeftRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicShortLeftRight128Java7Suite
+object GenericAtomicShortLeftRight128SafeSuite
   extends GenericAtomicSuite[Short, AtomicShort](
     Atomic.builderFor(0.toShort),
     LeftRight128,
@@ -1260,7 +1260,7 @@ object GenericAtomicShortLeftRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicByteLeftRight128Java7Suite
+object GenericAtomicByteLeftRight128SafeSuite
   extends GenericAtomicSuite[Byte, AtomicByte](
     Atomic.builderFor(0.toByte),
     LeftRight128,
@@ -1269,7 +1269,7 @@ object GenericAtomicByteLeftRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicCharLeftRight128Java7Suite
+object GenericAtomicCharLeftRight128SafeSuite
   extends GenericAtomicSuite[Char, AtomicChar](
     Atomic.builderFor(0.toChar),
     LeftRight128,
@@ -1278,7 +1278,7 @@ object GenericAtomicCharLeftRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicIntLeftRight128Java7Suite
+object GenericAtomicIntLeftRight128SafeSuite
   extends GenericAtomicSuite[Int, AtomicInt](
     Atomic.builderFor(0),
     LeftRight128,
@@ -1287,7 +1287,7 @@ object GenericAtomicIntLeftRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicLongLeftRight128Java7Suite
+object GenericAtomicLongLeftRight128SafeSuite
   extends GenericAtomicSuite[Long, AtomicLong](
     Atomic.builderFor(0.toLong),
     LeftRight128,
@@ -1298,7 +1298,7 @@ object GenericAtomicLongLeftRight128Java7Suite
 
 // -- Left128 (Java 7)
 
-object GenericAtomicAnyLeft128Java7Suite
+object GenericAtomicAnyLeft128SafeSuite
   extends GenericAtomicSuite[String, AtomicAny[String]](
     Atomic.builderFor(""),
     Left128,
@@ -1307,7 +1307,7 @@ object GenericAtomicAnyLeft128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicBooleanLeft128Java7Suite
+object GenericAtomicBooleanLeft128SafeSuite
   extends GenericAtomicSuite[Boolean, AtomicBoolean](
     Atomic.builderFor(true),
     Left128,
@@ -1316,7 +1316,7 @@ object GenericAtomicBooleanLeft128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicNumberAnyLeft128Java7Suite
+object GenericAtomicNumberAnyLeft128SafeSuite
   extends GenericAtomicSuite[BoxedLong, AtomicNumberAny[BoxedLong]](
     AtomicBuilder.AtomicNumberBuilder[BoxedLong],
     Left128,
@@ -1325,7 +1325,7 @@ object GenericAtomicNumberAnyLeft128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicFloatLeft128Java7Suite
+object GenericAtomicFloatLeft128SafeSuite
   extends GenericAtomicSuite[Float, AtomicFloat](
     Atomic.builderFor(0.0f),
     Left128,
@@ -1334,7 +1334,7 @@ object GenericAtomicFloatLeft128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicDoubleLeft128Java7Suite
+object GenericAtomicDoubleLeft128SafeSuite
   extends GenericAtomicSuite[Double, AtomicDouble](
     Atomic.builderFor(0.toDouble),
     Left128,
@@ -1343,7 +1343,7 @@ object GenericAtomicDoubleLeft128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicShortLeft128Java7Suite
+object GenericAtomicShortLeft128SafeSuite
   extends GenericAtomicSuite[Short, AtomicShort](
     Atomic.builderFor(0.toShort),
     Left128,
@@ -1352,7 +1352,7 @@ object GenericAtomicShortLeft128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicByteLeft128Java7Suite
+object GenericAtomicByteLeft128SafeSuite
   extends GenericAtomicSuite[Byte, AtomicByte](
     Atomic.builderFor(0.toByte),
     Left128,
@@ -1361,7 +1361,7 @@ object GenericAtomicByteLeft128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicCharLeft128Java7Suite
+object GenericAtomicCharLeft128SafeSuite
   extends GenericAtomicSuite[Char, AtomicChar](
     Atomic.builderFor(0.toChar),
     Left128,
@@ -1370,7 +1370,7 @@ object GenericAtomicCharLeft128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicIntLeft128Java7Suite
+object GenericAtomicIntLeft128SafeSuite
   extends GenericAtomicSuite[Int, AtomicInt](
     Atomic.builderFor(0),
     Left128,
@@ -1379,7 +1379,7 @@ object GenericAtomicIntLeft128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicLongLeft128Java7Suite
+object GenericAtomicLongLeft128SafeSuite
   extends GenericAtomicSuite[Long, AtomicLong](
     Atomic.builderFor(0.toLong),
     Left128,
@@ -1390,7 +1390,7 @@ object GenericAtomicLongLeft128Java7Suite
 
 // -- Right128 (Java 7)
 
-object GenericAtomicAnyRight128Java7Suite
+object GenericAtomicAnyRight128SafeSuite
   extends GenericAtomicSuite[String, AtomicAny[String]](
     Atomic.builderFor(""),
     Right128,
@@ -1399,7 +1399,7 @@ object GenericAtomicAnyRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicBooleanRight128Java7Suite
+object GenericAtomicBooleanRight128SafeSuite
   extends GenericAtomicSuite[Boolean, AtomicBoolean](
     Atomic.builderFor(true),
     Right128,
@@ -1408,7 +1408,7 @@ object GenericAtomicBooleanRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicNumberAnyRight128Java7Suite
+object GenericAtomicNumberAnyRight128SafeSuite
   extends GenericAtomicSuite[BoxedLong, AtomicNumberAny[BoxedLong]](
     AtomicBuilder.AtomicNumberBuilder[BoxedLong],
     Right128,
@@ -1417,7 +1417,7 @@ object GenericAtomicNumberAnyRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicFloatRight128Java7Suite
+object GenericAtomicFloatRight128SafeSuite
   extends GenericAtomicSuite[Float, AtomicFloat](
     Atomic.builderFor(0.0f),
     Right128,
@@ -1426,7 +1426,7 @@ object GenericAtomicFloatRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicDoubleRight128Java7Suite
+object GenericAtomicDoubleRight128SafeSuite
   extends GenericAtomicSuite[Double, AtomicDouble](
     Atomic.builderFor(0.toDouble),
     Right128,
@@ -1435,7 +1435,7 @@ object GenericAtomicDoubleRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicShortRight128Java7Suite
+object GenericAtomicShortRight128SafeSuite
   extends GenericAtomicSuite[Short, AtomicShort](
     Atomic.builderFor(0.toShort),
     Right128,
@@ -1444,7 +1444,7 @@ object GenericAtomicShortRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicByteRight128Java7Suite
+object GenericAtomicByteRight128SafeSuite
   extends GenericAtomicSuite[Byte, AtomicByte](
     Atomic.builderFor(0.toByte),
     Right128,
@@ -1453,7 +1453,7 @@ object GenericAtomicByteRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicCharRight128Java7Suite
+object GenericAtomicCharRight128SafeSuite
   extends GenericAtomicSuite[Char, AtomicChar](
     Atomic.builderFor(0.toChar),
     Right128,
@@ -1462,7 +1462,7 @@ object GenericAtomicCharRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicIntRight128Java7Suite
+object GenericAtomicIntRight128SafeSuite
   extends GenericAtomicSuite[Int, AtomicInt](
     Atomic.builderFor(0),
     Right128,
@@ -1471,7 +1471,7 @@ object GenericAtomicIntRight128Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicLongRight128Java7Suite
+object GenericAtomicLongRight128SafeSuite
   extends GenericAtomicSuite[Long, AtomicLong](
     Atomic.builderFor(0.toLong),
     Right128,
@@ -1482,7 +1482,7 @@ object GenericAtomicLongRight128Java7Suite
 
 // -- LeftRight256 (Java 7)
 
-object GenericAtomicAnyLeftRight256Java7Suite
+object GenericAtomicAnyLeftRight256SafeSuite
   extends GenericAtomicSuite[String, AtomicAny[String]](
     Atomic.builderFor(""),
     LeftRight256,
@@ -1491,7 +1491,7 @@ object GenericAtomicAnyLeftRight256Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicBooleanLeftRight256Java7Suite
+object GenericAtomicBooleanLeftRight256SafeSuite
   extends GenericAtomicSuite[Boolean, AtomicBoolean](
     Atomic.builderFor(true),
     LeftRight256,
@@ -1500,7 +1500,7 @@ object GenericAtomicBooleanLeftRight256Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicNumberAnyLeftRight256Java7Suite
+object GenericAtomicNumberAnyLeftRight256SafeSuite
   extends GenericAtomicSuite[BoxedLong, AtomicNumberAny[BoxedLong]](
     AtomicBuilder.AtomicNumberBuilder[BoxedLong],
     LeftRight256,
@@ -1509,7 +1509,7 @@ object GenericAtomicNumberAnyLeftRight256Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicFloatLeftRight256Java7Suite
+object GenericAtomicFloatLeftRight256SafeSuite
   extends GenericAtomicSuite[Float, AtomicFloat](
     Atomic.builderFor(0.0f),
     LeftRight256,
@@ -1518,7 +1518,7 @@ object GenericAtomicFloatLeftRight256Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicDoubleLeftRight256Java7Suite
+object GenericAtomicDoubleLeftRight256SafeSuite
   extends GenericAtomicSuite[Double, AtomicDouble](
     Atomic.builderFor(0.toDouble),
     LeftRight256,
@@ -1527,7 +1527,7 @@ object GenericAtomicDoubleLeftRight256Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicShortLeftRight256Java7Suite
+object GenericAtomicShortLeftRight256SafeSuite
   extends GenericAtomicSuite[Short, AtomicShort](
     Atomic.builderFor(0.toShort),
     LeftRight256,
@@ -1536,7 +1536,7 @@ object GenericAtomicShortLeftRight256Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicByteLeftRight256Java7Suite
+object GenericAtomicByteLeftRight256SafeSuite
   extends GenericAtomicSuite[Byte, AtomicByte](
     Atomic.builderFor(0.toByte),
     LeftRight256,
@@ -1545,7 +1545,7 @@ object GenericAtomicByteLeftRight256Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicCharLeftRight256Java7Suite
+object GenericAtomicCharLeftRight256SafeSuite
   extends GenericAtomicSuite[Char, AtomicChar](
     Atomic.builderFor(0.toChar),
     LeftRight256,
@@ -1554,7 +1554,7 @@ object GenericAtomicCharLeftRight256Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicIntLeftRight256Java7Suite
+object GenericAtomicIntLeftRight256SafeSuite
   extends GenericAtomicSuite[Int, AtomicInt](
     Atomic.builderFor(0),
     LeftRight256,
@@ -1563,7 +1563,7 @@ object GenericAtomicIntLeftRight256Java7Suite
     allowUnsafe = true
   )
 
-object GenericAtomicLongLeftRight256Java7Suite
+object GenericAtomicLongLeftRight256SafeSuite
   extends GenericAtomicSuite[Long, AtomicLong](
     Atomic.builderFor(0.toLong),
     LeftRight256,
