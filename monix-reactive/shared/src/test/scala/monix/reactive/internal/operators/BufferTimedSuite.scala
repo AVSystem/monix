@@ -17,7 +17,7 @@
 
 package monix.reactive.internal.operators
 
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Continue
 import monix.execution.internal.Platform
 import monix.reactive.observers.Subscriber

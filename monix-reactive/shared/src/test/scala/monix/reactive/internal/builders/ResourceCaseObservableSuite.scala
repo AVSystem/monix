@@ -23,6 +23,7 @@ import cats.laws._
 import cats.laws.discipline._
 import monix.eval.Task
 import monix.execution.Ack.Continue
+import monix.execution.Scheduler
 import monix.execution.exceptions.DummyException
 import monix.reactive.observers.Subscriber
 import monix.reactive.{BaseTestSuite, Consumer, Observable}

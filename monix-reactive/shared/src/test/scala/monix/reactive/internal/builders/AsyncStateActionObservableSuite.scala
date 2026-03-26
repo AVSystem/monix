@@ -23,10 +23,12 @@ import monix.eval.Task
 import monix.execution.Ack.Continue
 import monix.execution.internal.Platform
 import monix.execution.ExecutionModel.AlwaysAsyncExecution
+import monix.execution.Scheduler
 import monix.execution.exceptions.DummyException
 import monix.execution.schedulers.TestScheduler
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
+
 import scala.util.Failure
 import scala.concurrent.duration.MILLISECONDS
 

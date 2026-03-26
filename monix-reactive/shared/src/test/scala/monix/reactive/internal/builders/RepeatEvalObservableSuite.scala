@@ -19,6 +19,7 @@ package monix.reactive.internal.builders
 
 import minitest.TestSuite
 import monix.execution.Ack.Continue
+import monix.execution.Scheduler
 import monix.execution.internal.Platform
 import monix.execution.schedulers.TestScheduler
 import monix.reactive.Observable

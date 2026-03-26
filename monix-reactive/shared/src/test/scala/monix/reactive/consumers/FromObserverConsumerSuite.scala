@@ -19,8 +19,7 @@ package monix.reactive.consumers
 
 import cats.laws._
 import cats.laws.discipline._
-
-import monix.execution.Callback
+import monix.execution.{Callback, Scheduler}
 import monix.eval.Task
 import monix.execution.Ack.Continue
 import monix.execution.exceptions.DummyException

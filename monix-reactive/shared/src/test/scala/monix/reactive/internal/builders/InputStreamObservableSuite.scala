@@ -18,11 +18,10 @@
 package monix.reactive.internal.builders
 
 import java.io.{ByteArrayInputStream, InputStream}
-
 import minitest.SimpleTestSuite
 import minitest.laws.Checkers
 import monix.eval.Task
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Continue
 import monix.execution.ExecutionModel.{AlwaysAsyncExecution, BatchedExecution, SynchronousExecution}
 import monix.execution.exceptions.{APIContractViolationException, DummyException}

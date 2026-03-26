@@ -17,11 +17,12 @@
 
 package monix.reactive.internal.builders
 
-import cats.implicits._
 import cats.effect.ExitCase
 import cats.effect.concurrent.Deferred
+import cats.implicits._
 import monix.eval.Task
 import monix.execution.Ack.Continue
+import monix.execution.Scheduler
 import monix.reactive.observers.Subscriber
 import monix.reactive.{BaseTestSuite, Observable}
 

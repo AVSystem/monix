@@ -17,12 +17,13 @@
 
 package monix.reactive.internal.operators
 
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.{Continue, Stop}
 import monix.execution.FutureUtils.extensions._
 import monix.execution.exceptions.DummyException
 import monix.reactive.observers.Subscriber
 import monix.reactive.{BaseTestSuite, Observable, Observer}
+
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
 import scala.util.Random

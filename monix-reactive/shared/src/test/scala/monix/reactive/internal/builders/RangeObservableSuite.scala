@@ -20,10 +20,12 @@ package monix.reactive.internal.builders
 import minitest.TestSuite
 import monix.execution.Ack.{Continue, Stop}
 import monix.execution.FutureUtils.extensions._
+import monix.execution.Scheduler
 import monix.execution.internal.Platform
 import monix.execution.schedulers.TestScheduler
 import monix.reactive.observers.Subscriber
 import monix.reactive.{Observable, Observer}
+
 import scala.concurrent.Future
 import scala.concurrent.duration._
 

@@ -18,9 +18,11 @@
 package monix.reactive.observers
 
 import monix.execution.Ack.{Continue, Stop}
+import monix.execution.Scheduler
 import monix.execution.cancelables.BooleanCancelable
 import monix.execution.compat.internal.toIterator
 import monix.reactive.BaseTestSuite
+
 import scala.concurrent.Future
 
 object SubscriberFeedSuite extends BaseTestSuite {
