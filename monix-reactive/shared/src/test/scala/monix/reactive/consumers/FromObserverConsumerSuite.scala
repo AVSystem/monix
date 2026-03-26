@@ -34,7 +34,7 @@ object FromObserverConsumerSuite extends BaseTestSuite {
     check1 { (source: Observable[Int]) =>
       val lh = source.sumL
       val rh = Task.create[Int] { (s, cb) =>
-        implicit val scheduler = s
+        implicit val scheduler: Scheduler = s
         var sum = 0
 
         val consumer = Consumer.fromObserver(_ =>

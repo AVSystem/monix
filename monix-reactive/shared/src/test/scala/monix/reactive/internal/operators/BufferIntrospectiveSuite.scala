@@ -46,7 +46,7 @@ object BufferIntrospectiveSuite extends TestSuite[TestScheduler] {
     subject
       .bufferIntrospective(maxSize = 10)
       .unsafeSubscribeFn(new Subscriber[List[Long]] {
-        implicit val scheduler = s
+        implicit val scheduler: Scheduler = s
 
         def onNext(elem: List[Long]): Future[Ack] = {
           sum += elem.sum

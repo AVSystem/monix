@@ -17,10 +17,11 @@
 
 package monix.reactive.internal.operators
 
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Continue
 import monix.reactive.Observable.Operator
 import monix.reactive.observers.Subscriber
+
 import scala.concurrent.Future
 
 private[reactive] final class TakeEveryNthOperator[A](n: Int) extends Operator[A, A] {
@@ -29,7 +30,7 @@ private[reactive] final class TakeEveryNthOperator[A](n: Int) extends Operator[A
 
   def apply(out: Subscriber[A]): Subscriber[A] =
     new Subscriber[A] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
       private[this] var index = n
 
       def onNext(elem: A): Future[Ack] = {

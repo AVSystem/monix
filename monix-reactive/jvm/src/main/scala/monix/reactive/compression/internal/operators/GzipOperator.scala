@@ -20,23 +20,11 @@ package monix.reactive.compression.internal.operators
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.util.zip.{CRC32, Deflater}
-
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Continue
 import monix.reactive.Observable.Operator
 import monix.reactive.compression.internal.operators.Gzipper.gzipOperatingSystem
-import monix.reactive.compression.{
-  gzipCompressionMethod,
-  gzipExtraFlag,
-  gzipFlag,
-  gzipMagicFirstByte,
-  gzipMagicSecondByte,
-  zeroByte,
-  CompressionLevel,
-  CompressionParameters,
-  CompressionStrategy,
-  FlushMode
-}
+import monix.reactive.compression.{CompressionLevel, CompressionParameters, CompressionStrategy, FlushMode, gzipCompressionMethod, gzipExtraFlag, gzipFlag, gzipMagicFirstByte, gzipMagicSecondByte, zeroByte}
 import monix.reactive.observers.Subscriber
 
 import scala.concurrent.Future
@@ -52,7 +40,7 @@ private[compression] final class GzipOperator(
 ) extends Operator[Array[Byte], Array[Byte]] {
   override def apply(out: Subscriber[Array[Byte]]): Subscriber[Array[Byte]] = {
     new Subscriber[Array[Byte]] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
 
       private[this] var ack: Future[Ack] = _
       private[this] val gzipper =

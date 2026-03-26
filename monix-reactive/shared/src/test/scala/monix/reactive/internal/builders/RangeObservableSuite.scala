@@ -129,7 +129,7 @@ object RangeObservableSuite extends TestSuite[TestScheduler] {
     val source = Observable.range(0L, Platform.recommendedBatchSize.toLong * 10)
 
     val cancelable = source.unsafeSubscribeFn(new Subscriber[Long] {
-      implicit val scheduler = s
+      implicit val scheduler: Scheduler = s
 
       def onNext(elem: Long) = {
         received += 1

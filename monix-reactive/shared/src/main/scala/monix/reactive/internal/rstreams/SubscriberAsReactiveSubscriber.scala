@@ -94,7 +94,7 @@ private[reactive] final class AsyncSubscriberAsReactiveSubscriber[A](target: Sub
   private[this] val subscription = SingleAssignSubscription()
   private[this] val downstream: Subscriber[A] =
     new Subscriber[A] {
-      implicit val scheduler = target.scheduler
+      implicit val scheduler: Scheduler = target.scheduler
 
       private[this] val isFinite = requestCount < Int.MaxValue
       private[this] var isActive = true

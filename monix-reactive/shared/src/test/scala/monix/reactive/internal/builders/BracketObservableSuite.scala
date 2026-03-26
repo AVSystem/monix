@@ -86,7 +86,7 @@ object BracketObservableSuite extends BaseTestSuite {
     val cancelable = obs
       .flatMap(_ => Observable.never)
       .unsafeSubscribeFn(new Subscriber[Handle] {
-        implicit val scheduler = s
+        implicit val scheduler: Scheduler = s
         def onNext(elem: Handle) =
           Continue
         def onComplete() =

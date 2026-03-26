@@ -317,7 +317,7 @@ object IterableAsObservableSuite extends TestSuite[TestScheduler] {
     val cancelable = Observable
       .fromIterable(seq)
       .unsafeSubscribeFn(new Subscriber[Int] {
-        implicit val scheduler = s
+        implicit val scheduler: Scheduler = s
         def onNext(elem: Int) = {
           sum += 1
           Continue

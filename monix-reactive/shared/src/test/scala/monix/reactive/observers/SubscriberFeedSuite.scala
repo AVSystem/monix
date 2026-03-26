@@ -28,7 +28,7 @@ object SubscriberFeedSuite extends BaseTestSuite {
     check1 { (xs: List[Int]) =>
       var sum = 0
       val downstream = new Subscriber.Sync[Int] {
-        implicit val scheduler = s
+        implicit val scheduler: Scheduler = s
         def onError(ex: Throwable): Unit = ()
         def onComplete(): Unit = sum += 100
         def onNext(elem: Int) = {
@@ -48,7 +48,7 @@ object SubscriberFeedSuite extends BaseTestSuite {
     check1 { (xs: List[Int]) =>
       var sum = 0
       val downstream = new Subscriber[Int] {
-        implicit val scheduler = s
+        implicit val scheduler: Scheduler = s
         def onError(ex: Throwable): Unit = ()
         def onComplete(): Unit = sum += 100
         def onNext(elem: Int) = Future {
@@ -68,7 +68,7 @@ object SubscriberFeedSuite extends BaseTestSuite {
     check1 { (xs: List[Int]) =>
       var sum = 0
       val downstream = new Subscriber.Sync[Int] {
-        implicit val scheduler = s
+        implicit val scheduler: Scheduler = s
         def onError(ex: Throwable): Unit = ()
         def onComplete(): Unit = sum += 100
         def onNext(elem: Int) = {
@@ -88,7 +88,7 @@ object SubscriberFeedSuite extends BaseTestSuite {
     check1 { (xs: List[Int]) =>
       var sum = 0
       val downstream = new Subscriber[Int] {
-        implicit val scheduler = s
+        implicit val scheduler: Scheduler = s
         def onError(ex: Throwable): Unit = ()
         def onComplete(): Unit = sum += 100
         def onNext(elem: Int) = Future {
@@ -108,7 +108,7 @@ object SubscriberFeedSuite extends BaseTestSuite {
     check1 { (xs: List[Int]) =>
       var sum = 0
       val downstream = new Subscriber.Sync[Int] {
-        implicit val scheduler = s
+        implicit val scheduler: Scheduler = s
         def onError(ex: Throwable): Unit = ()
         def onComplete(): Unit = sum += 100
         def onNext(elem: Int) = {
@@ -126,7 +126,7 @@ object SubscriberFeedSuite extends BaseTestSuite {
     check1 { (xs: List[Int]) =>
       var sum = 0
       val downstream = new Subscriber[Int] {
-        implicit val scheduler = s
+        implicit val scheduler: Scheduler = s
         def onError(ex: Throwable): Unit = ()
         def onComplete(): Unit = sum += 100
         def onNext(elem: Int) = Future {
@@ -144,7 +144,7 @@ object SubscriberFeedSuite extends BaseTestSuite {
     check1 { (xs: List[Int]) =>
       var sum = 0
       val downstream = new Subscriber[Int] {
-        implicit val scheduler = s
+        implicit val scheduler: Scheduler = s
         def onError(ex: Throwable): Unit = ()
         def onComplete(): Unit = sum += 100
         def onNext(elem: Int) = Future {

@@ -17,10 +17,11 @@
 
 package monix.reactive.internal.operators
 
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.{Continue, Stop}
 import monix.reactive.Observable.Operator
 import monix.reactive.observers.Subscriber
+
 import scala.concurrent.Future
 import monix.execution.compat.internal.toSeq
 
@@ -31,7 +32,7 @@ private[reactive] final class BufferSlidingOperator[A](count: Int, skip: Int) ex
 
   def apply(out: Subscriber[Seq[A]]): Subscriber[A] =
     new Subscriber[A] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
 
       private[this] var isDone = false
       private[this] var ack: Future[Ack] = _

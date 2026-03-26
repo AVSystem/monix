@@ -18,7 +18,7 @@
 package monix.reactive.internal.operators
 
 import cats.Eq
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.{Continue, Stop}
 import monix.reactive.Observable.Operator
 
@@ -32,7 +32,7 @@ private[reactive] final class DistinctUntilChangedByKeyOperator[A, K](key: A => 
 
   def apply(out: Subscriber[A]): Subscriber[A] =
     new Subscriber[A] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
 
       private[this] var isDone = false
       private[this] var isFirst = true

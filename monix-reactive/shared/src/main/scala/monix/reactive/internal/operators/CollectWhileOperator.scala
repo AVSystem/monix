@@ -17,7 +17,7 @@
 
 package monix.reactive.internal.operators
 
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Stop
 
 import scala.util.control.NonFatal
@@ -31,7 +31,7 @@ private[reactive] final class CollectWhileOperator[-A, +B](pf: PartialFunction[A
 
   def apply(out: Subscriber[B]): Subscriber[A] =
     new Subscriber[A] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
       private[this] var isActive = true
 
       def onNext(elem: A): Future[Ack] = {

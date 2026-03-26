@@ -62,7 +62,7 @@ object PaginateEvalObservableSuite extends BaseTestSuite {
     val cancelable = Observable
       .paginateEval(s.clockMonotonic(MILLISECONDS))(intNowOption)
       .unsafeSubscribeFn(new Subscriber[Int] {
-        implicit val scheduler = s
+        implicit val scheduler: Scheduler = s
 
         def onNext(elem: Int) = {
           sum += 1

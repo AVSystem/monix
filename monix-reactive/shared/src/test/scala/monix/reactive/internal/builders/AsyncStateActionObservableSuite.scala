@@ -84,7 +84,7 @@ object AsyncStateActionObservableSuite extends TestSuite[TestScheduler] {
     val cancelable = Observable
       .fromAsyncStateAction(intNow)(s.clockMonotonic(MILLISECONDS))
       .unsafeSubscribeFn(new Subscriber[Int] {
-        implicit val scheduler = s
+        implicit val scheduler: Scheduler = s
         def onNext(elem: Int) = {
           sum += 1
           Continue

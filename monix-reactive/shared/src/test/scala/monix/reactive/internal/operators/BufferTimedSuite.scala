@@ -167,7 +167,7 @@ object BufferTimedSuite extends BaseOperatorSuite {
       .map(_.sum)
 
     obs.unsafeSubscribeFn(new Subscriber[Long] {
-      implicit val scheduler = s
+      implicit val scheduler: Scheduler = s
 
       def onNext(elem: Long): Future[Ack] = {
         received += elem

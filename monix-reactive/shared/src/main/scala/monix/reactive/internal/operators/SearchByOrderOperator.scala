@@ -18,7 +18,7 @@
 package monix.reactive.internal.operators
 
 import cats.Order
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.{Continue, Stop}
 
 import scala.util.control.NonFatal
@@ -34,7 +34,7 @@ private[reactive] abstract class SearchByOrderOperator[A, K](key: A => K)(implic
 
   final def apply(out: Subscriber[A]): Subscriber.Sync[A] =
     new Subscriber.Sync[A] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
 
       private[this] var isDone = false
       private[this] var minValue: A = _

@@ -59,7 +59,7 @@ object RepeatEvalObservableSuite extends TestSuite[TestScheduler] {
     val cancelable = Observable
       .repeatEval(1)
       .unsafeSubscribeFn(new Subscriber[Int] {
-        implicit val scheduler = s
+        implicit val scheduler: Scheduler = s
         def onNext(elem: Int) = {
           sum += elem
           Continue

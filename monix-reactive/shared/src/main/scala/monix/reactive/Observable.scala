@@ -365,7 +365,7 @@ abstract class Observable[+A] extends Serializable { self =>
     s: Scheduler): Cancelable = {
 
     subscribe(new Subscriber[A] {
-      implicit val scheduler = s
+      implicit val scheduler: Scheduler = s
 
       def onNext(elem: A) = nextFn(elem)
       def onComplete() = completedFn()

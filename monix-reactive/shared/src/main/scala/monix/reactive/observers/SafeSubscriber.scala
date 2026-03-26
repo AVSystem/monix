@@ -17,10 +17,10 @@
 
 package monix.reactive.observers
 
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.{Continue, Stop}
-import scala.util.control.NonFatal
 
+import scala.util.control.NonFatal
 import scala.concurrent.{Future, Promise}
 import scala.util.Try
 
@@ -36,7 +36,7 @@ import scala.util.Try
   */
 final class SafeSubscriber[-A] private (subscriber: Subscriber[A]) extends Subscriber[A] {
 
-  implicit val scheduler = subscriber.scheduler
+  implicit val scheduler: Scheduler = subscriber.scheduler
   private[this] var isDone = false
   private[this] var ack: Future[Ack] = Continue
 
