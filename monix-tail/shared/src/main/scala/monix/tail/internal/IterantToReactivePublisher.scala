@@ -47,7 +47,7 @@ private[tail] object IterantToReactivePublisher {
 
     def subscribe(out: Subscriber[_ >: A]): Unit = {
       // Reactive Streams requirement
-      if (out == null) throw null
+      if (out == null) throw new NullPointerException("Subscriber must not be null")
 
       source match {
         case Halt(e) =>
