@@ -100,6 +100,13 @@ object ExecutorScheduler {
     // Implementations will inherit BatchingScheduler, so this is guaranteed
     val ft = features + Scheduler.BATCHING
     service match {
+      case _: ForkJoinPool =>
+        // ForkJoinPool implements ScheduledExecutorService since JDK 25,
+        // but its scheduling behavior differs from ScheduledThreadPoolExecutor
+        // (e.g. exception handling in scheduled tasks). Use the simple executor
+        // path with Monix's own ScheduledExecutorService for reliable scheduling.
+        val s = Defaults.scheduledExecutor
+        new FromSimpleExecutor(s, service, reporter, executionModel, ft)
       case ref: ScheduledExecutorService =>
         new FromScheduledExecutor(ref, reporter, executionModel, ft)
       case _ =>
