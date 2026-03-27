@@ -79,7 +79,7 @@ object CancelableSuite extends SimpleTestSuite {
           assertEquals(e, dummy1)
           assertEquals(e.getSuppressed.toList, List(dummy2))
         } else {
-          val CompositeException(errors) = e
+          val CompositeException(errors) = e: @unchecked
           assertEquals(errors.toList, List(dummy1, dummy2))
         }
     }
@@ -121,7 +121,7 @@ object CancelableSuite extends SimpleTestSuite {
       assertEquals(e, dummy1)
       assertEquals(e.getSuppressed.toList, List(dummy2))
     } else {
-      val CompositeException(errors) = sc.state.lastReportedError
+      val CompositeException(errors) = sc.state.lastReportedError: @unchecked
       assertEquals(errors.toList, List(dummy1, dummy2))
     }
   }

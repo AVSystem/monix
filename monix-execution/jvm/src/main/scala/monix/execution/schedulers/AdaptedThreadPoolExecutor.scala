@@ -33,7 +33,7 @@ private[schedulers] abstract class AdaptedThreadPoolExecutor(corePoolSize: Int, 
     if ((exception eq null) && r.isInstanceOf[Future[_]]) {
       try {
         val future = r.asInstanceOf[Future[_]]
-        if (future.isDone) future.get()
+        if (future.isDone) future.get(): Unit
       } catch {
         case ex: ExecutionException =>
           exception = ex.getCause

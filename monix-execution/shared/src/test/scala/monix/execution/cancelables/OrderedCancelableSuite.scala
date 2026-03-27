@@ -107,11 +107,11 @@ object OrderedCancelableSuite extends SimpleTestSuite {
     val c2 = Cancelable { () =>
       effect = 2
     }
-    mc.orderedUpdate(c2, Long.MaxValue + 1)
+    mc.orderedUpdate(c2, Long.MinValue)
     val c3 = Cancelable { () =>
       effect = 3
     }
-    mc.orderedUpdate(c3, Long.MaxValue + 2)
+    mc.orderedUpdate(c3, Long.MinValue + 1)
     val c4 = Cancelable { () =>
       effect = 4
     }

@@ -57,13 +57,13 @@ private[tail] object IterantTakeLast {
 
     def visit(ref: NextBatch[F, A]): Iterant[F, A] = {
       val cursor = ref.batch.cursor()
-      while (cursor.hasNext()) buffer.offer(cursor.next())
+      while (cursor.hasNext()) buffer.offer(cursor.next()): Unit
       Suspend(ref.rest.map(loop))
     }
 
     def visit(ref: NextCursor[F, A]): Iterant[F, A] = {
       val cursor = ref.cursor
-      while (cursor.hasNext()) buffer.offer(cursor.next())
+      while (cursor.hasNext()) buffer.offer(cursor.next()): Unit
       Suspend(ref.rest.map(loop))
     }
 

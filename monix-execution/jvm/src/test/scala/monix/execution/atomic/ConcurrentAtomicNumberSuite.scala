@@ -39,8 +39,8 @@ abstract class ConcurrentAtomicNumberSuite[A, R <: AtomicNumber[A]](
 
   test("should perform concurrent compareAndSet") {
     val r = Atomic(ev.zero)
-    val futures = for (i <- 0 until 5) yield Future {
-      for (j <- 0 until 100)
+    val futures = for (_ <- 0 until 5) yield Future {
+      for (_ <- 0 until 100)
         r.increment()
     }
 
@@ -51,7 +51,7 @@ abstract class ConcurrentAtomicNumberSuite[A, R <: AtomicNumber[A]](
 
   test("should perform concurrent getAndSet") {
     val r = Atomic(ev.zero)
-    val futures = for (i <- 0 until 5) yield Future {
+    val futures = for (_ <- 0 until 5) yield Future {
       for (j <- 0 until 100)
         r.getAndSet(ev.fromInt(j + 1))
     }
@@ -63,8 +63,8 @@ abstract class ConcurrentAtomicNumberSuite[A, R <: AtomicNumber[A]](
 
   test("should perform concurrent increment") {
     val r = Atomic(ev.zero)
-    val futures = for (i <- 0 until 5) yield Future {
-      for (j <- 0 until 100)
+    val futures = for (_ <- 0 until 5) yield Future {
+      for (_ <- 0 until 100)
         r.increment()
     }
 
@@ -75,8 +75,8 @@ abstract class ConcurrentAtomicNumberSuite[A, R <: AtomicNumber[A]](
 
   test("should perform concurrent incrementAndGet") {
     val r = Atomic(ev.zero)
-    val futures = for (i <- 0 until 5) yield Future {
-      for (j <- 0 until 100)
+    val futures = for (_ <- 0 until 5) yield Future {
+      for (_ <- 0 until 100)
         r.incrementAndGet()
     }
 
@@ -87,8 +87,8 @@ abstract class ConcurrentAtomicNumberSuite[A, R <: AtomicNumber[A]](
 
   test("should perform concurrent getAndIncrement") {
     val r = Atomic(ev.zero)
-    val futures = for (i <- 0 until 5) yield Future {
-      for (j <- 0 until 100)
+    val futures = for (_ <- 0 until 5) yield Future {
+      for (_ <- 0 until 100)
         r.getAndIncrement()
     }
 

@@ -219,7 +219,7 @@ private[eval] object TaskCreate {
 
     private def startExecution(): Unit = {
       // Cleanup of the current finalizer
-      if (shouldPop) ctx.connection.pop()
+      if (shouldPop) ctx.connection.pop(): Unit
       // Optimization — if the callback was called on the same thread
       // where it was created, then we are not going to fork
       // This is not safe to do when localContextPropagation enabled
