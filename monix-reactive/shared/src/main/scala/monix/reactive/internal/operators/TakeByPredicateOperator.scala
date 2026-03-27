@@ -47,7 +47,7 @@ private[reactive] final class TakeByPredicateOperator[A](p: A => Boolean, inclus
             } else {
               isActive = false
               if (inclusive) {
-                out.onNext(elem)
+                out.onNext(elem): Unit
               }
               out.onComplete()
               Stop

@@ -61,7 +61,7 @@ private[reactive] final class IntersperseObservable[+A](
 
       def onComplete() = {
         downstreamAck.syncOnContinue {
-          if (atLeastOne && end.nonEmpty) out.onNext(end.get)
+          if (atLeastOne && end.nonEmpty) out.onNext(end.get): Unit
           out.onComplete()
         }
         ()

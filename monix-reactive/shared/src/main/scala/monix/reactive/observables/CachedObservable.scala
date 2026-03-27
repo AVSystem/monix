@@ -46,7 +46,7 @@ final class CachedObservable[+A] private (source: Observable[A], maxCapacity: In
   def unsafeSubscribeFn(subscriber: Subscriber[A]): Cancelable = {
     import subscriber.scheduler
     if (isStarted.compareAndSet(expect = false, update = true))
-      source.unsafeSubscribeFn(Subscriber(subject, scheduler))
+      source.unsafeSubscribeFn(Subscriber(subject, scheduler)): Unit
     subject.unsafeSubscribeFn(subscriber)
   }
 }

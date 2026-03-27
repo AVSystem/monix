@@ -48,7 +48,7 @@ private[reactive] final class IntervalFixedDelayObservable(initialDelay: FiniteD
       def asyncScheduleNext(r: Future[Ack]): Unit =
         r.onComplete {
           case Success(ack) =>
-            if (ack == Continue) scheduleNext()
+            if (ack == Continue) scheduleNext(): Unit
           case Failure(ex) =>
             s.reportFailure(ex)
         }

@@ -69,7 +69,7 @@ private[reactive] final class BufferTimedObservable[+A](source: Observable[A], t
           sendNextAndReset(now).syncOnContinue(
             // Schedule the next tick, but only after we are done
             // sending the bundle
-            run())
+            run()): Unit
         }
         ()
       }

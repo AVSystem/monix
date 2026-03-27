@@ -126,7 +126,7 @@ final class PublishSubject[A] private () extends Subject[A, A] { self =>
       if (ack.isCompleted) {
         // subscriber canceled or triggered an error? Then remove!
         if (ack != Continue && ack.value.get != Continue.AsSuccess)
-          unsubscribe(subscriber)
+          unsubscribe(subscriber): Unit
       } else {
         // going async, so we've got to count active futures for final Ack
         // the counter starts from 1 because zero implies isCompleted

@@ -58,7 +58,7 @@ final class RefCountObservable[+A] private (source: ConnectableObservable[A]) ex
       val countdown = Cancelable(() => countDownToConnectionCancel())
       // Subscribing and triggering connect() if this is the first subscription
       val ret = source.unsafeSubscribeFn(wrap(subscriber, countdown))
-      if (current == -1) connection // triggers connect()
+      if (current == -1) connection: Unit // triggers connect()
       // A composite that both cancels this subscription and does the countdown
       Cancelable { () =>
         try ret.cancel()
