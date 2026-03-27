@@ -21,6 +21,8 @@ import minitest.TestSuite
 import monix.execution.exceptions.DummyException
 import monix.execution.schedulers.TestScheduler
 import monix.reactive.{Consumer, Observable}
+
+import scala.annotation.unused
 import scala.util.{Failure, Success}
 
 object ForeachConsumerSuite extends TestSuite[TestScheduler] {
@@ -43,7 +45,7 @@ object ForeachConsumerSuite extends TestSuite[TestScheduler] {
   test("should interrupt with error") { implicit s =>
     val ex = DummyException("dummy")
     val obs = Observable.range(0, 10000).endWithError(ex)
-    var sum = 0L
+    @unused var sum = 0L
     val f = obs.consumeWith(Consumer.foreach(x => sum += x)).runToFuture
 
     s.tick()

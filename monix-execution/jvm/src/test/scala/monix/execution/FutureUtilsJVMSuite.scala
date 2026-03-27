@@ -19,13 +19,13 @@ package monix.execution
 
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
-
 import minitest.TestSuite
 import monix.execution.FutureUtils.extensions._
 import monix.execution.schedulers.TestScheduler
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.reflect.ClassTag
 
 object FutureUtilsJVMSuite extends TestSuite[TestScheduler] {
 
@@ -39,6 +39,10 @@ object FutureUtilsJVMSuite extends TestSuite[TestScheduler] {
     implicit val scheduler: Scheduler = Scheduler(Executors.newWorkStealingPool())
 
     case class TestException() extends RuntimeException
+
+    object TestException {
+      val ct: ClassTag[TestException] = implicitly[ClassTag[TestException]]
+    }
 
     val total = new AtomicLong(0)
     val sideEffect = new AtomicLong(0)
@@ -64,7 +68,7 @@ object FutureUtilsJVMSuite extends TestSuite[TestScheduler] {
         success.incrementAndGet()
         ()
       }.recover {
-        case _: TestException =>
+        case TestException.ct(_) =>
           error.incrementAndGet()
           ()
       }

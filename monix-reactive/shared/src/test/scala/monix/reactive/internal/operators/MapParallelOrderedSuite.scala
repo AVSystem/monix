@@ -26,6 +26,7 @@ import monix.execution.exceptions.DummyException
 import monix.execution.internal.Platform
 import monix.reactive.{Observable, Observer, OverflowStrategy}
 
+import scala.annotation.unused
 import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration._
 import scala.util.{Failure, Random}
@@ -198,7 +199,7 @@ object MapParallelOrderedSuite extends BaseOperatorSuite {
     val dummy = DummyException("dummy")
     var isComplete = false
     var wasThrown: Throwable = null
-    var received = 0L
+    @unused var received = 0L
 
     val task1 = Task(1L)
     val task2 = Task.raiseError[Long](dummy)
@@ -234,8 +235,8 @@ object MapParallelOrderedSuite extends BaseOperatorSuite {
   test("should interrupt the streaming on error, test #2") { implicit s =>
     val dummy = DummyException("dummy")
     var isComplete = false
-    var wasThrown: Throwable = null
-    var received = 0L
+    @unused var wasThrown: Throwable = null
+    @unused var received = 0L
 
     val task1 = Task(1L)
     val tasks = List.fill(8)(task1)
@@ -270,8 +271,8 @@ object MapParallelOrderedSuite extends BaseOperatorSuite {
   test("should protect against user error") { implicit s =>
     val dummy = DummyException("dummy")
     var isComplete = false
-    var wasThrown: Throwable = null
-    var received = 0L
+    @unused var wasThrown: Throwable = null
+    @unused var received = 0L
 
     Observable
       .range(0, 100)

@@ -23,6 +23,7 @@ import monix.execution.cancelables.BooleanCancelable
 import monix.execution.compat.internal.toIterator
 import monix.reactive.BaseTestSuite
 
+import scala.annotation.unused
 import scala.concurrent.Future
 
 object SubscriberFeedSuite extends BaseTestSuite {
@@ -144,7 +145,7 @@ object SubscriberFeedSuite extends BaseTestSuite {
 
   test("should be cancelable") { s =>
     check1 { (xs: List[Int]) =>
-      var sum = 0
+      @unused var sum = 0
       val downstream = new Subscriber[Int] {
         implicit val scheduler: Scheduler = s
         def onError(ex: Throwable): Unit = ()

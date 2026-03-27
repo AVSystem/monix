@@ -22,6 +22,8 @@ import monix.execution.Ack
 import monix.execution.Ack.{Continue, Stop}
 import monix.reactive.subjects.PublishSubject
 import monix.reactive.{Observable, Observer}
+
+import scala.annotation.unused
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration.Zero
 import scala.concurrent.duration._
@@ -59,7 +61,7 @@ object GroupBySuite extends BaseOperatorSuite {
 
   test("on complete the key should get recycled") { implicit s =>
     var received = 0
-    var wasCompleted = 0
+    @unused var wasCompleted = 0
     var fallbackTick = 0
     var nextShouldCancel = false
 
