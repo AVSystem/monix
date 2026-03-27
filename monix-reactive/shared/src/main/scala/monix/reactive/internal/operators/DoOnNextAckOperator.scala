@@ -18,7 +18,7 @@
 package monix.reactive.internal.operators
 
 import monix.eval.Task
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Stop
 import monix.execution.atomic.Atomic
 import monix.reactive.Observable.Operator
@@ -31,7 +31,7 @@ private[reactive] final class DoOnNextAckOperator[A](cb: (A, Ack) => Task[Unit])
 
   def apply(out: Subscriber[A]): Subscriber[A] =
     new Subscriber[A] { self =>
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
       private[this] val isActive = Atomic(true)
 
       def onNext(elem: A): Future[Ack] = {

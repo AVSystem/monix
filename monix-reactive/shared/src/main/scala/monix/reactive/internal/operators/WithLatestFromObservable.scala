@@ -19,8 +19,9 @@ package monix.reactive.internal.operators
 
 import monix.execution.Ack.{Continue, Stop}
 import monix.execution.cancelables.CompositeCancelable
+
 import scala.util.control.NonFatal
-import monix.execution.{Ack, Cancelable}
+import monix.execution.{Ack, Cancelable, Scheduler}
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
 
@@ -36,7 +37,7 @@ private[reactive] final class WithLatestFromObservable[A, B, +R](
     val connection = CompositeCancelable()
 
     connection += source.unsafeSubscribeFn(new Subscriber[A] { self =>
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
 
       private[this] var isDone = false
       private[this] var otherStarted = false
@@ -44,7 +45,7 @@ private[reactive] final class WithLatestFromObservable[A, B, +R](
 
       private[this] val otherConnection = {
         val ref = other.unsafeSubscribeFn(new Subscriber.Sync[B] {
-          implicit val scheduler = out.scheduler
+          implicit val scheduler: Scheduler = out.scheduler
 
           def onNext(elem: B): Ack =
             self.synchronized {

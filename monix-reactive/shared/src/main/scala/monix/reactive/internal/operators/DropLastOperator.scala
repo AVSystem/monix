@@ -17,10 +17,11 @@
 
 package monix.reactive.internal.operators
 
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Continue
 import monix.reactive.Observable.Operator
 import monix.reactive.observers.Subscriber
+
 import scala.collection.mutable
 import scala.concurrent.Future
 
@@ -30,7 +31,7 @@ private[reactive] final class DropLastOperator[A](n: Int) extends Operator[A, A]
 
   def apply(out: Subscriber[A]): Subscriber[A] =
     new Subscriber[A] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
       private[this] var queue = mutable.Queue.empty[A]
       private[this] var length = 0
 

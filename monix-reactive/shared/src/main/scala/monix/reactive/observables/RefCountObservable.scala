@@ -17,10 +17,11 @@
 
 package monix.reactive.observables
 
-import monix.execution.{Ack, Cancelable}
+import monix.execution.{Ack, Cancelable, Scheduler}
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
 import monix.execution.atomic.Atomic
+
 import scala.annotation.tailrec
 import scala.concurrent.Future
 
@@ -68,7 +69,7 @@ final class RefCountObservable[+A] private (source: ConnectableObservable[A]) ex
 
   private def wrap[U >: A](downstream: Subscriber[U], subscription: Cancelable): Subscriber[U] =
     new Subscriber[U] {
-      implicit val scheduler = downstream.scheduler
+      implicit val scheduler: Scheduler = downstream.scheduler
 
       def onNext(elem: U): Future[Ack] = {
         downstream

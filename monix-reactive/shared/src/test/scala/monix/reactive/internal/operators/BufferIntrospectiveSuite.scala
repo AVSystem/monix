@@ -19,7 +19,7 @@ package monix.reactive.internal.operators
 
 import minitest.TestSuite
 import monix.eval.Task
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Continue
 import monix.execution.schedulers.TestScheduler
 import monix.reactive.observers.Subscriber
@@ -46,7 +46,7 @@ object BufferIntrospectiveSuite extends TestSuite[TestScheduler] {
     subject
       .bufferIntrospective(maxSize = 10)
       .unsafeSubscribeFn(new Subscriber[List[Long]] {
-        implicit val scheduler = s
+        implicit val scheduler: Scheduler = s
 
         def onNext(elem: List[Long]): Future[Ack] = {
           sum += elem.sum

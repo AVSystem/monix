@@ -17,16 +17,17 @@
 
 package monix.reactive.internal.operators
 
-import monix.execution.Callback
+import monix.execution.{Ack, Callback, Cancelable, Scheduler}
 import monix.eval.Task
 import monix.execution.Ack.Stop
 import monix.execution.atomic.Atomic
 import monix.execution.atomic.PaddingStrategy.LeftRight128
 import monix.execution.cancelables.OrderedCancelable
+
 import scala.util.control.NonFatal
-import monix.execution.{Ack, Cancelable}
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
+
 import scala.annotation.tailrec
 import scala.concurrent.Future
 
@@ -66,7 +67,7 @@ private[reactive] final class ScanTaskObservable[A, S](source: Observable[A], se
     import MapTaskObservable.MapTaskState
     import MapTaskObservable.MapTaskState._
 
-    implicit val scheduler = out.scheduler
+    implicit val scheduler: Scheduler = out.scheduler
 
     // For synchronizing our internal state machine, padded
     // in order to avoid the false sharing problem

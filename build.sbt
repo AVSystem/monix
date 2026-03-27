@@ -3,6 +3,7 @@ import sbt.{ Def, Global, Tags }
 
 import scala.collection.immutable.SortedSet
 import MonixBuildUtils._
+import org.typelevel.scalacoptions.ScalacOptions
 
 val benchmarkProjects = List(
   "benchmarksPrev",
@@ -31,9 +32,9 @@ val reactiveStreams_Version   = "1.0.4"
 val macrotaskExecutor_Version = "1.0.0"
 val minitest_Version          = "2.9.6"
 val implicitBox_Version       = "0.3.4"
-val kindProjector_Version     = "0.13.2"
+val kindProjector_Version     = "0.13.4"
 val betterMonadicFor_Version  = "0.3.1"
-val silencer_Version          = "1.7.8"
+val silencer_Version          = "1.7.19"
 val scalaCompat_Version       = "2.7.0"
 
 // The Monix version with which we must keep binary compatibility.
@@ -189,8 +190,19 @@ lazy val sharedSettings = pgpSettings ++ Seq(
     "-Wunused:explicits",
     "-Ywarn-unused:params",
     "-Wunused:params",
-    "-Xlint:infer-any"
+    "-Xlint:infer-any",
+    "-Wnonunit-statement"
   ),
+  // Disabled from tpolecat for test compilation:
+  // -Wunused:patvars triggers on for-comprehension loop vars in tests (pre-existing pattern)
+  // -Xlint:constant triggers on intentional overflow tests (e.g. Long.MaxValue + 1)
+  Test / scalacOptions --= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      case Some((2, 13)) => Seq("-Wunused:patvars", "-Xlint:constant")
+      case Some((2, 12)) => Seq("-Ywarn-unused:patvars")
+      case _ => Seq.empty
+    }
+  },
   // Turning off fatal warnings for doc generation
   Compile / doc / tpolecatExcludeOptions ++= ScalacOptions.defaultConsoleExclude,
   // Silence everything in auto-generated files
@@ -202,7 +214,9 @@ lazy val sharedSettings = pgpSettings ++ Seq(
   },
   scalacOptions --= {
     if (isDotty.value)
-      Seq("-Xfatal-warnings")
+      // tpolecat uses -Werror in Scala 3; disable fatal warnings
+      // so that pre-existing value-discard and similar patterns don't break Scala 3 builds
+      Seq("-Werror")
     else
       Seq()
   },

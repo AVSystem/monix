@@ -17,9 +17,10 @@
 
 package monix.reactive.internal.builders
 
-import monix.execution.{Ack, Cancelable}
+import monix.execution.{Ack, Cancelable, Scheduler}
 import monix.execution.Ack.{Continue, Stop}
 import monix.execution.cancelables.CompositeCancelable
+
 import scala.util.control.NonFatal
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
@@ -142,7 +143,7 @@ private[reactive] final class CombineLatest6Observable[A1, A2, A3, A4, A5, A6, +
     val composite = CompositeCancelable()
 
     composite += obsA1.unsafeSubscribeFn(new Subscriber[A1] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
 
       def onNext(elem: A1): Future[Ack] = lock.synchronized {
         if (isDone) Stop
@@ -164,7 +165,7 @@ private[reactive] final class CombineLatest6Observable[A1, A2, A3, A4, A5, A6, +
     })
 
     composite += obsA2.unsafeSubscribeFn(new Subscriber[A2] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
 
       def onNext(elem: A2): Future[Ack] = lock.synchronized {
         if (isDone) Stop
@@ -186,7 +187,7 @@ private[reactive] final class CombineLatest6Observable[A1, A2, A3, A4, A5, A6, +
     })
 
     composite += obsA3.unsafeSubscribeFn(new Subscriber[A3] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
 
       def onNext(elem: A3): Future[Ack] = lock.synchronized {
         if (isDone) Stop
@@ -208,7 +209,7 @@ private[reactive] final class CombineLatest6Observable[A1, A2, A3, A4, A5, A6, +
     })
 
     composite += obsA4.unsafeSubscribeFn(new Subscriber[A4] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
 
       def onNext(elem: A4): Future[Ack] = lock.synchronized {
         if (isDone) Stop
@@ -230,7 +231,7 @@ private[reactive] final class CombineLatest6Observable[A1, A2, A3, A4, A5, A6, +
     })
 
     composite += obsA5.unsafeSubscribeFn(new Subscriber[A5] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
 
       def onNext(elem: A5): Future[Ack] = lock.synchronized {
         if (isDone) Stop
@@ -252,7 +253,7 @@ private[reactive] final class CombineLatest6Observable[A1, A2, A3, A4, A5, A6, +
     })
 
     composite += obsA6.unsafeSubscribeFn(new Subscriber[A6] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
 
       def onNext(elem: A6): Future[Ack] = lock.synchronized {
         if (isDone) Stop

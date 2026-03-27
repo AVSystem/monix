@@ -17,16 +17,17 @@
 
 package monix.reactive.internal.operators
 
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.reactive.Observable.Operator
 import monix.reactive.observers.Subscriber
+
 import scala.concurrent.Future
 
 private[reactive] final class ZipWithIndexOperator[A] extends Operator[A, (A, Long)] {
 
   def apply(out: Subscriber[(A, Long)]): Subscriber[A] =
     new Subscriber[A] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
       private[this] var index = 0L
 
       def onNext(elem: A): Future[Ack] = {

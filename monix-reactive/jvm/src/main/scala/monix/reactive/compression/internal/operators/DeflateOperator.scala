@@ -18,8 +18,7 @@
 package monix.reactive.compression.internal.operators
 
 import java.util.zip.Deflater
-
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Continue
 import monix.reactive.Observable.Operator
 import monix.reactive.compression.{CompressionLevel, CompressionParameters, CompressionStrategy, FlushMode}
@@ -36,7 +35,7 @@ private[compression] final class DeflateOperator(
 ) extends Operator[Array[Byte], Array[Byte]] {
   override def apply(out: Subscriber[Array[Byte]]): Subscriber[Array[Byte]] = {
     new Subscriber[Array[Byte]] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
 
       private[this] var ack: Future[Ack] = Continue
       private[this] val deflate =

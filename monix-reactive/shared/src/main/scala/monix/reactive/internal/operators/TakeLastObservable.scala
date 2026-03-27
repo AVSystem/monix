@@ -17,12 +17,13 @@
 
 package monix.reactive.internal.operators
 
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Continue
 import monix.execution.cancelables.AssignableCancelable
 import monix.reactive.Observable
 import monix.reactive.observables.ChainedObservable
 import monix.reactive.observers.Subscriber
+
 import scala.collection.mutable
 
 private[reactive] final class TakeLastObservable[A](source: Observable[A], n: Int)
@@ -30,7 +31,7 @@ private[reactive] final class TakeLastObservable[A](source: Observable[A], n: In
 
   override def unsafeSubscribeFn(conn: AssignableCancelable.Multi, out: Subscriber[A]): Unit = {
     ChainedObservable.subscribe(source, conn, new Subscriber[A] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
       private[this] val queue = mutable.Queue.empty[A]
       private[this] var queued = 0
 

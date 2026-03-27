@@ -33,7 +33,7 @@ object TypeClassLawsForCancelableFutureSuite extends BaseLawsSuite {
   }
 
   test("adaptError") {
-    implicit val ec = TestScheduler()
+    implicit val ec: TestScheduler = TestScheduler()
     val F = MonadError[CancelableFuture, Throwable]
 
     val fa1 = F.catchNonFatal(1); ec.tick()
@@ -45,7 +45,7 @@ object TypeClassLawsForCancelableFutureSuite extends BaseLawsSuite {
   }
 
   test("adaptErrorEval") {
-    implicit val ec = TestScheduler()
+    implicit val ec: TestScheduler = TestScheduler()
     val F = MonadError[CancelableFuture, Throwable]
 
     val fa1 = F.catchNonFatalEval(Eval.always(1)); ec.tick()
@@ -57,7 +57,7 @@ object TypeClassLawsForCancelableFutureSuite extends BaseLawsSuite {
   }
 
   test("flatMap should be stack safe") {
-    implicit val s = TestScheduler()
+    implicit val s: TestScheduler = TestScheduler()
     val n = 100000
     val M = Monad[CancelableFuture]
     val f = M.tailRecM(0)(i => M.pure(if (i < n) Left(i + 1) else Right(i)))

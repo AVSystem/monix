@@ -18,10 +18,9 @@
 package monix.reactive.internal.builders
 
 import java.io.{BufferedReader, Reader, StringReader}
-
 import minitest.SimpleTestSuite
 import monix.eval.Task
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Continue
 import monix.execution.ExecutionModel.{AlwaysAsyncExecution, BatchedExecution, SynchronousExecution}
 import monix.execution.exceptions.APIContractViolationException
@@ -41,7 +40,7 @@ object LinesReaderObservableSuite extends SimpleTestSuite {
     s.tick()
 
     obs.unsafeSubscribeFn(new Subscriber[String] {
-      implicit val scheduler = s
+      implicit val scheduler: Scheduler = s
 
       def onNext(elem: String): Ack =
         throw new IllegalStateException("onNext")
@@ -101,7 +100,7 @@ object LinesReaderObservableSuite extends SimpleTestSuite {
       .map(_.trim)
 
     obs.unsafeSubscribeFn(new Subscriber[String] {
-      implicit val scheduler = s
+      implicit val scheduler: Scheduler = s
 
       def onError(ex: Throwable): Unit =
         throw new IllegalStateException("onError")

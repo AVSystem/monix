@@ -19,9 +19,10 @@ package monix.reactive.internal.operators
 
 import monix.execution.Ack.Stop
 import monix.execution.cancelables.OrderedCancelable
-import monix.execution.{Ack, Cancelable}
+import monix.execution.{Ack, Cancelable, Scheduler}
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
+
 import scala.concurrent.Future
 
 private[reactive] final class DelayExecutionWithTriggerObservable[A](source: Observable[A], trigger: Observable[_])
@@ -33,7 +34,7 @@ private[reactive] final class DelayExecutionWithTriggerObservable[A](source: Obs
     val main = trigger
       .asInstanceOf[Observable[Any]]
       .unsafeSubscribeFn(new Subscriber[Any] {
-        implicit val scheduler = subscriber.scheduler
+        implicit val scheduler: Scheduler = subscriber.scheduler
         private[this] var isDone = false
 
         def onNext(elem: Any): Future[Ack] = {

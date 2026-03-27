@@ -37,7 +37,7 @@ private[reactive] final class ReactiveSubscriberAsMonixSubscriber[A] private (
   subscription: Cancelable)(implicit val scheduler: Scheduler)
   extends Subscriber[A] with Cancelable { self =>
 
-  if (subscriber == null) throw null
+  if (subscriber == null) throw new NullPointerException("Subscriber must not be null")
 
   private[this] var isComplete = false
   private[this] val requests = new RequestsQueue

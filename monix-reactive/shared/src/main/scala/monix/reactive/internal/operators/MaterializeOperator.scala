@@ -17,19 +17,20 @@
 
 package monix.reactive.internal.operators
 
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Continue
 import monix.reactive.Notification
 import monix.reactive.Notification.{OnComplete, OnError, OnNext}
 import monix.reactive.Observable.Operator
 import monix.reactive.observers.Subscriber
+
 import scala.concurrent.Future
 
 private[reactive] final class MaterializeOperator[A] extends Operator[A, Notification[A]] {
 
   def apply(out: Subscriber[Notification[A]]): Subscriber[A] =
     new Subscriber[A] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
       private[this] var isDone = false
       private[this] var ack: Future[Ack] = Continue
 

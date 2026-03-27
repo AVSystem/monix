@@ -19,8 +19,9 @@ package monix.reactive.internal.operators
 
 import monix.execution.Ack.Continue
 import monix.execution.cancelables.OrderedCancelable
+
 import scala.util.control.NonFatal
-import monix.execution.{Ack, Cancelable}
+import monix.execution.{Ack, Cancelable, Scheduler}
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
 
@@ -33,7 +34,7 @@ private[reactive] final class OnErrorRecoverWithObservable[A](source: Observable
     val cancelable = OrderedCancelable()
 
     val main = source.unsafeSubscribeFn(new Subscriber[A] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
       private[this] var ack: Future[Ack] = Continue
 
       def onNext(elem: A) = {

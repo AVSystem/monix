@@ -17,7 +17,7 @@
 
 package monix.reactive.observers.buffers
 
-import monix.execution.{Ack, ChannelType}
+import monix.execution.{Ack, ChannelType, Scheduler}
 import monix.execution.Ack.{Continue, Stop}
 import monix.execution.BufferCapacity.{Bounded, Unbounded}
 import monix.execution.ChannelType.SingleConsumer
@@ -62,7 +62,7 @@ private[observers] abstract class AbstractSimpleBufferedSubscriber[A] protected 
 
   private[this] val queue = _qRef
   private[this] val em = out.scheduler.executionModel
-  implicit val scheduler = out.scheduler
+  implicit val scheduler: Scheduler = out.scheduler
   private[this] val itemsToPush =
     Atomic.withPadding(0, LeftRight256)
 

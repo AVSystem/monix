@@ -17,18 +17,20 @@
 
 package monix.reactive.internal.operators
 
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Stop
+
 import scala.util.control.NonFatal
 import monix.reactive.Observable.Operator
 import monix.reactive.observers.Subscriber
+
 import scala.concurrent.Future
 
 private[reactive] final class MapOperator[-A, +B](f: A => B) extends Operator[A, B] {
 
   def apply(out: Subscriber[B]): Subscriber[A] = {
     new Subscriber[A] {
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
       private[this] var isDone = false
 
       def onNext(elem: A): Future[Ack] = {

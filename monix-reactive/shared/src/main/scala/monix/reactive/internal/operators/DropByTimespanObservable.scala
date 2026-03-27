@@ -19,9 +19,10 @@ package monix.reactive.internal.operators
 
 import monix.execution.Ack.Continue
 import monix.execution.cancelables.{CompositeCancelable, SingleAssignCancelable}
-import monix.execution.{Ack, Cancelable}
+import monix.execution.{Ack, Cancelable, Scheduler}
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
+
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
@@ -33,7 +34,7 @@ private[reactive] final class DropByTimespanObservable[A](source: Observable[A],
     val composite = CompositeCancelable(trigger)
 
     composite += source.unsafeSubscribeFn(new Subscriber[A] with Runnable { self =>
-      implicit val scheduler = out.scheduler
+      implicit val scheduler: Scheduler = out.scheduler
       @volatile private[this] var shouldDrop = true
 
       locally {

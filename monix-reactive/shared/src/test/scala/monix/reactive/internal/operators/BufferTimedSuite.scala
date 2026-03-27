@@ -17,7 +17,7 @@
 
 package monix.reactive.internal.operators
 
-import monix.execution.Ack
+import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Continue
 import monix.execution.internal.Platform
 import monix.reactive.observers.Subscriber
@@ -167,7 +167,7 @@ object BufferTimedSuite extends BaseOperatorSuite {
       .map(_.sum)
 
     obs.unsafeSubscribeFn(new Subscriber[Long] {
-      implicit val scheduler = s
+      implicit val scheduler: Scheduler = s
 
       def onNext(elem: Long): Future[Ack] = {
         received += elem
