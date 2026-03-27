@@ -19,20 +19,21 @@ package monix.execution.internal.forkJoin
 
 import java.util.concurrent.ForkJoinPool.{ForkJoinWorkerThreadFactory, ManagedBlocker}
 import java.util.concurrent.{ForkJoinPool, ForkJoinWorkerThread, ThreadFactory}
-
 import monix.execution.internal.forkJoin.DynamicWorkerThreadFactory.EmptyBlockContext
 
+import scala.annotation.nowarn
 import scala.concurrent.{BlockContext, CanAwait}
 
 // Implement BlockContext on FJP threads
 private[monix] final class DynamicWorkerThreadFactory(
   prefix: String,
   uncaught: Thread.UncaughtExceptionHandler,
-  daemonic: Boolean)
-  extends ThreadFactory with ForkJoinWorkerThreadFactory {
+  daemonic: Boolean
+) extends ThreadFactory with ForkJoinWorkerThreadFactory {
 
   require(prefix ne null, "DefaultWorkerThreadFactory.prefix must be non null")
 
+  @nowarn("msg=deprecated")
   def wire[T <: Thread](thread: T): T = {
     thread.setDaemon(daemonic)
     thread.setUncaughtExceptionHandler(uncaught)
