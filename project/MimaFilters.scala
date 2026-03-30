@@ -105,6 +105,8 @@ object MimaFilters {
     // TrampolineExecutionContext signature tweaks (internal API)
     exclude[IncompatibleMethTypeProblem]("monix.execution.schedulers.TrampolineExecutionContext#JVMNormalTrampoline.startLoop"),
     exclude[IncompatibleMethTypeProblem]("monix.execution.schedulers.TrampolineExecutionContext#JVMOptimalTrampoline.startLoop"),
-    exclude[IncompatibleMethTypeProblem]("monix.execution.schedulers.TrampolineExecutionContext.this")
+    exclude[IncompatibleMethTypeProblem]("monix.execution.schedulers.TrampolineExecutionContext.this"),
+    exclude[MissingClassProblem]("monix.execution.schedulers.AdaptedThreadPoolExecutor"),
+    exclude[MissingClassProblem]("monix.execution.schedulers.ExecutorScheduler$FromScheduledExecutor"),
   )
 }
