@@ -46,7 +46,7 @@ import scala.collection.mutable.ArrayBuffer
   *   // For being able to do IO.start
   *   implicit val cs: ContextShift[IO] = SchedulerEffect.contextShift[IO](global)(IO.ioEffect)
   *   // We need a `Timer` for this to work
-  *   @annotation.unused implicit val timer: Timer[IO] = SchedulerEffect.timer[IO](global)
+  *   implicit val timer: Timer[IO] = SchedulerEffect.timer[IO](global)
   *
   *   def consumer(queue: ConcurrentQueue[IO, Int], index: Int): IO[Unit] =
   *     queue.poll.flatMap { a =>
@@ -108,7 +108,7 @@ import scala.collection.mutable.ArrayBuffer
   *   import monix.execution.ChannelType.MPSC
   *   import monix.execution.BufferCapacity.Bounded
   *
-  *   @annotation.unused val queue = ConcurrentQueue[IO].withConfig[Int](
+  *   val queue = ConcurrentQueue[IO].withConfig[Int](
   *     capacity = Bounded(128),
   *     channelType = MPSC
   *   )

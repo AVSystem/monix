@@ -29,7 +29,7 @@ private[monix] final class StandardWorkerThreadFactory(
   def wire[T <: Thread](thread: T): T = {
     thread.setDaemon(daemonic)
     thread.setUncaughtExceptionHandler(uncaught)
-    thread.setName(prefix + "-" + thread.getId)
+    thread.setName(prefix + "-" + thread.threadId())
     thread
   }
 

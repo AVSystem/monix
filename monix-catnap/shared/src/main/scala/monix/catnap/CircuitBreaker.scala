@@ -118,7 +118,7 @@ import scala.concurrent.duration._
   *       throw new RuntimeException("dummy")
   *   }
   *
-  *   @annotation.unused val task = circuitBreaker.protect(problematic)
+  *   val task = circuitBreaker.protect(problematic)
   * }}}
   *
   * When attempting to close the circuit breaker and resume normal
@@ -126,7 +126,7 @@ import scala.concurrent.duration._
   * failed attempts, like so:
   *
   * {{{
-  *   @annotation.unused val exponential = CircuitBreaker[IO].of(
+  *   val exponential = CircuitBreaker[IO].of(
   *     maxFailures = 5,
   *     resetTimeout = 10.seconds,
   *     exponentialBackoffFactor = 2,
@@ -159,7 +159,7 @@ import scala.concurrent.duration._
   *   import cats.effect._
   *   import monix.execution.exceptions.ExecutionRejectedException
   *
-  *   @annotation.unused def protectWithRetry[F[_], A](task: F[A], cb: CircuitBreaker[F], delay: FiniteDuration)
+  *   def protectWithRetry[F[_], A](task: F[A], cb: CircuitBreaker[F], delay: FiniteDuration)
   *     (implicit F: Async[F], timer: Timer[F]): F[A] = {
   *
   *     cb.protect(task).recoverWith {
@@ -175,7 +175,7 @@ import scala.concurrent.duration._
   * [[CircuitBreaker!.awaitClose awaitClose]] method:
   *
   * {{{
-  *   @annotation.unused def protectWithRetry2[F[_], A](task: F[A], cb: CircuitBreaker[F])
+  *   def protectWithRetry2[F[_], A](task: F[A], cb: CircuitBreaker[F])
   *     (implicit F: Async[F]): F[A] = {
   *
   *     cb.protect(task).recoverWith {
@@ -596,7 +596,7 @@ object CircuitBreaker extends CircuitBreakerDocs {
     *   import cats.effect.{IO, Clock}
     *   implicit val clock: Clock[IO] = Clock.create[IO]
     *
-    *   @annotation.unused val cb = CircuitBreaker[IO].of(
+    *   val cb = CircuitBreaker[IO].of(
     *     maxFailures = 10,
     *     resetTimeout = 3.second,
     *     exponentialBackoffFactor = 2

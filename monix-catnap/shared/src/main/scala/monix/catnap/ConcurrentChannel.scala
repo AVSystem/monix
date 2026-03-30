@@ -53,7 +53,7 @@ import scala.collection.mutable.ArrayBuffer
   *   // For being able to do IO.start
   *   implicit val cs: ContextShift[IO] = SchedulerEffect.contextShift[IO](global)(IO.ioEffect)
   *   // We need a `Timer` for this to work
-  *   @annotation.unused implicit val timer: Timer[IO] = SchedulerEffect.timer[IO](global)
+  *   implicit val timer: Timer[IO] = SchedulerEffect.timer[IO](global)
   *
   *   // Completion event
   *   sealed trait Complete
@@ -269,7 +269,7 @@ final class ConcurrentChannel[F[_], E, A] private (
     *   sealed trait Complete
     *   object Complete extends Complete
     *
-    *   @annotation.unused def range[F[_]](from: Int, until: Int, increment: Int)
+    *   def range[F[_]](from: Int, until: Int, increment: Int = 1)
     *     (channel: ConcurrentChannel[F, Complete, Int])
     *     (implicit F: Sync[F]): F[Unit] = {
     *
@@ -321,7 +321,7 @@ final class ConcurrentChannel[F[_], E, A] private (
     *   sealed trait Complete
     *   object Complete extends Complete
     *
-    *   @annotation.unused def range[F[_]](from: Int, until: Int, increment: Int)
+    *   def range[F[_]](from: Int, until: Int, increment: Int = 1)
     *     (channel: ConcurrentChannel[F, Complete, Int])
     *     (implicit F: Sync[F]): F[Unit] = {
     *

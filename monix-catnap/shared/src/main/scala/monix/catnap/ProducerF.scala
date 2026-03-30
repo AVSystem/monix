@@ -59,7 +59,7 @@ trait ProducerF[F[_], E, A] extends Serializable {
     *   import cats.implicits._
     *   import cats.effect.Async
     *
-    *   @annotation.unused def range[F[_]](channel: ProducerF[F, Int, Int], from: Int, until: Int)
+    *   def range[F[_]](channel: ProducerF[F, Int, Int], from: Int, until: Int)
     *     (implicit F: Async[F]): F[Unit] = {
     *
     *     if (from < until) {
@@ -110,7 +110,7 @@ trait ProducerF[F[_], E, A] extends Serializable {
     *   import cats.implicits._
     *   import cats.effect.Async
     *
-    *   @annotation.unused def range[F[_]](channel: ProducerF[F, Int, Int], from: Int, until: Int)
+    *   def range[F[_]](channel: ProducerF[F, Int, Int], from: Int, until: Int)
     *     (implicit F: Async[F]): F[Unit] = {
     *
     *     if (from < until) {

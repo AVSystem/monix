@@ -198,7 +198,7 @@ lazy val sharedSettings = pgpSettings ++ Seq(
   // Silence everything in auto-generated files
   scalacOptions ++= {
     if (isDotty.value)
-      Seq.empty
+      Seq("-Wconf:src=.*src_managed.*:s")
     else
       Seq("-P:silencer:pathFilters=.*[/]src_managed[/].*")
   },

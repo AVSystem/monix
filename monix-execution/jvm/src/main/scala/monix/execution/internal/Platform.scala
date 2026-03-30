@@ -176,7 +176,7 @@ private[monix] object Platform {
     * in JavaScript this always returns the same value.
     */
   def currentThreadId(): Long = {
-    Thread.currentThread().getId
+    Thread.currentThread().threadId()
   }
 
   /**

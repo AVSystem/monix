@@ -43,7 +43,7 @@ import scala.concurrent.Promise
   *
   *   // Dummies for didactic purposes
   *   case class HttpRequest()
-  *   type HttpResponse = Unit
+  *   case class HttpResponse()
   *   def makeRequest(r: HttpRequest): IO[HttpResponse] = IO(???)
   *
   *   for {

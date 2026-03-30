@@ -34,19 +34,19 @@ import scala.util.Try
   *   import cats.Eval
   *
   *   val source0 = Eval.always(1 + 1)
-  *   @annotation.unused val task0 = TaskLike[Eval].apply(source0)
+  *   val task0 = TaskLike[Eval].apply(source0)
   *
   *   // Conversion from Future
   *   import scala.concurrent.Future
   *
   *   val source1 = Future.successful(1 + 1)
-  *   @annotation.unused val task1 = TaskLike[Future].apply(source1)
+  *   val task1 = TaskLike[Future].apply(source1)
   *
   *   // Conversion from IO
   *   import cats.effect.IO
   *
   *   val source2 = IO(1 + 1)
-  *   @annotation.unused val task2 = TaskLike[IO].apply(source2)
+  *   val task2 = TaskLike[IO].apply(source2)
   * }}}
   *
   * This is an alternative to usage of `cats.effect.Effect`

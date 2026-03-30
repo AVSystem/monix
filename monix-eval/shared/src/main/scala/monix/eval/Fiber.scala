@@ -30,7 +30,7 @@ import cats.effect.CancelToken
   * {{{
   *   val task = Task.evalAsync(println("Hello!"))
   *
-  *   @annotation.unused val forked: Task[Fiber[Unit]] = task.start
+  *   val forked: Task[Fiber[Unit]] = task.start
   * }}}
   *
   * Usage example:
