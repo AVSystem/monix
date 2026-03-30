@@ -38,7 +38,7 @@ import scala.reflect.ClassTag
   *
   * Sample:
   * {{{
-  *   def sum(cursor: BatchCursor[Int]): Long = {
+  *   @annotation.unused def sum(cursor: BatchCursor[Int]): Long = {
   *     var sum = 0L
   *
   *     while (cursor.hasNext()) {

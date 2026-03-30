@@ -212,7 +212,7 @@ import scala.util.{Failure, Success, Try}
   *         {{{
   *           import cats.Order
   *
-  *           case class Person(name: String, age: Int)
+  *           class Person(val name: String, val age: Int)
   *
   *           // Starting from a Scala Ordering
   *           implicit val scalaOrderingForPerson: Ordering[Person] =
@@ -233,7 +233,7 @@ import scala.util.{Failure, Success, Try}
   *         (due to Cats also exposing laws and tests for free) and build a
   *         Scala `Ordering` when needed:
   *         {{{
-  *           val scalaOrdering = catsOrderForPerson.toOrdering
+  *           @annotation.unused val scalaOrdering = catsOrderForPerson.toOrdering
   *         }}}
   *
   * @define catsEqInterop ==Cats Eq and Scala Interop==
@@ -258,9 +258,9 @@ import scala.util.{Failure, Success, Try}
   *         {{{
   *           import cats.Eq
   *
-  *           case class Address(host: String, port: Int)
+  *           type Address = (String, Int)
   *
-  *           implicit val eqForAddress: Eq[Address] =
+  *           @annotation.unused implicit val eqForAddress: Eq[Address] =
   *             Eq.fromUniversalEquals
   *         }}}
   */
@@ -1038,7 +1038,7 @@ abstract class Observable[+A] extends Serializable { self =>
     * {{{
     *   import scala.concurrent.duration._
     *
-    *   def debounce[A](stream: Observable[A], d: FiniteDuration): Observable[A] =
+    *   @annotation.unused def debounce[A](stream: Observable[A], d: FiniteDuration): Observable[A] =
     *     stream.switchMap { x =>
     *       Observable.now(x).delayExecution(d)
     *     }
@@ -1163,7 +1163,7 @@ abstract class Observable[+A] extends Serializable { self =>
     *   import cats.implicits._
     *
     *   // Yields 1, 2, 1, 3, 2, 4
-    *   val stream = Observable(1, 1, 1, 2, 2, 1, 1, 3, 3, 3, 2, 2, 4, 4, 4)
+    *   @annotation.unused val stream = Observable(1, 1, 1, 2, 2, 1, 1, 3, 3, 3, 2, 2, 4, 4, 4)
     *     .distinctUntilChanged
     * }}}
     *
@@ -1190,7 +1190,7 @@ abstract class Observable[+A] extends Serializable { self =>
     *   import cats.implicits._
     *
     *   // Yields 1, 2, 3, 4
-    *   val stream = Observable(1, 3, 2, 4, 2, 3, 5, 7, 4)
+    *   @annotation.unused val stream = Observable(1, 3, 2, 4, 2, 3, 5, 7, 4)
     *     .distinctUntilChangedByKey(_ % 2)
     * }}}
     *
@@ -1222,7 +1222,7 @@ abstract class Observable[+A] extends Serializable { self =>
     * {{{
     *   import monix.eval.Task
     *
-    *   val stream = Observable.range(0, Int.MaxValue)
+    *   @annotation.unused val stream = Observable.range(0, Int.MaxValue)
     *     .doOnEarlyStop(Task(println("Stopped early!")))
     *     .take(100)
     * }}}
@@ -1249,7 +1249,7 @@ abstract class Observable[+A] extends Serializable { self =>
     * {{{
     *   import cats.effect.IO
     *
-    *   val stream = Observable.range(0, Int.MaxValue)
+    *   @annotation.unused val stream = Observable.range(0, Int.MaxValue)
     *     .doOnEarlyStopF(IO(println("Stopped early!")))
     *     .take(100)
     * }}}
@@ -1955,7 +1955,7 @@ abstract class Observable[+A] extends Serializable { self =>
     *     Observable(2, 3)
     *   )
     *
-    *   val concatenated =
+    *   @annotation.unused val concatenated =
     *     stream.concatDelayErrors
     * }}}
     *
@@ -2109,7 +2109,7 @@ abstract class Observable[+A] extends Serializable { self =>
     *   import cats.effect.ExitCase
     *   import monix.eval.Task
     *
-    *   val stream = Observable.suspend(???).guaranteeCase(err => Task {
+    *   @annotation.unused val stream = Observable.suspend(???).guaranteeCase(err => Task {
     *     err match {
     *       case ExitCase.Completed =>
     *         println("Completed successfully!")
@@ -2520,7 +2520,7 @@ abstract class Observable[+A] extends Serializable { self =>
     * {{{
     *   import monix.execution.ExecutionModel.AlwaysAsyncExecution
     *
-    *   val stream = Observable(1, 2, 3)
+    *   @annotation.unused val stream = Observable(1, 2, 3)
     *     .executeWithModel(AlwaysAsyncExecution)
     * }}}
     *
@@ -2993,7 +2993,7 @@ abstract class Observable[+A] extends Serializable { self =>
     *   case class Current[A](current: Option[A], count: Int)
     *     extends State[A]
     *
-    *   case class Person(id: Int, name: String)
+    *   type Person = (Int, String)
     *
     *   // TODO: to implement!
     *   def requestPersonDetails(id: Int): IO[Option[Person]] =
@@ -3017,7 +3017,7 @@ abstract class Observable[+A] extends Serializable { self =>
     *     }
     *   }
     *
-    *   val filtered = scanned
+    *   @annotation.unused val filtered = scanned
     *     .takeWhile(_.count < 10)
     *     .collect { case Current(a, _) => a }
     * }}}
@@ -3074,7 +3074,7 @@ abstract class Observable[+A] extends Serializable { self =>
     *   case class Current[A](current: Option[A], count: Int)
     *     extends State[A]
     *
-    *   case class Person(id: Int, name: String)
+    *   type Person = (Int, String)
     *
     *   // TODO: to implement!
     *   def requestPersonDetails(id: Int): Task[Option[Person]] =
@@ -3098,7 +3098,7 @@ abstract class Observable[+A] extends Serializable { self =>
     *     }
     *   }
     *
-    *   val filtered = scanned
+    *   @annotation.unused val filtered = scanned
     *     .takeWhile(_.count < 10)
     *     .collect { case Current(a, _) => a }
     * }}}
@@ -3145,7 +3145,7 @@ abstract class Observable[+A] extends Serializable { self =>
     *   import cats.implicits._
     *
     *   // Yields 2, 6, 12, 20, 30, 42
-    *   val stream = Observable(1, 2, 3, 4, 5, 6).scanMap(x => x * 2)
+    *   @annotation.unused val stream = Observable(1, 2, 3, 4, 5, 6).scanMap(x => x * 2)
     * }}}
     *
     * @param f is the mapping function applied to every incoming element of this `Observable`
@@ -4054,10 +4054,10 @@ abstract class Observable[+A] extends Serializable { self =>
     *   import cats.implicits._
     *
     *   // Yields 10
-    *   val stream1 = Observable(1, 2, 3, 4).fold
+    *   @annotation.unused val stream1 = Observable(1, 2, 3, 4).fold
     *
     *   // Yields "1234"
-    *   val stream2 = Observable("1", "2", "3", "4").fold
+    *   @annotation.unused val stream2 = Observable("1", "2", "3", "4").fold
     * }}}
     *
     * Note, in case you don't have a `Monoid` instance in scope,
@@ -4092,10 +4092,10 @@ abstract class Observable[+A] extends Serializable { self =>
     *   import cats.implicits._
     *
     *   // Yields 10
-    *   val stream1 = Observable(1, 2, 3, 4).foldL
+    *   @annotation.unused val stream1 = Observable(1, 2, 3, 4).foldL
     *
     *   // Yields "1234"
-    *   val stream2 = Observable("1", "2", "3", "4").foldL
+    *   @annotation.unused val stream2 = Observable("1", "2", "3", "4").foldL
     * }}}
     *
     * @see [[fold]] for the version that returns an observable
@@ -4121,20 +4121,20 @@ abstract class Observable[+A] extends Serializable { self =>
     *
     * Example: {{{
     *   // Sums first 10 items
-    *   val stream1 = Observable.range(0, 1000).foldWhileLeft((0L, 0)) {
+    *   @annotation.unused val stream1 = Observable.range(0, 1000).foldWhileLeft((0L, 0)) {
     *     case ((sum, count), e) =>
     *       val next = (sum + e, count + 1)
     *       if (count + 1 < 10) Left(next) else Right(next)
     *   }
     *
     *   // Implements exists(predicate)
-    *   val stream2 = Observable(1, 2, 3, 4, 5).foldWhileLeft(false) {
+    *   @annotation.unused val stream2 = Observable(1, 2, 3, 4, 5).foldWhileLeft(false) {
     *     (default, e) =>
     *       if (e == 3) Right(true) else Left(default)
     *   }
     *
     *   // Implements forall(predicate)
-    *   val stream3 = Observable(1, 2, 3, 4, 5).foldWhileLeft(true) {
+    *   @annotation.unused val stream3 = Observable(1, 2, 3, 4, 5).foldWhileLeft(true) {
     *     (default, e) =>
     *       if (e != 3) Right(false) else Left(default)
     *   }
@@ -4170,20 +4170,20 @@ abstract class Observable[+A] extends Serializable { self =>
     *
     * Example: {{{
     *   // Sums first 10 items
-    *   val stream1 = Observable.range(0, 1000).foldWhileLeftL((0L, 0)) {
+    *   @annotation.unused val stream1 = Observable.range(0, 1000).foldWhileLeftL((0L, 0)) {
     *     case ((sum, count), e) =>
     *       val next = (sum + e, count + 1)
     *       if (count + 1 < 10) Left(next) else Right(next)
     *   }
     *
     *   // Implements exists(predicate)
-    *   val stream2 = Observable(1, 2, 3, 4, 5).foldWhileLeftL(false) {
+    *   @annotation.unused val stream2 = Observable(1, 2, 3, 4, 5).foldWhileLeftL(false) {
     *     (default, e) =>
     *       if (e == 3) Right(true) else Left(default)
     *   }
     *
     *   // Implements forall(predicate)
-    *   val stream3 = Observable(1, 2, 3, 4, 5).foldWhileLeftL(true) {
+    *   @annotation.unused val stream3 = Observable(1, 2, 3, 4, 5).foldWhileLeftL(true) {
     *     (default, e) =>
     *       if (e != 3) Right(false) else Left(default)
     *   }
@@ -4452,10 +4452,10 @@ abstract class Observable[+A] extends Serializable { self =>
     *   import cats.implicits._
     *
     *   // Yields Some(20)
-    *   val stream1 = Observable(10, 7, 6, 8, 20, 3, 5).maxL
+    *   @annotation.unused val stream1 = Observable(10, 7, 6, 8, 20, 3, 5).maxL
     *
     *   // Yields Observable.empty
-    *   val stream2 = Observable.empty[Int].maxL
+    *   @annotation.unused val stream2 = Observable.empty[Int].maxL
     * }}}
     *
     * $catsOrderInterop
@@ -4482,10 +4482,10 @@ abstract class Observable[+A] extends Serializable { self =>
     *   import cats.implicits._
     *
     *   // Yields Observable(20)
-    *   val stream1 = Observable(10, 7, 6, 8, 20, 3, 5).max
+    *   @annotation.unused val stream1 = Observable(10, 7, 6, 8, 20, 3, 5).max
     *
     *   // Yields Observable.empty
-    *   val stream2 = Observable.empty[Int].max
+    *   @annotation.unused val stream2 = Observable.empty[Int].max
     * }}}
     *
     * $catsOrderInterop
@@ -4593,11 +4593,11 @@ abstract class Observable[+A] extends Serializable { self =>
     *   import cats.implicits._
     *
     *   // Yields Some(3)
-    *   val stream1 =
+    *   @annotation.unused val stream1 =
     *     Observable(10, 7, 6, 8, 20, 3, 5).minL
     *
     *   // Yields None
-    *   val stream2 =
+    *   @annotation.unused val stream2 =
     *     Observable.empty[Int].minL
     * }}}
     *
@@ -4625,11 +4625,11 @@ abstract class Observable[+A] extends Serializable { self =>
     *   import cats.implicits._
     *
     *   // Yields Observable(3)
-    *   val stream1 =
+    *   @annotation.unused val stream1 =
     *     Observable(10, 7, 6, 8, 20, 3, 5).min
     *
     *   // Yields Observable.empty
-    *   val stream2 =
+    *   @annotation.unused val stream2 =
     *     Observable.empty[Int].min
     * }}}
     *
@@ -4691,7 +4691,7 @@ abstract class Observable[+A] extends Serializable { self =>
     *   case class Person(name: String, age: Int)
     *
     *   // Yields Observable(Person("Alice", 27))
-    *   val stream = Observable(Person("Alex", 34), Person("Alice", 27))
+    *   @annotation.unused val stream = Observable(Person("Alex", 34), Person("Alice", 27))
     *     .minBy(_.age)
     * }}}
     *
@@ -4893,7 +4893,7 @@ object Observable extends ObservableDeprecatedBuilders {
     * {{{
     *   // Don't do this kind of recursion, because `flatMap` can throw
     *   // stack overflow errors:
-    *   def tailRecM[A, B](a: A)(f: (A) => Observable[Either[A, B]]): Observable[B] =
+    *   @annotation.unused def tailRecM[A, B](a: A)(f: (A) => Observable[Either[A, B]]): Observable[B] =
     *     f(a).flatMap {
     *       case Right(b) => Observable.pure(b)
     *       case Left(nextA) => tailRecM(nextA)(f)
@@ -5141,7 +5141,7 @@ object Observable extends ObservableDeprecatedBuilders {
     * This example would be equivalent with usage of [[Observable.resource]]:
     *
     * {{{
-    *   def openFileAsResource2(file: File): Observable[FileInputStream] = {
+    *   @annotation.unused def openFileAsResource2(file: File): Observable[FileInputStream] = {
     *     Observable.resource(Task(new FileInputStream(file)))(h => Task(h.close()))
     *   }
     * }}}
@@ -5149,7 +5149,7 @@ object Observable extends ObservableDeprecatedBuilders {
     * This means that `flatMap` is safe to use:
     *
     * {{{
-    *   def readBytes(file: File): Observable[Array[Byte]] =
+    *   @annotation.unused def readBytes(file: File): Observable[Array[Byte]] =
     *     openFileAsStream(file).flatMap { in =>
     *       Observable.fromInputStreamUnsafe(in)
     *     }

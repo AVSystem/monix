@@ -165,7 +165,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
   *         {{{
   *           import cats.Order
   *
-  *           case class Person(name: String, age: Int)
+  *           class Person(val name: String, val age: Int)
   *
   *           // Starting from a Scala Ordering
   *           implicit val scalaOrderingForPerson: Ordering[Person] =
@@ -186,7 +186,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
   *         (due to Cats also exposing laws and tests for free) and build a
   *         Scala `Ordering` when needed:
   *         {{{
-  *           val scalaOrdering = catsOrderForPerson.toOrdering
+  *           @annotation.unused val scalaOrdering = catsOrderForPerson.toOrdering
   *         }}}
   *
   * @define catsEqInterop ==Cats Eq and Scala Interop==
@@ -211,9 +211,9 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
   *         {{{
   *           import cats.Eq
   *
-  *           case class Address(host: String, port: Int)
+  *           type Address = (String, Int)
   *
-  *           implicit val eqForAddress: Eq[Address] =
+  *           @annotation.unused implicit val eqForAddress: Eq[Address] =
   *             Eq.fromUniversalEquals
   *         }}}
   */
@@ -1158,7 +1158,7 @@ sealed abstract class Iterant[F[_], A] extends Product with Serializable {
     *   import cats.implicits._
     *   import cats.effect.Sync
     *
-    *   def exists[F[_], A](fa: Iterant[F, A], p: A => Boolean)
+    *   @annotation.unused def exists[F[_], A](fa: Iterant[F, A], p: A => Boolean)
     *     (implicit F: Sync[F]): F[Boolean] = {
     *
     *     fa.foldRightL(F.pure(false)) { (a, next) =>
@@ -1166,7 +1166,7 @@ sealed abstract class Iterant[F[_], A] extends Product with Serializable {
     *     }
     *   }
     *
-    *   def forall[F[_], A](fa: Iterant[F, A], p: A => Boolean)
+    *   @annotation.unused def forall[F[_], A](fa: Iterant[F, A], p: A => Boolean)
     *     (implicit F: Sync[F]): F[Boolean] = {
     *
     *     fa.foldRightL(F.pure(true)) { (a, next) =>
@@ -1174,7 +1174,7 @@ sealed abstract class Iterant[F[_], A] extends Product with Serializable {
     *     }
     *   }
     *
-    *   def concat[F[_], A](lh: Iterant[F, A], rh: Iterant[F, A])
+    *   @annotation.unused def concat[F[_], A](lh: Iterant[F, A], rh: Iterant[F, A])
     *     (implicit F: Sync[F]): Iterant[F, A] = {
     *
     *     Iterant.suspend[F, A] {
@@ -2022,7 +2022,7 @@ sealed abstract class Iterant[F[_], A] extends Product with Serializable {
     *     extends State[A]
     *
     *   // Dummies
-    *   case class Person(id: Int, name: String, age: Int)
+    *   type Person = (Int, String, Int)
     *   def requestPersonDetails(id: Int): Task[Option[Person]] = Task.delay(???)
     *
     *   // Whatever
@@ -2150,7 +2150,7 @@ sealed abstract class Iterant[F[_], A] extends Product with Serializable {
     * {{{
     *   import cats._, cats.implicits._, cats.effect._
     *
-    *    def unconsFold[F[_]: Sync, A: Monoid](iterant: Iterant[F, A]): F[A] = {
+    *    @annotation.unused def unconsFold[F[_]: Sync, A: Monoid](iterant: Iterant[F, A]): F[A] = {
     *     def go(iterant: Iterant[F, A], acc: A): Iterant[F, A] =
     *       iterant.uncons.flatMap {
     *         case (None, _) => Iterant.pure(acc)
@@ -2779,7 +2779,7 @@ object Iterant extends IterantInstances {
     * This example would be equivalent with usage of [[Iterant.resource]]:
     *
     * {{{
-    *   def openFileAsResource2(file: File): Iterant[IO, FileInputStream] = {
+    *   @annotation.unused def openFileAsResource2(file: File): Iterant[IO, FileInputStream] = {
     *     Iterant.resource(IO(new FileInputStream(file)))(h => IO(h.close()))
     *   }
     * }}}
@@ -2787,7 +2787,7 @@ object Iterant extends IterantInstances {
     * This means that `flatMap` is safe to use:
     *
     * {{{
-    *   def readLines(file: File): Iterant[IO, String] =
+    *   @annotation.unused def readLines(file: File): Iterant[IO, String] =
     *     openFileAsStream(file).flatMap { in =>
     *       val buf = new BufferedReader(new InputStreamReader(in, "utf-8"))
     *       Iterant[IO].repeatEval(buf.readLine())
@@ -2896,7 +2896,7 @@ object Iterant extends IterantInstances {
     *   import monix.eval.Coeval
     *   import scala.util.Random
     *
-    *   val randomInts = Iterant[Coeval].repeatEval(Random.nextInt())
+    *   @annotation.unused val randomInts = Iterant[Coeval].repeatEval(Random.nextInt())
     * }}}
     *
     */

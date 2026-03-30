@@ -35,19 +35,19 @@ import scala.util.Try
   *   import cats.Eval
   *
   *   val source0 = Eval.always(1 + 1)
-  *   val task0 = ObservableLike[Eval].apply(source0)
+  *   @annotation.unused val task0 = ObservableLike[Eval].apply(source0)
   *
   *   // Conversion from Future
   *   import scala.concurrent.Future
   *
   *   val source1 = Future.successful(1 + 1)
-  *   val task1 = ObservableLike[Future].apply(source1)
+  *   @annotation.unused val task1 = ObservableLike[Future].apply(source1)
   *
   *   // Conversion from IO
   *   import cats.effect.IO
   *
   *   val source2 = IO(1 + 1)
-  *   val task2 = ObservableLike[IO].apply(source2)
+  *   @annotation.unused val task2 = ObservableLike[IO].apply(source2)
   * }}}
   *
   * See [[Observable.from]]
