@@ -23,6 +23,8 @@ import monix.execution.internal.atomic.UnsafeAccess
 import monix.execution.internal.collection.LowLevelConcurrentQueue
 import monix.execution.internal.jctools.queues.MessagePassingQueue
 import sun.misc.Unsafe
+
+import scala.annotation.nowarn
 import scala.collection.mutable
 
 private[internal] abstract class FromCircularQueue[A](queue: MessagePassingQueue[A])
@@ -50,6 +52,7 @@ private[internal] abstract class FromCircularQueue[A](queue: MessagePassingQueue
   }
 }
 
+@nowarn("msg=deprecated")
 private[internal] object FromCircularQueue {
   /**
     * Builds a [[FromCircularQueue]] instance.

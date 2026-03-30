@@ -18,6 +18,8 @@
 package monix.execution.internal
 
 import monix.execution.schedulers.CanBlock
+
+import scala.annotation.nowarn
 import scala.concurrent.{Await, Awaitable}
 import scala.concurrent.duration.Duration
 import scala.util.Try
@@ -175,6 +177,7 @@ private[monix] object Platform {
     * To be used for multi-threading optimizations. Note that
     * in JavaScript this always returns the same value.
     */
+  @nowarn("msg=deprecated")
   def currentThreadId(): Long = {
     Thread.currentThread().getId
   }

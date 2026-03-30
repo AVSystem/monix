@@ -17,8 +17,10 @@
 
 package monix.execution.schedulers
 
-import java.util.concurrent.ThreadFactory
 import monix.execution.UncaughtExceptionReporter
+
+import java.util.concurrent.ThreadFactory
+import scala.annotation.nowarn
 
 private[schedulers] object ThreadFactoryBuilder {
   /** Constructs a ThreadFactory using the provided name prefix and appending
@@ -28,8 +30,10 @@ private[schedulers] object ThreadFactoryBuilder {
     * @param daemonic specifies whether the created threads should be daemonic
     *                 (non-daemonic threads are blocking the JVM process on exit).
     */
+
   def apply(name: String, reporter: UncaughtExceptionReporter, daemonic: Boolean): ThreadFactory = {
     new ThreadFactory {
+      @nowarn("msg=deprecated")
       def newThread(r: Runnable) = {
         val thread = new Thread(r)
         thread.setName(name + "-" + thread.getId)

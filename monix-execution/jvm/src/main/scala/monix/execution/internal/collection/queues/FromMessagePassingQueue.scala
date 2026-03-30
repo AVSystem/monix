@@ -23,6 +23,8 @@ import monix.execution.internal.atomic.UnsafeAccess
 import monix.execution.internal.collection.LowLevelConcurrentQueue
 import monix.execution.internal.jctools.queues.MessagePassingQueue
 import sun.misc.Unsafe
+
+import scala.annotation.nowarn
 import scala.collection.mutable
 
 private[internal] abstract class FromMessagePassingQueue[A](queue: MessagePassingQueue[A])
@@ -47,6 +49,7 @@ private[internal] abstract class FromMessagePassingQueue[A](queue: MessagePassin
   }
 }
 
+@nowarn("msg=deprecated")
 private[internal] object FromMessagePassingQueue {
   /**
     * Builds a [[FromMessagePassingQueue]] instance.

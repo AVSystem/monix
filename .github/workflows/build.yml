@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [ 11 ]
+        java: [ 11, 17, 21, 25 ]
         # WARN: build.sbt depends on this key path, as scalaVersion and
         # crossScalaVersions is determined from it
         scala: [ 2.13.18, 3.3.7 ]
