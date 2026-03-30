@@ -233,7 +233,7 @@ import scala.util.{Failure, Success, Try}
   *         (due to Cats also exposing laws and tests for free) and build a
   *         Scala `Ordering` when needed:
   *         {{{
-  *           @annotation.unused val scalaOrdering = catsOrderForPerson.toOrdering
+  *           val _scalaOrdering = catsOrderForPerson.toOrdering
   *         }}}
   *
   * @define catsEqInterop ==Cats Eq and Scala Interop==
@@ -260,7 +260,7 @@ import scala.util.{Failure, Success, Try}
   *
   *           type Address = (String, Int)
   *
-  *           @annotation.unused implicit val eqForAddress: Eq[Address] =
+  *           implicit val _eqForAddress: Eq[Address] =
   *             Eq.fromUniversalEquals
   *         }}}
   */
