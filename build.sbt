@@ -205,7 +205,7 @@ lazy val sharedSettings = pgpSettings ++ Seq(
   // Disable unused locals check in Test for Scala 3 (generated doctest files trigger false positives)
   Test / scalacOptions ++= {
     if (isDotty.value)
-      Seq("-Wconf:msg=unused local definition:s", "-Wconf:msg=discarded non-Unit value:s")
+      Seq("-Wconf:msg=unused local definition:s")
     else
       Seq.empty
   },
