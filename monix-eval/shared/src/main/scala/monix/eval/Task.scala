@@ -1603,7 +1603,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     *     var line: String = ""
     *     while (line != null) {
     *       line = in.readLine()
-    *       if (line != null) buffer.append(line)
+    *       if (line != null) buffer.append(line): Unit
     *     }
     *
     *     buffer.toString

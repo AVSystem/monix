@@ -37,7 +37,7 @@ import scala.concurrent.{Future => ScalaFuture}
   *   // Can use any data type implementing Async or Concurrent
   *   import cats.effect.IO
   *
-  *   val io = IO(Future(1 + 1)).futureLift
+  *   @annotation.unused val io = IO(Future(1 + 1)).futureLift
   * }}}
   *
   * `IO` provides its own `IO.fromFuture` of course, however
@@ -57,7 +57,7 @@ import scala.concurrent.{Future => ScalaFuture}
   *   }
   *
   *   // The result will be cancelable:
-  *   val sum: IO[Int] = IO(delayed(1 + 1)).futureLift
+  *   @annotation.unused val sum: IO[Int] = IO(delayed(1 + 1)).futureLift
   * }}}
   */
 trait FutureLift[F[_], Future[_]] extends (FutureLift.Lambda[F, Future, *] ~> F) {
@@ -76,7 +76,7 @@ object FutureLift extends internal.FutureLiftForPlatform {
     *
     *   val F = FutureLift[IO, Future]
     *
-    *   val task: IO[Int] = F.apply(IO(Future(1 + 1)))
+    *   @annotation.unused val task: IO[Int] = F.apply(IO(Future(1 + 1)))
     * }}}
     */
   def apply[F[_], Future[_]](implicit F: FutureLift[F, Future]): FutureLift[F, Future] = F
@@ -89,7 +89,7 @@ object FutureLift extends internal.FutureLiftForPlatform {
     *   import scala.concurrent.Future
     *   import scala.concurrent.ExecutionContext.Implicits.global
     *
-    *   val ioa = FutureLift.from(IO(Future(1 + 1)))
+    *   @annotation.unused val ioa = FutureLift.from(IO(Future(1 + 1)))
     * }}}
     */
   def from[F[_], Future[_], A](fa: F[Future[A]])(implicit F: FutureLift[F, Future]): F[A] =

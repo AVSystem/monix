@@ -38,7 +38,7 @@ trait ConsumerF[F[_], E, A] extends Serializable {
     *   import cats.implicits._
     *   import cats.effect.Async
     *
-    *   def sum[F[_]](channel: ConsumerF[F, Int, Int], acc: Long = 0)
+    *   @annotation.unused def sum[F[_]](channel: ConsumerF[F, Int, Int], acc: Long = 0)
     *     (implicit F: Async[F]): F[Long] = {
     *
     *     channel.pull.flatMap {
@@ -62,7 +62,7 @@ trait ConsumerF[F[_], E, A] extends Serializable {
     *   import cats.implicits._
     *   import cats.effect.Async
     *
-    *   def sum[F[_]](channel: ConsumerF[F, Int, Int], acc: Long = 0)
+    *   @annotation.unused def sum[F[_]](channel: ConsumerF[F, Int, Int], acc: Long = 0)
     *     (implicit F: Async[F]): F[Long] = {
     *
     *     channel.pullMany(1, 16).flatMap {
