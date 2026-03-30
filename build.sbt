@@ -198,12 +198,16 @@ lazy val sharedSettings = pgpSettings ++ Seq(
   // Silence everything in auto-generated files
   scalacOptions ++= {
     if (isDotty.value)
-      Seq(
-        "-Wconf:src=.*src_managed.*:s",
-        "-Wconf:msg=method getId in class Thread is deprecated:s"
-      )
+      Seq("-Wconf:msg=method getId in class Thread is deprecated:s")
     else
       Seq("-P:silencer:pathFilters=.*[/]src_managed[/].*")
+  },
+  // Disable unused locals check in Test for Scala 3 (generated doctest files trigger false positives)
+  Test / scalacOptions ++= {
+    if (isDotty.value)
+      Seq("-Wconf:msg=unused local definition:s", "-Wconf:msg=discarded non-Unit value:s")
+    else
+      Seq.empty
   },
   // Syntax improvements, linting, etc.
   libraryDependencies ++= {
