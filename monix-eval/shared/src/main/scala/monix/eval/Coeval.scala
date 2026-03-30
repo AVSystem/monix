@@ -189,7 +189,7 @@ sealed abstract class Coeval[+A] extends (() => A) with Serializable { self =>
     *
     * Example:
     * {{{
-    *   val combined = Coeval{println("first"); "first"} >> Coeval{println("second"); "second"}
+    *   @annotation.unused val combined = Coeval{println("first"); "first"} >> Coeval{println("second"); "second"}
     *   // Prints "first" and then "second"
     *   // Result value will be "second"
     * }}}
@@ -202,7 +202,7 @@ sealed abstract class Coeval[+A] extends (() => A) with Serializable { self =>
     *
     * Example:
     * {{{
-    *   val combined = Coeval{println("first"); "first"} *> Coeval{println("second"); "second"}
+    *   @annotation.unused val combined = Coeval{println("first"); "first"} *> Coeval{println("second"); "second"}
     *   // Prints "first" and then "second"
     *   // Result value will be "second"
     * }}}
@@ -215,7 +215,7 @@ sealed abstract class Coeval[+A] extends (() => A) with Serializable { self =>
     *
     * Example:
     * {{{
-    *   val combined = Coeval{println("first"); "first"} <* Coeval{println("second"); "second"}
+    *   @annotation.unused val combined = Coeval{println("first"); "first"} <* Coeval{println("second"); "second"}
     *   // Prints "first" and then "second"
     *   // Result value will be "first"
     * }}}
@@ -425,7 +425,7 @@ sealed abstract class Coeval[+A] extends (() => A) with Serializable { self =>
     * {{{
     *   import java.io._
     *
-    *   def readFile(file: File): Coeval[String] = {
+    *   @annotation.unused def readFile(file: File): Coeval[String] = {
     *     // Opening a file handle for reading text
     *     val acquire = Coeval.eval(new BufferedReader(
     *       new InputStreamReader(new FileInputStream(file), "utf-8")
@@ -628,7 +628,7 @@ sealed abstract class Coeval[+A] extends (() => A) with Serializable { self =>
     *   import scala.util.Random
     *
     *   val random = Coeval(Random.nextInt())
-    *   val loop = random.flatMapLoop(Vector.empty[Int]) { (a, list, continue) =>
+    *   @annotation.unused val loop = random.flatMapLoop(Vector.empty[Int]) { (a, list, continue) =>
     *     val newList = list :+ a
     *     if (newList.length < 5)
     *       continue(newList)
@@ -737,9 +737,9 @@ sealed abstract class Coeval[+A] extends (() => A) with Serializable { self =>
     *
     *   val source = Coeval { 1 + 1 }
     *
-    *   val asIO: IO[Int]     = source.to[IO]
-    *   val asEval: Eval[Int] = source.to[Eval]
-    *   val asTask: Task[Int] = source.to[Task]
+    *   @annotation.unused val asIO: IO[Int]     = source.to[IO]
+    *   @annotation.unused val asEval: Eval[Int] = source.to[Eval]
+    *   @annotation.unused val asTask: Task[Int] = source.to[Task]
     * }}}
     */
   final def to[F[_]](implicit F: CoevalLift[F]): F[A @uV] =
@@ -1465,7 +1465,7 @@ object Coeval extends CoevalInstancesLevel0 {
     *     })
     *
     *   // Lifting to a Resource of Coeval
-    *   val res: Resource[Coeval, InputStream] =
+    *   @annotation.unused val res: Resource[Coeval, InputStream] =
     *     open(new File("sample")).mapK(Coeval.liftFrom[SyncIO])
     * }}}
     *

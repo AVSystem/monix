@@ -67,8 +67,8 @@ import scala.util.{Failure, Success, Try}
   * [[monix.eval.Task.evalAsync Task.evalAsync]]:
   *
   * {{{
-  *   val hello = Task("Hello ")
-  *   val world = Task.evalAsync("World!")
+  *   @annotation.unused val hello = Task("Hello ")
+  *   @annotation.unused val world = Task.evalAsync("World!")
   * }}}
   *
   * Nothing gets executed yet, as `Task` is lazy, nothing executes
@@ -80,7 +80,7 @@ import scala.util.{Failure, Success, Try}
   * it's in a very real sense because of the laziness involved:
   *
   * {{{
-  *   val sayHello = hello
+  *   @annotation.unused val sayHello = hello
   *     .flatMap(h => world.map(w => h + w))
   *     .map(println)
   * }}}
@@ -92,7 +92,7 @@ import scala.util.{Failure, Success, Try}
   *   import monix.execution.CancelableFuture
   *   import monix.execution.Scheduler.Implicits.global
   *
-  *   val f: CancelableFuture[Unit] = sayHello.runToFuture
+  *   @annotation.unused val f: CancelableFuture[Unit] = sayHello.runToFuture
   *   // => Hello World!
   * }}}
   *
@@ -191,7 +191,7 @@ import scala.util.{Failure, Success, Try}
   *   val allBatches = Task.sequence(batchedTasks)
   *
   *   // Flatten the result, within the context of Task
-  *   val all: Task[Seq[Int]] = allBatches.map(_.flatten)
+  *   @annotation.unused val all: Task[Seq[Int]] = allBatches.map(_.flatten)
   * }}}
   *
   * Note that the built `Task` reference is just a specification at
@@ -215,7 +215,7 @@ import scala.util.{Failure, Success, Try}
   *   import scala.concurrent.duration._
   *   import scala.util._
   *
-  *   val delayedHello = Task.cancelable0[Unit] { (scheduler, callback) =>
+  *   @annotation.unused val delayedHello = Task.cancelable0[Unit] { (scheduler, callback) =>
   *     val task = scheduler.scheduleOnce(1.second) {
   *       println("Delayed Hello!")
   *       // Signaling successful completion
@@ -509,20 +509,20 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     *   import scala.concurrent.Await
     *
     *   // ANTI-PATTERN 1: Unnecessary side effects
-    *   def increment1(sample: Task[Int]): CancelableFuture[Int] = {
+    *   @annotation.unused def increment1(sample: Task[Int]): CancelableFuture[Int] = {
     *     // No reason to trigger `runAsync` for this operation
     *     sample.runToFuture.map(_ + 1)
     *   }
     *
     *   // ANTI-PATTERN 2: blocking threads makes it worse than (1)
-    *   def increment2(sample: Task[Int]): Int = {
+    *   @annotation.unused def increment2(sample: Task[Int]): Int = {
     *     // Blocking threads is totally unnecessary
     *     val x = Await.result(sample.runToFuture, 5.seconds)
     *     x + 1
     *   }
     *
     *   // ANTI-PATTERN 3: this is even WORSE than (2)!
-    *   def increment3(sample: Task[Int]): Task[Int] = {
+    *   @annotation.unused def increment3(sample: Task[Int]): Task[Int] = {
     *     // Triggering side-effects, but misleading users/readers
     *     // into thinking this function is pure via the return type
     *     Task.fromFuture(sample.runToFuture.map(_ + 1))
@@ -725,7 +725,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     * {{{
     *   import scala.concurrent.duration._
     *
-    *   val task = Task("Hello!").bracketCase { str =>
+    *   @annotation.unused val task = Task("Hello!").bracketCase { str =>
     *     Task(println(str))
     *   } { (_, exitCode) =>
     *     // Finalization
@@ -1118,10 +1118,10 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     *
     *   // Option 1: trigger error on cancellation
     *   val err = new CancellationException
-    *   val cached1 = source.onCancelRaiseError(err).memoize
+    *   @annotation.unused val cached1 = source.onCancelRaiseError(err).memoize
     *
     *   // Option 2: make it uninterruptible
-    *   val cached2 = source.uncancelable.memoize
+    *   @annotation.unused val cached2 = source.uncancelable.memoize
     * }}}
     *
     * When using [[onCancelRaiseError]] like in the example above, the
@@ -1157,10 +1157,10 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     *
     *   // Option 1: trigger error on cancellation
     *   val err = new CancellationException
-    *   val cached1 = source.onCancelRaiseError(err).memoizeOnSuccess
+    *   @annotation.unused val cached1 = source.onCancelRaiseError(err).memoizeOnSuccess
     *
     *   // Option 2: make it uninterruptible
-    *   val cached2 = source.uncancelable.memoizeOnSuccess
+    *   @annotation.unused val cached2 = source.uncancelable.memoizeOnSuccess
     * }}}
     *
     * When using [[onCancelRaiseError]] like in the example above, the
@@ -1189,7 +1189,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     *
     * Example:
     * {{{
-    *   val combined = Task{println("first"); "first"} >> Task{println("second"); "second"}
+    *   @annotation.unused val combined = Task{println("first"); "first"} >> Task{println("second"); "second"}
     *   // Prints "first" and then "second"
     *   // Result value will be "second"
     * }}}
@@ -1202,7 +1202,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     *
     * Example:
     * {{{
-    *   val combined = Task{println("first"); "first"} *> Task{println("second"); "second"}
+    *   @annotation.unused val combined = Task{println("first"); "first"} *> Task{println("second"); "second"}
     *   // Prints "first" and then "second"
     *   // Result value will be "second"
     * }}}
@@ -1218,7 +1218,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     *
     * Example:
     * {{{
-    *   val combined = Task{println("first"); "first"} <* Task{println("second"); "second"}
+    *   @annotation.unused val combined = Task{println("first"); "first"} <* Task{println("second"); "second"}
     *   // Prints "first" and then "second"
     *   // Result value will be "first"
     * }}}
@@ -1240,7 +1240,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     *   import monix.execution.ExecutionModel.SynchronousExecution
     *   import monix.execution.Scheduler
     *
-    *   val s = Scheduler.singleThread("example-scheduler").withExecutionModel(SynchronousExecution)
+    *   @annotation.unused val s = Scheduler.singleThread("example-scheduler").withExecutionModel(SynchronousExecution)
     *
     *   val source1 = Task(println("task 1")).loopForever
     *   val source2 = Task(println("task 2")).loopForever
@@ -1290,7 +1290,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     *   implicit val s = Scheduler.global
     *   val io = Scheduler.io()
     *
-    *   val source = Task(1) // s
+    *   @annotation.unused val source = Task(1) // s
     *     .asyncBoundary(io)
     *     .flatMap(_ => Task(2)) // io
     *     .flatMap(_ => Task(3)) // io
@@ -1328,7 +1328,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     * {{{
     *   import java.io._
     *
-    *   def readFile(file: File): Task[String] = {
+    *   @annotation.unused def readFile(file: File): Task[String] = {
     *     // Opening a file handle for reading text
     *     val acquire = Task.eval(new BufferedReader(
     *       new InputStreamReader(new FileInputStream(file), "utf-8")
@@ -1692,7 +1692,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     *     // Overriding the default `ec`!
     *     sayHello(io11)
     *
-    *   def sayHello3(ec: ExecutionContext): Unit =
+    *   @annotation.unused def sayHello3(ec: ExecutionContext): Unit =
     *     // Overriding the default no longer has the desired effect
     *     // because sayHello2 is ignoring it!
     *     sayHello2(io22)
@@ -1807,7 +1807,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     *   import scala.util.Random
     *
     *   val random = Task(Random.nextInt())
-    *   val loop = random.flatMapLoop(Vector.empty[Int]) { (a, list, continue) =>
+    *   @annotation.unused val loop = random.flatMapLoop(Vector.empty[Int]) { (a, list, continue) =>
     *     val newList = list :+ a
     *     if (newList.length < 5)
     *       continue(newList)
@@ -2181,7 +2181,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     * cancellation):
     *
     * {{{
-    *   def par2[A, B](ta: Task[A], tb: Task[B]): Task[(A, B)] =
+    *   @annotation.unused def par2[A, B](ta: Task[A], tb: Task[B]): Task[(A, B)] =
     *     for {
     *       fa <- ta.start
     *       fb <- tb.start
@@ -2375,7 +2375,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     *   // expensive remote call
     *   def call(): Unit = ()
     *
-    *   val remoteCall = Task(call())
+    *   @annotation.unused val remoteCall = Task(call())
     *     .timeoutL(actualTimeout)
     *     .onErrorRestart(100)
     *     .timeout(deadline.time)
@@ -2409,7 +2409,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     *   // expensive remote call
     *   def call(): Unit = ()
     *
-    *   val remoteCall = Task(call())
+    *   @annotation.unused val remoteCall = Task(call())
     *     .timeoutToL(actualTimeout, Task.unit)
     *     .onErrorRestart(100)
     *     .timeout(deadline.time)
@@ -2669,7 +2669,7 @@ object Task extends TaskInstancesLevel1 {
     * {{{
     *   import scala.concurrent.duration.MILLISECONDS
     *
-    *   def measureLatency[A](source: Task[A]): Task[(A, Long)] =
+    *   @annotation.unused def measureLatency[A](source: Task[A]): Task[(A, Long)] =
     *     Task.deferAction { implicit s =>
     *       // We have our Scheduler, which can inject time, we
     *       // can use it for side-effectful operations
@@ -2711,7 +2711,7 @@ object Task extends TaskInstancesLevel1 {
     * {{{
     *   import scala.concurrent.{ExecutionContext, Future}
     *
-    *   def sumFuture(list: Seq[Int])(implicit ec: ExecutionContext): Future[Int] =
+    *   @annotation.unused def sumFuture(list: Seq[Int])(implicit ec: ExecutionContext): Future[Int] =
     *     Future(list.sum)
     * }}}
     *
@@ -2721,7 +2721,7 @@ object Task extends TaskInstancesLevel1 {
     * function an `ExecutionContext` is needed:
     *
     * {{{
-    *   def sumTask(list: Seq[Int])(implicit ec: ExecutionContext): Task[Int] =
+    *   @annotation.unused def sumTask(list: Seq[Int])(implicit ec: ExecutionContext): Task[Int] =
     *     Task.deferFuture(sumFuture(list))
     * }}}
     *
@@ -2733,7 +2733,7 @@ object Task extends TaskInstancesLevel1 {
     * `Scheduler` in the passed callback:
     *
     * {{{
-    *   def sumTask2(list: Seq[Int]): Task[Int] =
+    *   @annotation.unused def sumTask2(list: Seq[Int]): Task[Int] =
     *     Task.deferFutureAction { implicit scheduler =>
     *       sumFuture(list)
     *     }
@@ -2846,7 +2846,7 @@ object Task extends TaskInstancesLevel1 {
     *   val io = IO.sleep(5.seconds) *> IO(println("Hello!"))
     *
     *   // Resulting task is cancelable
-    *   val task: Task[Unit] = Task.fromEffect(io)
+    *   @annotation.unused val task: Task[Unit] = Task.fromEffect(io)
     * }}}
     *
     * Cancellation / finalization behavior is carried over, so the
@@ -2879,7 +2879,7 @@ object Task extends TaskInstancesLevel1 {
     *
     *   val io = IO(println("Hello!"))
     *
-    *   val task: Task[Unit] = Task.fromEffect(io)
+    *   @annotation.unused val task: Task[Unit] = Task.fromEffect(io)
     * }}}
     *
     * WARNING: the resulting task might not carry the source's
@@ -2986,7 +2986,7 @@ object Task extends TaskInstancesLevel1 {
     *   import scala.concurrent.{Future, ExecutionContext}
     *   import scala.util._
     *
-    *   def deferFuture[A](f: => Future[A])(implicit ec: ExecutionContext): Task[A] =
+    *   @annotation.unused def deferFuture[A](f: => Future[A])(implicit ec: ExecutionContext): Task[A] =
     *     Task.async { cb =>
     *       // N.B. we could do `f.onComplete(cb)` directly ;-)
     *       f.onComplete {
@@ -3047,7 +3047,7 @@ object Task extends TaskInstancesLevel1 {
     *   import scala.concurrent.Future
     *   import scala.util._
     *
-    *   def deferFuture[A](f: => Future[A]): Task[A] =
+    *   @annotation.unused def deferFuture[A](f: => Future[A]): Task[A] =
     *     Task.async0 { (scheduler, cb) =>
     *       // We are being given an ExecutionContext ;-)
     *       implicit val ec = scheduler
@@ -3149,7 +3149,7 @@ object Task extends TaskInstancesLevel1 {
     *   import scala.concurrent.duration._
     *   import scala.util.control.NonFatal
     *
-    *   def delayed[A](sc: ScheduledExecutorService, timespan: FiniteDuration)
+    *   @annotation.unused def delayed[A](sc: ScheduledExecutorService, timespan: FiniteDuration)
     *     (thunk: => A)
     *     (implicit ec: ExecutionContext): Task[A] = {
     *
@@ -3231,7 +3231,7 @@ object Task extends TaskInstancesLevel1 {
     *   import scala.concurrent.duration._
     *   import scala.util.control.NonFatal
     *
-    *   def delayed1[A](sc: ScheduledExecutorService, timespan: FiniteDuration)
+    *   @annotation.unused def delayed1[A](sc: ScheduledExecutorService, timespan: FiniteDuration)
     *     (thunk: => A): Task[A] = {
     *
     *     Task.cancelable0 { (scheduler, cb) =>
@@ -3265,7 +3265,7 @@ object Task extends TaskInstancesLevel1 {
     * Java's standard library:
     *
     * {{{
-    *   def delayed2[A](timespan: FiniteDuration)(thunk: => A): Task[A] =
+    *   @annotation.unused def delayed2[A](timespan: FiniteDuration)(thunk: => A): Task[A] =
     *     Task.cancelable0 { (scheduler, cb) =>
     *       // N.B. this already returns the Cancelable that we need!
     *       val cancelable = scheduler.scheduleOnce(timespan) {
@@ -3363,7 +3363,7 @@ object Task extends TaskInstancesLevel1 {
     * {{{
     *   import scala.concurrent.Future
     *
-    *   def deferFuture[A](f: => Future[A]): Task[A] =
+    *   @annotation.unused def deferFuture[A](f: => Future[A]): Task[A] =
     *     Task.create { (scheduler, cb) =>
     *       f.onComplete(cb(_))(scheduler)
     *     }
@@ -3377,7 +3377,7 @@ object Task extends TaskInstancesLevel1 {
     *   import scala.concurrent.duration.FiniteDuration
     *   import scala.util.Try
     *
-    *   def delayResult1[A](timespan: FiniteDuration)(thunk: => A): Task[A] =
+    *   @annotation.unused def delayResult1[A](timespan: FiniteDuration)(thunk: => A): Task[A] =
     *     Task.create { (scheduler, cb) =>
     *       val c = scheduler.scheduleOnce(timespan)(cb(Try(thunk)))
     *       // We can simply return `c`, but doing this for didactic purposes!
@@ -3391,7 +3391,7 @@ object Task extends TaskInstancesLevel1 {
     * {{{
     *   import cats.effect.IO
     *
-    *   def delayResult2[A](timespan: FiniteDuration)(thunk: => A): Task[A] =
+    *   @annotation.unused def delayResult2[A](timespan: FiniteDuration)(thunk: => A): Task[A] =
     *     Task.create { (scheduler, cb) =>
     *       val c = scheduler.scheduleOnce(timespan)(cb(Try(thunk)))
     *       // We can simply return `c`, but doing this for didactic purposes!
@@ -3406,7 +3406,7 @@ object Task extends TaskInstancesLevel1 {
     * `Task.cancelable(f) <-> Task.create(f)`
     *
     * {{{
-    *   def delayResult3[A](timespan: FiniteDuration)(thunk: => A): Task[A] =
+    *   @annotation.unused def delayResult3[A](timespan: FiniteDuration)(thunk: => A): Task[A] =
     *     Task.create { (scheduler, cb) =>
     *       val c = scheduler.scheduleOnce(timespan)(cb(Try(thunk)))
     *       // We can simply return `c`, but doing this for didactic purposes!
@@ -3418,7 +3418,7 @@ object Task extends TaskInstancesLevel1 {
     * describes a cancelation action:
     *
     * {{{
-    *   def delayResult4[A](timespan: FiniteDuration)(thunk: => A): Task[A] =
+    *   @annotation.unused def delayResult4[A](timespan: FiniteDuration)(thunk: => A): Task[A] =
     *     Task.create { (scheduler, cb) =>
     *       val c = scheduler.scheduleOnce(timespan)(cb(Try(thunk)))
     *       // We can simply return `c`, but doing this for didactic purposes!
@@ -3505,7 +3505,7 @@ object Task extends TaskInstancesLevel1 {
     *   val list: List[Task[Int]] =
     *     List(1, 2, 3).map(i => Task.sleep(i.seconds).map(_ => i))
     *
-    *   val winner: Task[Int] = Task.raceMany(list)
+    *   @annotation.unused val winner: Task[Int] = Task.raceMany(list)
     * }}}
     *
     * $parallelismNote
@@ -4329,7 +4329,7 @@ object Task extends TaskInstancesLevel1 {
     *     })
     *
     *   // Lifting to a Resource of Task
-    *   val res: Resource[Task, InputStream] =
+    *   @annotation.unused val res: Resource[Task, InputStream] =
     *     open(new File("sample")).mapK(Task.liftFrom[IO])
     * }}}
     */

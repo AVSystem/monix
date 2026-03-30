@@ -269,7 +269,7 @@ final class ConcurrentChannel[F[_], E, A] private (
     *   sealed trait Complete
     *   object Complete extends Complete
     *
-    *   @annotation.unused def range[F[_]](from: Int, until: Int, increment: Int = 1)
+    *   @annotation.unused def range[F[_]](from: Int, until: Int, increment: Int)
     *     (channel: ConcurrentChannel[F, Complete, Int])
     *     (implicit F: Sync[F]): F[Unit] = {
     *
@@ -321,7 +321,7 @@ final class ConcurrentChannel[F[_], E, A] private (
     *   sealed trait Complete
     *   object Complete extends Complete
     *
-    *   @annotation.unused def range[F[_]](from: Int, until: Int, increment: Int = 1)
+    *   @annotation.unused def range[F[_]](from: Int, until: Int, increment: Int)
     *     (channel: ConcurrentChannel[F, Complete, Int])
     *     (implicit F: Sync[F]): F[Unit] = {
     *

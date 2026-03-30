@@ -37,7 +37,7 @@ private[eval] trait CoevalDeprecatedExtensions[+A] extends Any {
     *
     *   val value = Coeval { 1 + 1 }
     *
-    *   val result: IO[Int] = value.to[IO]
+    *   @annotation.unused val result: IO[Int] = value.to[IO]
     * }}}
     */
   @deprecated("Use value.to[IO]", "3.0.0")
@@ -57,7 +57,7 @@ private[eval] trait CoevalDeprecatedExtensions[+A] extends Any {
     *
     *   val value = Coeval { 1 + 1 }
     *
-    *   val result: Eval[Int] = value.to[Eval]
+    *   @annotation.unused val result: Eval[Int] = value.to[Eval]
     * }}}
     */
   @deprecated("Use value.to[Eval]", "3.0.0")
@@ -76,7 +76,7 @@ private[eval] trait CoevalDeprecatedExtensions[+A] extends Any {
     *
     *   val value = Coeval { 1 + 1 }
     *
-    *   val result: Task[Int] = value.to[Task]
+    *   @annotation.unused val result: Task[Int] = value.to[Task]
     * }}}
     */
   @deprecated("Use value.to[Task]", "3.0.0")

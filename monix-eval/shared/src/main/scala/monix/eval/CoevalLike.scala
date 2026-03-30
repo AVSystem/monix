@@ -29,13 +29,13 @@ import scala.util.Try
   *   import cats.Eval
   *
   *   val source0 = Eval.always(1 + 1)
-  *   val task0 = CoevalLike[Eval].apply(source0)
+  *   @annotation.unused val task0 = CoevalLike[Eval].apply(source0)
   *
   *   // Conversion from SyncIO
   *   import cats.effect.SyncIO
   *
   *   val source1 = SyncIO(1 + 1)
-  *   val task1 = CoevalLike[SyncIO].apply(source1)
+  *   @annotation.unused val task1 = CoevalLike[SyncIO].apply(source1)
   * }}}
   *
   * This is an alternative to usage of `cats.effect.Effect`

@@ -60,7 +60,7 @@ import monix.execution.misc.Local
   *
   *     val t = Task(42)
   *     // Options passed implicitly
-  *     val f = t.runToFutureOpt
+  *     @annotation.unused val f = t.runToFutureOpt
   *   }
   * }}}
   *
@@ -96,7 +96,7 @@ import monix.execution.misc.Local
   *
   *   // Triggering actual execution,
   *   // runToFutureOpt is not needed if `TracingScheduler` is used
-  *   val result = task.runToFuture
+  *   @annotation.unused val result = task.runToFuture
   * }}}
   */
 final class TaskLocal[A] private (ref: Local[A]) {
@@ -129,7 +129,7 @@ final class TaskLocal[A] private (ref: Local[A]) {
     * {{{
     *   // Should yield 200 on execution, regardless of what value
     *   // we have in `local` at the time of evaluation
-    *   val task: Task[Int] =
+    *   @annotation.unused val task: Task[Int] =
     *     for {
     *       local <- TaskLocal(0)
     *       value <- local.bind(100)(local.read.map(_ * 2))
@@ -156,7 +156,7 @@ final class TaskLocal[A] private (ref: Local[A]) {
     * {{{
     *   // Should yield 200 on execution, regardless of what value
     *   // we have in `local` at the time of evaluation
-    *   val task: Task[Int] =
+    *   @annotation.unused val task: Task[Int] =
     *     for {
     *       local <- TaskLocal(0)
     *       value <- local.bindL(Task.eval(100))(local.read.map(_ * 2))
@@ -188,7 +188,7 @@ final class TaskLocal[A] private (ref: Local[A]) {
     * {{{
     *   // Should yield 0 on execution, regardless of what value
     *   // we have in `local` at the time of evaluation
-    *   val task: Task[Int] =
+    *   @annotation.unused val task: Task[Int] =
     *     for {
     *       local <- TaskLocal(0)
     *       value <- local.bindClear(local.read.map(_ * 2))
