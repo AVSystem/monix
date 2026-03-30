@@ -17,15 +17,16 @@
 
 package monix.execution.schedulers
 
-import java.util.concurrent.{ExecutorService, ForkJoinPool, ScheduledExecutorService}
 import monix.execution.internal.forkJoin.{AdaptedForkJoinPool, DynamicWorkerThreadFactory, StandardWorkerThreadFactory}
 import monix.execution.internal.{InterceptRunnable, Platform, ScheduledExecutors}
-import monix.execution.{Cancelable, UncaughtExceptionReporter}
-import monix.execution.{Features, Scheduler}
+import monix.execution.{Cancelable, Features, Scheduler, UncaughtExceptionReporter}
+
+import java.util.concurrent.{ExecutorService, ScheduledExecutorService}
 // Prevents conflict with the deprecated symbol
 import monix.execution.{ExecutionModel => ExecModel}
-import scala.concurrent.{ExecutionContext, Future, Promise, blocking}
+
 import scala.concurrent.duration.TimeUnit
+import scala.concurrent.{ExecutionContext, Future, Promise, blocking}
 import scala.util.control.NonFatal
 
 /** An [[ExecutorScheduler]] is a class for building a
@@ -54,9 +55,10 @@ abstract class ExecutorScheduler(e: ExecutorService, r: UncaughtExceptionReporte
     awaitOn.execute(new Runnable {
       override def run() =
         try blocking {
-          p.success(e.awaitTermination(timeout, unit))
-          ()
-        } catch {
+            p.success(e.awaitTermination(timeout, unit))
+            ()
+          }
+        catch {
           case ex if NonFatal(ex) =>
             p.failure(ex); ()
         }
@@ -78,10 +80,9 @@ abstract class ExecutorScheduler(e: ExecutorService, r: UncaughtExceptionReporte
 }
 
 object ExecutorScheduler {
-  /** Builder for an [[ExecutorScheduler]], converting a
-    * Java `ScheduledExecutorService`.
+  /** Builder for an [[ExecutorScheduler]], converting a Java `ExecutorService`.
     *
-    * @param service is the Java `ScheduledExecutorService` that will take
+    * @param service is the Java `ExecutorService` that will take
     *        care of scheduling and execution of all runnables.
     * @param reporter is the [[UncaughtExceptionReporter]] that logs uncaught exceptions.
     * @param executionModel is the preferred
@@ -91,22 +92,58 @@ object ExecutorScheduler {
     *        provided `ExecutorService` implements, see the documentation
     *        for [[monix.execution.Scheduler.features Scheduler.features]]
     */
+  @deprecated("Use ExecutorScheduler.fromExecutorService", "3.4.2-avs.6")
   def apply(
     service: ExecutorService,
     reporter: UncaughtExceptionReporter,
     executionModel: ExecModel,
-    features: Features): ExecutorScheduler = {
-
-    // Implementations will inherit BatchingScheduler, so this is guaranteed
-    val ft = features + Scheduler.BATCHING
+    features: Features,
+  ): ExecutorScheduler =
     service match {
-      case ref: ScheduledExecutorService =>
-        new FromScheduledExecutor(ref, reporter, executionModel, ft)
-      case _ =>
-        val s = Defaults.scheduledExecutor
-        new FromSimpleExecutor(s, service, reporter, executionModel, ft)
+      case ref: AdaptedScheduledThreadPoolExecutor => scheduledThreadPool(ref, executionModel, features)
+      case _ => fromExecutorService(service, reporter, executionModel, features)
     }
-  }
+
+  /** Builder for an [[ExecutorScheduler]], converting a Java `ExecutorService`.
+   *
+   * @param service is the Java `ExecutorService` that will take
+   *        care of scheduling and execution of all runnables.
+   * @param reporter is the [[UncaughtExceptionReporter]] that logs uncaught exceptions.
+   * @param executionModel is the preferred
+   *        [[monix.execution.ExecutionModel ExecutionModel]], a guideline
+   *        for run-loops and producers of data.
+   * @param features is the set of [[Features]] that the
+   *        provided `ExecutorService` implements, see the documentation
+   *        for [[monix.execution.Scheduler.features Scheduler.features]]
+   */
+  def fromExecutorService(
+    service: ExecutorService,
+    reporter: UncaughtExceptionReporter,
+    executionModel: ExecModel,
+    features: Features,
+  ): ExecutorScheduler =
+    new FromSimpleExecutor(
+      scheduler = Defaults.scheduledExecutor,
+      executor = service,
+      reporter = reporter,
+      executionModel = executionModel,
+      features = withBatching(features)
+    )
+
+  private[schedulers] def scheduledThreadPool(
+    service: AdaptedScheduledThreadPoolExecutor,
+    executionModel: ExecModel,
+    features: Features,
+  ): ExecutorScheduler =
+    new FromAdaptedThreadPoolExecutor(
+      executor = service,
+      executionModel = executionModel,
+      features = withBatching(features)
+    )
+
+  private def withBatching(features: Features): Features =
+    // Implementations will inherit BatchingScheduler, so this is guaranteed
+    features + Scheduler.BATCHING
 
   /**
     * DEPRECATED — provided for binary backwards compatibility.
@@ -117,9 +154,10 @@ object ExecutorScheduler {
   def apply(
     service: ExecutorService,
     reporter: UncaughtExceptionReporter,
-    executionModel: ExecModel): ExecutorScheduler = {
+    executionModel: ExecModel
+  ): ExecutorScheduler = {
     // $COVERAGE-OFF$
-    apply(service, reporter, executionModel, Features.empty)
+    fromExecutorService(service, reporter, executionModel, Features.empty)
     // $COVERAGE-ON$
   }
 
@@ -131,7 +169,8 @@ object ExecutorScheduler {
     parallelism: Int,
     daemonic: Boolean,
     reporter: UncaughtExceptionReporter,
-    executionModel: ExecModel): ExecutorScheduler = {
+    executionModel: ExecModel,
+  ): ExecutorScheduler = {
 
     val handler = reporter.asJava
     val pool = new AdaptedForkJoinPool(
@@ -142,7 +181,7 @@ object ExecutorScheduler {
       asyncMode = true
     )
 
-    apply(pool, reporter, executionModel, Features.empty)
+    fromExecutorService(pool, reporter, executionModel, Features.empty)
   }
 
   /** Creates an [[ExecutorScheduler]] backed by a `ForkJoinPool`
@@ -154,7 +193,8 @@ object ExecutorScheduler {
     maxThreads: Int,
     daemonic: Boolean,
     reporter: UncaughtExceptionReporter,
-    executionModel: ExecModel): ExecutorScheduler = {
+    executionModel: ExecModel,
+  ): ExecutorScheduler = {
 
     val exceptionHandler = reporter.asJava
     val pool = new AdaptedForkJoinPool(
@@ -165,7 +205,7 @@ object ExecutorScheduler {
       asyncMode = true
     )
 
-    apply(pool, reporter, executionModel, Features.empty)
+    fromExecutorService(pool, reporter, executionModel, Features.empty)
   }
 
   /** Converts a Java `ExecutorService`.
@@ -178,17 +218,18 @@ object ExecutorScheduler {
   private final class FromSimpleExecutor(
     scheduler: ScheduledExecutorService,
     executor: ExecutorService,
-    r: UncaughtExceptionReporter,
+    reporter: UncaughtExceptionReporter,
     override val executionModel: ExecModel,
-    override val features: Features)
-    extends ExecutorScheduler(executor, r) {
+    override val features: Features
+  ) extends ExecutorScheduler(executor, reporter) {
 
     @deprecated("Provided for backwards compatibility", "3.0.0")
     def this(
       scheduler: ScheduledExecutorService,
       executor: ExecutorService,
       r: UncaughtExceptionReporter,
-      executionModel: ExecModel) = {
+      executionModel: ExecModel,
+    ) = {
       // $COVERAGE-OFF$
       this(scheduler, executor, r, executionModel, Features.empty)
       // $COVERAGE-ON$
@@ -198,53 +239,47 @@ object ExecutorScheduler {
       ScheduledExecutors.scheduleOnce(this, scheduler)(initialDelay, unit, r)
 
     override def withExecutionModel(em: ExecModel): SchedulerService =
-      new FromSimpleExecutor(scheduler, executor, r, em, features)
+      new FromSimpleExecutor(scheduler, executor, reporter, em, features)
 
     override def withUncaughtExceptionReporter(r: UncaughtExceptionReporter): SchedulerService =
       new FromSimpleExecutor(scheduler, executor, r, executionModel, features)
   }
 
-  /** Converts a Java `ScheduledExecutorService`. */
-  private final class FromScheduledExecutor(
-    s: ScheduledExecutorService,
-    r: UncaughtExceptionReporter,
+  /** Implementation of ExecutorScheduler backed by Java `ScheduledExecutorService`. Assumes error reporting is done by
+   * the underlying `ScheduledExecutorService`.
+   *
+   * Currently intended for use only with AdaptedThreadPoolExecutor.
+   */
+  private final class FromAdaptedThreadPoolExecutor(
+    executor: AdaptedScheduledThreadPoolExecutor,
     override val executionModel: ExecModel,
-    override val features: Features)
-    extends ExecutorScheduler(s, r) {
-
-    @deprecated("Provided for backwards compatibility", "3.0.0")
-    def this(scheduler: ScheduledExecutorService, r: UncaughtExceptionReporter, executionModel: ExecModel) = {
-      // $COVERAGE-OFF$
-      this(scheduler, r, executionModel, Features.empty)
-      // $COVERAGE-ON$
-    }
-
-    override def executor: ScheduledExecutorService = s
+    override val features: Features
+  ) extends ExecutorScheduler(executor, null) {
 
     def scheduleOnce(initialDelay: Long, unit: TimeUnit, r: Runnable): Cancelable = {
       if (initialDelay <= 0) {
         execute(r)
         Cancelable.empty
       } else {
-        val task = s.schedule(r, initialDelay, unit)
+        val task = executor.schedule(r, initialDelay, unit)
         Cancelable(() => { task.cancel(true); () })
       }
     }
 
     override def scheduleWithFixedDelay(initialDelay: Long, delay: Long, unit: TimeUnit, r: Runnable): Cancelable = {
-      val task = s.scheduleWithFixedDelay(r, initialDelay, delay, unit)
+      val task = executor.scheduleWithFixedDelay(r, initialDelay, delay, unit)
       Cancelable(() => { task.cancel(false); () })
     }
 
     override def scheduleAtFixedRate(initialDelay: Long, period: Long, unit: TimeUnit, r: Runnable): Cancelable = {
-      val task = s.scheduleAtFixedRate(r, initialDelay, period, unit)
+      val task = executor.scheduleAtFixedRate(r, initialDelay, period, unit)
       Cancelable(() => { task.cancel(false); () })
     }
 
     override def withExecutionModel(em: ExecModel): SchedulerService =
-      new FromScheduledExecutor(s, r, em, features)
+      new FromAdaptedThreadPoolExecutor(executor, em, features)
 
     override def withUncaughtExceptionReporter(r: UncaughtExceptionReporter): SchedulerService =
-      new FromScheduledExecutor(s, r, executionModel, features)
+      new FromAdaptedThreadPoolExecutor(executor.withUncaughtExceptionReporter(r), executionModel, features)
   }
 }

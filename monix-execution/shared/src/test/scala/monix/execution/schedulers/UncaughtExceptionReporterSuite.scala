@@ -17,10 +17,11 @@
 
 package monix.execution.schedulers
 
-import scala.concurrent.{ExecutionContext, Promise}
-import scala.concurrent.duration._
 import minitest.TestSuite
 import monix.execution.{ExecutionModel, FutureUtils, Scheduler, UncaughtExceptionReporter}
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Promise}
 
 class UncaughtExceptionReporterBaseSuite extends TestSuite[Promise[Throwable]] {
   protected val immediateEC = TrampolineExecutionContext.immediate
@@ -41,13 +42,42 @@ class UncaughtExceptionReporterBaseSuite extends TestSuite[Promise[Throwable]] {
   def testReports(name: String)(f: UncaughtExceptionReporter => Scheduler) = {
     testAsync(name) { p =>
       f(reporter(p)).execute(throwRunnable)
-      FutureUtils.timeout(p.future.collect { case Dummy => }(immediateEC), 500.millis)(Scheduler.global)
+      assertExceptionCaught(p)
     }
 
     testAsync(name + ".withUncaughtExceptionReporter") { p =>
       f(UncaughtExceptionReporter.default).withUncaughtExceptionReporter(reporter(p)).execute(throwRunnable)
-      FutureUtils.timeout(p.future.collect { case Dummy => }(immediateEC), 500.millis)(Scheduler.global)
+      assertExceptionCaught(p)
     }
+
+    testAsync(name + ".withUncaughtExceptionReporter + scheduleOnce") { p =>
+      f(UncaughtExceptionReporter.default)
+        .withUncaughtExceptionReporter(reporter(p))
+        .scheduleOnce(1.milli)(throwRunnable.run())
+      assertExceptionCaught(p)
+    }
+
+    testAsync(name + ".withUncaughtExceptionReporter + scheduleAtFixedRate") { p =>
+      val schedule = f(UncaughtExceptionReporter.default)
+        .withUncaughtExceptionReporter(reporter(p))
+        .scheduleAtFixedRate(0.millis, 1.second)(throwRunnable.run())
+      val result = assertExceptionCaught(p)
+      result.onComplete(_ => schedule.cancel())(immediateEC)
+      result
+    }
+
+    testAsync(name + ".withUncaughtExceptionReporter + scheduleWithFixedDelay") { p =>
+      val schedule = f(UncaughtExceptionReporter.default)
+        .withUncaughtExceptionReporter(reporter(p))
+        .scheduleWithFixedDelay(0.millis, 1.second)(throwRunnable.run())
+      val result = assertExceptionCaught(p)
+      result.onComplete(_ => schedule.cancel())(immediateEC)
+      result
+    }
+  }
+
+  private def assertExceptionCaught(p: Promise[Throwable]) = {
+    FutureUtils.timeout(p.future.collect { case Dummy => }(immediateEC), 500.millis)(Scheduler.global)
   }
 }
 
