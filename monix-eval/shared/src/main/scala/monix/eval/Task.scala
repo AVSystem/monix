@@ -111,7 +111,7 @@ import scala.util.{Failure, Success, Try}
   * {{{
   *   import scala.concurrent.duration._
   *
-  *   def retryOnFailure[A](times: Int, source: Task[A]): Task[A] =
+  *   @annotation.unused def retryOnFailure[A](times: Int, source: Task[A]): Task[A] =
   *     source.onErrorHandleWith { err =>
   *       // No more retries left? Re-throw error:
   *       if (times <= 0) Task.raiseError(err) else {
@@ -1287,7 +1287,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     * {{{
     *   import monix.execution.Scheduler
     *
-    *   implicit val s = Scheduler.global
+    *   @annotation.unused implicit val s = Scheduler.global
     *   val io = Scheduler.io()
     *
     *   @annotation.unused val source = Task(1) // s
@@ -3324,7 +3324,7 @@ object Task extends TaskInstancesLevel1 {
     *
     *  import cats.syntax.all._
     *
-    *  def fib(n: Int, a: Long, b: Long): Task[Long] =
+    *  @annotation.unused def fib(n: Int, a: Long, b: Long): Task[Long] =
     *    Task.suspend {
     *      if (n <= 0) Task.pure(a) else {
     *        val next = fib(n - 1, b, a + b)

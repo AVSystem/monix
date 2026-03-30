@@ -599,7 +599,7 @@ sealed abstract class Coeval[+A] extends (() => A) with Serializable { self =>
     * {{{
     *   import scala.util.Random
     *
-    *   def randomEven: Coeval[Int] =
+    *   @annotation.unused def randomEven: Coeval[Int] =
     *     Coeval(Random.nextInt()).flatMap { x =>
     *       if (x < 0 || x % 2 == 1)
     *         randomEven // retry
