@@ -32,7 +32,7 @@ private[schedulers] object ThreadFactoryBuilder {
     new ThreadFactory {
       def newThread(r: Runnable) = {
         val thread = new Thread(r)
-        thread.setName(name + "-" + thread.threadId())
+        thread.setName(name + "-" + thread.getId)
         thread.setDaemon(daemonic)
         thread.setUncaughtExceptionHandler(reporter.asJava)
         thread
