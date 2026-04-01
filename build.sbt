@@ -202,19 +202,11 @@ lazy val sharedSettings = pgpSettings ++ Seq(
     else
       Seq("-P:silencer:pathFilters=.*[/]src_managed[/].*")
   },
-  // Exclude -Wunused:nowarn from tpolecat — it generates -Wconf:cat=unused-nowarn:s which doesn't exist in Scala 3.3.x
   tpolecatExcludeOptions ++= {
     if (isDotty.value)
-      Set(ScalacOptions.warnUnusedNoWarn)
+      Set(ScalacOptions.warnUnusedNoWarn, ScalacOptions.warnUnusedLocals)
     else
       Set.empty
-  },
-  // Suppress specific warnings in Scala 3
-  scalacOptions ++= {
-    if (isDotty.value)
-      Seq("-Wconf:msg=method getId in class Thread is deprecated:s,msg=unused local definition:s")
-    else
-      Seq.empty
   },
   // Syntax improvements, linting, etc.
   libraryDependencies ++= {
