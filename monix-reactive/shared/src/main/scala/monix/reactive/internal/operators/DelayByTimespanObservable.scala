@@ -73,7 +73,7 @@ private[reactive] final class DelayByTimespanObservable[A](source: Observable[A]
             hasError = true
             try out.onError(ex)
             finally {
-              if (ack != null) ack.trySuccess(Stop)
+              if (ack != null) ack.trySuccess(Stop): Unit
               task.cancel()
             }
           }

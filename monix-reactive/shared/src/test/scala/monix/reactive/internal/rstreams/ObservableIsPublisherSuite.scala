@@ -26,6 +26,7 @@ import monix.reactive.Observable
 import monix.reactive.subjects.PublishSubject
 import org.reactivestreams.{Subscriber, Subscription}
 
+import scala.annotation.unused
 import scala.util.Success
 
 object ObservableIsPublisherSuite extends TestSuite[TestScheduler] {
@@ -40,7 +41,7 @@ object ObservableIsPublisherSuite extends TestSuite[TestScheduler] {
   }
 
   test("should work with stop-and-wait back-pressure, test 1") { implicit scheduler =>
-    var wasCompleted = false
+    @unused var wasCompleted = false
     var sum = 0L
 
     Observable

@@ -87,7 +87,7 @@ private[reactive] final class DebounceObservable[A](source: Observable[A], timeo
                     mainTask.cancel()
                   }
                   Stop
-              }
+              }: Unit
             } else {
               val remainingTime = timeoutMillis - sinceLastOnNext
               scheduleNext(remainingTime)

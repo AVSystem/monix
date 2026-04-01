@@ -184,7 +184,7 @@ private[eval] object TaskConversions {
     def run(): Unit = {
       if (canCall) {
         canCall = false
-        if (conn ne null) conn.pop()
+        if (conn ne null) conn.pop(): Unit
         cb(value)
         value = null
       }

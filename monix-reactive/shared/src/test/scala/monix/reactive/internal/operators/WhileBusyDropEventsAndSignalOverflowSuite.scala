@@ -22,6 +22,8 @@ import monix.execution.Ack.Continue
 import monix.execution.schedulers.TestScheduler
 import monix.reactive.subjects.PublishSubject
 import monix.reactive.{Observable, Observer}
+
+import scala.annotation.unused
 import scala.concurrent.Promise
 import scala.util.Success
 
@@ -47,7 +49,7 @@ object WhileBusyDropEventsAndSignalOverflowSuite extends TestSuite[TestScheduler
     val source = PublishSubject[Long]()
     val p = Promise[Continue.type]()
     var received = 0L
-    var wasCompleted = false
+    @unused var wasCompleted = false
 
     source
       .whileBusyDropEventsAndSignal(x => x)

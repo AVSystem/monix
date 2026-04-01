@@ -22,6 +22,7 @@ import monix.execution.Ack.{Continue, Stop}
 import monix.execution.schedulers.TestScheduler
 import monix.reactive.{Observable, Observer}
 
+import scala.annotation.unused
 import scala.concurrent.Future
 
 object MonixSubscriberAsReactiveSuite extends TestSuite[TestScheduler] {
@@ -37,7 +38,7 @@ object MonixSubscriberAsReactiveSuite extends TestSuite[TestScheduler] {
 
   test("should work with synchronous batched requests") { implicit scheduler =>
     var sum = 0L
-    var completed = false
+    @unused var completed = false
 
     val observer = new Observer[Long] {
       def onNext(elem: Long) = {
@@ -145,7 +146,7 @@ object MonixSubscriberAsReactiveSuite extends TestSuite[TestScheduler] {
   }
 
   test("should work synchronously and with requests of size 1") { implicit s =>
-    var completed = false
+    @unused var completed = false
     var sum = 0L
 
     val observer = new Observer[Long] {
@@ -174,7 +175,7 @@ object MonixSubscriberAsReactiveSuite extends TestSuite[TestScheduler] {
   }
 
   test("should work with asynchronous boundaries and batched requests") { implicit s =>
-    var completed = false
+    @unused var completed = false
     var sum = 0L
 
     val observer = new Observer[Long] {
@@ -203,7 +204,7 @@ object MonixSubscriberAsReactiveSuite extends TestSuite[TestScheduler] {
   }
 
   test("should work with asynchronous boundaries and requests of size 1") { implicit scheduler =>
-    var completed = false
+    @unused var completed = false
     var sum = 0L
 
     val observer = new Observer[Long] {
@@ -273,7 +274,7 @@ object MonixSubscriberAsReactiveSuite extends TestSuite[TestScheduler] {
   }
 
   test("should cancel precisely with requests of size 1") { implicit s =>
-    for (i <- 0 until 100) {
+    for (_ <- 0 until 100) {
       var completed = 0
       var sum = 0L
 

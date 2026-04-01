@@ -19,13 +19,13 @@ package monix.reactive.internal.operators
 
 import cats.laws._
 import cats.laws.discipline._
-
 import monix.eval.Task
 import monix.execution.Ack.Continue
 import monix.execution.internal.Platform
 import monix.execution.exceptions.DummyException
 import monix.reactive.{Observable, Observer, OverflowStrategy}
 
+import scala.annotation.unused
 import scala.concurrent.Promise
 import scala.concurrent.duration._
 import scala.util.{Failure, Random}
@@ -155,7 +155,7 @@ object MapParallelUnorderedSuite extends BaseOperatorSuite {
     val dummy = DummyException("dummy")
     var isComplete = false
     var wasThrown: Throwable = null
-    var received = 0L
+    @unused var received = 0L
 
     val task1 = Task.evalAsync(1L)
     val task2 = Task.raiseError[Long](dummy)
@@ -192,7 +192,7 @@ object MapParallelUnorderedSuite extends BaseOperatorSuite {
     val dummy = DummyException("dummy")
     var isComplete = false
     var wasThrown: Throwable = null
-    var received = 0L
+    @unused var received = 0L
 
     val task1 = Task.evalAsync(1L)
     val tasks = List.fill(8)(task1)
@@ -228,7 +228,7 @@ object MapParallelUnorderedSuite extends BaseOperatorSuite {
     val dummy = DummyException("dummy")
     var isComplete = false
     var wasThrown: Throwable = null
-    var received = 0L
+    @unused var received = 0L
 
     Observable
       .range(0, 100)

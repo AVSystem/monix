@@ -29,6 +29,7 @@ import monix.reactive.Observable
 import monix.execution.exceptions.DummyException
 import monix.reactive.observers.Subscriber
 
+import scala.annotation.unused
 import scala.util.{Failure, Random, Success}
 
 object LinesReaderObservableSuite extends SimpleTestSuite {
@@ -87,9 +88,9 @@ object LinesReaderObservableSuite extends SimpleTestSuite {
   }
 
   test("fromLinesReaderUnsafe works for SynchronousExecution") {
-    implicit val s = TestScheduler(SynchronousExecution)
+    implicit val s: TestScheduler = TestScheduler(SynchronousExecution)
 
-    var wasCompleted = 0
+    @unused var wasCompleted = 0
     var received = ""
     val string = randomString()
     val in = new BufferedReader(new StringReader(string))

@@ -213,11 +213,11 @@ object Ack {
       */
     def syncOnContinueFollow[A](p: Promise[A], value: A): Self = {
       if (source eq Continue)
-        p.trySuccess(value)
+        p.trySuccess(value): Unit
       else if (source ne Stop)
         source.onComplete { r =>
           if (r.isSuccess && (r.get eq Continue))
-            p.trySuccess(value)
+            p.trySuccess(value): Unit
         }(immediate)
       source
     }
@@ -227,11 +227,11 @@ object Ack {
       */
     def syncOnStopFollow[A](p: Promise[A], value: A): Self = {
       if (source eq Stop)
-        p.trySuccess(value)
+        p.trySuccess(value): Unit
       else if (source ne Continue)
         source.onComplete { r =>
           if (r.isSuccess && (r.get eq Stop))
-            p.trySuccess(value)
+            p.trySuccess(value): Unit
         }(immediate)
       source
     }

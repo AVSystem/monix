@@ -20,6 +20,8 @@ package monix.reactive.observers
 import monix.execution.Ack.{Continue, Stop}
 import monix.execution.cancelables.BooleanCancelable
 import monix.reactive.{BaseTestSuite, Observer}
+
+import scala.annotation.unused
 import scala.concurrent.Future
 import scala.util.Success
 
@@ -98,7 +100,7 @@ object ObserverFeedSuite extends BaseTestSuite {
 
   test("should be cancelable") { implicit s =>
     check1 { (xs: List[Int]) =>
-      var sum = 0
+      @unused var sum = 0
       val downstream = new Observer[Int] {
         def onError(ex: Throwable): Unit = ()
         def onComplete(): Unit = sum += 100

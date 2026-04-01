@@ -23,6 +23,8 @@ import monix.execution.schedulers.TestScheduler
 import monix.execution.exceptions.DummyException
 import monix.reactive.subjects.PublishSubject
 import monix.reactive.{Observable, Observer}
+
+import scala.annotation.unused
 import scala.concurrent.Promise
 import scala.util.Success
 
@@ -43,7 +45,7 @@ object WhileBusyDropEventsSuite extends TestSuite[TestScheduler] {
     val source = PublishSubject[Long]()
     val p = Promise[Continue.type]()
     var received = 0L
-    var wasCompleted = false
+    @unused var wasCompleted = false
 
     source.whileBusyDropEvents.unsafeSubscribeFn(new Observer[Long] {
       def onNext(elem: Long) = {

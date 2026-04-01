@@ -145,7 +145,7 @@ private[eval] object TaskFromFuture {
       }
 
       def run(): Unit = {
-        if (conn ne null) conn.pop()
+        if (conn ne null) conn.pop(): Unit
         val v = value
         value = null
         cb(v)

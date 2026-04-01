@@ -90,7 +90,7 @@ private[tail] object IterantCompleteL {
       F.raiseError(e)
 
     private def processCursor(cursor: BatchCursor[A], rest: F[Iterant[F, A]]) = {
-      while (cursor.hasNext()) cursor.next()
+      while (cursor.hasNext()) cursor.next(): Unit
       rest.flatMap(this)
     }
   }

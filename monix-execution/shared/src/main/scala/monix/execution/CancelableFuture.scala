@@ -128,7 +128,7 @@ sealed abstract class CancelableFuture[+A] extends Future[A] with Cancelable { s
   override final def andThen[U](pf: PartialFunction[Try[A], U])(implicit
     executor: ExecutionContext): CancelableFuture[A] =
     transformWith { r =>
-      if (pf.isDefinedAt(r)) pf(r)
+      if (pf.isDefinedAt(r)) pf(r): Unit
       this
     }
 

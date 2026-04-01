@@ -31,7 +31,7 @@ object TaskExecuteWithOptionsSuite extends BaseTestSuite {
     val f = task.runToFuture
     s.tick()
 
-    val Some(Success((opt1, opt2))) = f.value
+    val Some(Success((opt1, opt2))) = f.value: @unchecked
     assert(opt1.localContextPropagation, "opt1.localContextPropagation")
     assert(!opt2.localContextPropagation, "!opt2.localContextPropagation")
   }

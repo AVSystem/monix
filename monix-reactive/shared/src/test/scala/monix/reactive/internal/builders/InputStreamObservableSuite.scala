@@ -30,6 +30,7 @@ import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
 import org.scalacheck.{Gen, Prop}
 
+import scala.annotation.unused
 import scala.collection.mutable.ListBuffer
 import scala.util.{Failure, Random, Success}
 
@@ -109,9 +110,9 @@ object InputStreamObservableSuite extends SimpleTestSuite with Checkers {
   }
 
   test("fromInputStreamUnsafe works for SynchronousExecution") {
-    implicit val s = TestScheduler(SynchronousExecution)
+    implicit val s: TestScheduler = TestScheduler(SynchronousExecution)
 
-    var wasCompleted = 0
+    @unused var wasCompleted = 0
     val received = ListBuffer.empty[Byte]
     val array = randomByteArray()
     val in = new ByteArrayInputStream(array)
