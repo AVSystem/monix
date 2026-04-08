@@ -18,6 +18,8 @@
 package monix.reactiveTests
 
 import cats.effect.Sync
+import cats.effect.std.Dispatcher
+import cats.effect.unsafe.implicits.{global => ioRuntime}
 import monix.execution.Scheduler.Implicits.global
 import monix.eval.Task
 import monix.execution.exceptions.DummyException
@@ -32,6 +34,15 @@ import scala.util.Random
 
 class IterantToPublisherTest extends PublisherVerification[Long](env())
   with TestNGSuiteLike {
+
+  // CE3 Dispatcher[Task] required for toReactivePublisher
+  implicit val taskDispatcher: Dispatcher[Task] = new Dispatcher[Task] {
+    import monix.execution.Scheduler.Implicits.global as s
+    def unsafeToFutureCancelable[A](fa: Task[A]): (scala.concurrent.Future[A], () => scala.concurrent.Future[Unit]) = {
+      val cf = fa.runToFuture(s)
+      (cf, () => { cf.cancel(); scala.concurrent.Future.successful(()) })
+    }
+  }
 
   def createPublisher(elements: Long): Publisher[Long] = {
     if (elements < 4096) {
