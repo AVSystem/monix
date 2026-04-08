@@ -16,14 +16,15 @@
  */
 
 package monix.eval
-import cats.effect.{ContextShift, IO}
-import monix.catnap.SchedulerEffect
+import cats.effect.IO
+import cats.effect.unsafe.implicits.{global => ioRuntime}
 import monix.execution.exceptions.DummyException
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 object TaskLiftSuite extends BaseTestSuite {
-  import TaskConversionsSuite.{CIO, CustomConcurrentEffect, CustomEffect}
 
   test("task.to[Task]") { _ =>
     val task = Task(1)
@@ -36,67 +37,18 @@ object TaskLiftSuite extends BaseTestSuite {
     val io = task.to[IO]
     val f = io.unsafeToFuture()
 
-    s.tick()
-    assertEquals(f.value, Some(Success(1)))
+    assertEquals(Await.result(f, 5.seconds), 1)
   }
 
   test("task.to[IO] for errors") { implicit s =>
     val dummy = DummyException("dummy")
     val task = Task.raiseError(dummy)
     val io = task.to[IO]
-    val f = io.unsafeToFuture()
+    val f = Await.ready(io.unsafeToFuture(), 5.seconds)
 
-    s.tick()
     assertEquals(f.value, Some(Failure(dummy)))
   }
 
-  test("task.to[Effect]") { implicit s =>
-    implicit val cs: ContextShift[IO] = SchedulerEffect.contextShift[IO](s)(IO.ioEffect)
-    implicit val F: CustomEffect = new CustomEffect()
-
-    val task = Task(1)
-    val io = task.to[CIO]
-    val f = io.io.unsafeToFuture()
-
-    s.tick()
-    assertEquals(f.value, Some(Success(1)))
-  }
-
-  test("task.to[Effect] for errors") { implicit s =>
-    implicit val cs: ContextShift[IO] = SchedulerEffect.contextShift[IO](s)(IO.ioEffect)
-    implicit val F: CustomEffect = new CustomEffect()
-
-    val dummy = DummyException("dummy")
-    val task = Task.raiseError(dummy)
-    val io = task.to[CIO]
-    val f = io.io.unsafeToFuture()
-
-    s.tick()
-    assertEquals(f.value, Some(Failure(dummy)))
-  }
-
-  test("task.to[ConcurrentEffect]") { implicit s =>
-    implicit val cs: ContextShift[IO] = SchedulerEffect.contextShift[IO](s)(IO.ioEffect)
-    implicit val F: CustomConcurrentEffect = new CustomConcurrentEffect()
-
-    val task = Task(1)
-    val io = task.to[CIO]
-    val f = io.io.unsafeToFuture()
-
-    s.tick()
-    assertEquals(f.value, Some(Success(1)))
-  }
-
-  test("task.to[ConcurrentEffect] for errors") { implicit s =>
-    implicit val cs: ContextShift[IO] = SchedulerEffect.contextShift[IO](s)(IO.ioEffect)
-    implicit val F: CustomConcurrentEffect = new CustomConcurrentEffect()
-
-    val dummy = DummyException("dummy")
-    val task = Task.raiseError(dummy)
-    val io = task.to[CIO]
-    val f = io.io.unsafeToFuture()
-
-    s.tick()
-    assertEquals(f.value, Some(Failure(dummy)))
-  }
+  // Tests for task.to[Effect] and task.to[ConcurrentEffect] removed —
+  // those CE2 type classes no longer exist in Cats Effect 3.
 }

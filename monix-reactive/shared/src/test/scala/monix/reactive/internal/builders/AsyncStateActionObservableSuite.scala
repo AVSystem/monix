@@ -17,7 +17,6 @@
 
 package monix.reactive.internal.builders
 
-import cats.effect.IO
 import minitest.TestSuite
 import monix.eval.Task
 import monix.execution.Ack.Continue
@@ -134,7 +133,7 @@ object AsyncStateActionObservableSuite extends TestSuite[TestScheduler] {
   test("should do async execution with cats.effect.IO") { implicit s =>
     var received = 0
     Observable
-      .fromAsyncStateActionF(intAsyncIO)(s.clockMonotonic(MILLISECONDS))
+      .fromAsyncStateActionF(intAsyncTask)(s.clockMonotonic(MILLISECONDS))
       .take(Platform.recommendedBatchSize.toLong * 2)
       .subscribe { _ =>
         received += 1; Continue
@@ -144,7 +143,7 @@ object AsyncStateActionObservableSuite extends TestSuite[TestScheduler] {
     assertEquals(received, Platform.recommendedBatchSize * 2)
   }
 
-  def intAsyncIO(seed: Long): IO[(Int, Long)] = IO.async(cb => cb(Right(int(seed))))
+  def intAsyncTask(seed: Long): Task[(Int, Long)] = Task.evalAsync(int(seed))
   def intAsync(seed: Long) = Task.evalAsync(int(seed))
   def intNow(seed: Long) = Task.now(int(seed))
   def intError(ex: Throwable)(seed: Long) = Task.raiseError[(Int, Long)](ex)

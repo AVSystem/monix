@@ -19,7 +19,6 @@ package monix.reactive.internal.operators
 
 import java.util.concurrent.TimeUnit
 
-import cats.effect.IO
 import cats.laws._
 import cats.laws.discipline._
 import monix.eval.Task
@@ -114,9 +113,9 @@ object ScanTaskSuite extends BaseOperatorSuite {
 
     val obs = Observable
       .range(0, 100)
-      .guaranteeF(IO { effect += 1 })
+      .guaranteeF(Task.eval { effect += 1 })
       .scanEval(Task.now(0))((_, _) => throw dummy)
-      .doOnErrorF(_ => IO { effect += 1 })
+      .doOnErrorF(_ => Task.eval { effect += 1 })
       .lastL
 
     val f = obs.runToFuture; s.tick()
@@ -130,9 +129,9 @@ object ScanTaskSuite extends BaseOperatorSuite {
 
     val obs = Observable
       .range(0, 100)
-      .guaranteeF(IO { effect += 1 })
+      .guaranteeF(Task.eval { effect += 1 })
       .scanEval(Task.now(0))((_, _) => Task.raiseError(dummy))
-      .doOnErrorF(_ => IO { effect += 1 })
+      .doOnErrorF(_ => Task.eval { effect += 1 })
       .lastL
 
     val f = obs.runToFuture; s.tick()
@@ -148,13 +147,13 @@ object ScanTaskSuite extends BaseOperatorSuite {
     val f = Observable
       .now(10)
       .endWithError(dummy)
-      .doOnErrorF(_ => IO { effect += 1 })
+      .doOnErrorF(_ => Task.eval { effect += 1 })
       .scanEval(Task.now(11))((s, a) => Task.evalAsync(s + a).delayExecution(1.second))
       .doOnNextF { x =>
-        IO { sum += x }
+        Task.eval { sum += x }
       }
       .doOnErrorF { _ =>
-        IO { effect += 1 }
+        Task.eval { effect += 1 }
       }
       .lastL
       .runToFuture
@@ -183,11 +182,11 @@ object ScanTaskSuite extends BaseOperatorSuite {
       .now(10)
       .endWithError(dummy1)
       .doOnErrorF { _ =>
-        IO { effect += 1 }
+        Task.eval { effect += 1 }
       }
       .scanEval(Task.now(0))((_, _) => Task.raiseError[Int](dummy2).delayExecution(1.second))
       .doOnErrorF { _ =>
-        IO { effect += 1 }
+        Task.eval { effect += 1 }
       }
       .lastL
       .runToFuture
@@ -220,11 +219,11 @@ object ScanTaskSuite extends BaseOperatorSuite {
     val f = Observable
       .now(10)
       .doOnNextF { _ =>
-        IO { effect += 1 }
+        Task.eval { effect += 1 }
       }
       .scanEval(Task.now(0))((_, _) => delay[Int](dummy))
       .doOnErrorF { _ =>
-        IO { effect += 1 }
+        Task.eval { effect += 1 }
       }
       .runAsyncGetLast
 

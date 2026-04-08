@@ -17,7 +17,7 @@
 
 package monix.reactive.internal.builders
 
-import cats.effect.IO
+import monix.eval.Task
 import minitest.TestSuite
 import monix.execution.Ack
 import monix.execution.Ack.Continue
@@ -41,7 +41,7 @@ object RepeatEvalFSuite extends TestSuite[TestScheduler] {
     var received = 0
 
     var i = 0
-    val obs = Observable.repeatEvalF(IO { i += 1; i })
+    val obs = Observable.repeatEvalF(Task.eval { i += 1; i })
 
     val c = obs.unsafeSubscribeFn(new Observer[Int] {
       def onNext(elem: Int): Future[Ack] = {
@@ -67,7 +67,7 @@ object RepeatEvalFSuite extends TestSuite[TestScheduler] {
     var received = 0
 
     var i = 0
-    val obs = Observable.repeatEvalF(IO.async[Int] { cb =>
+    val obs = Observable.repeatEvalF(Task.async[Int] { cb =>
       i += 1
       cb(Right(i))
     })
@@ -99,7 +99,7 @@ object RepeatEvalFSuite extends TestSuite[TestScheduler] {
     val dummy = DummyException("dummy")
     var errorThrown: Throwable = null
 
-    val obs = Observable.repeatEvalF(IO.raiseError(dummy))
+    val obs = Observable.repeatEvalF(Task.raiseError(dummy))
 
     obs.unsafeSubscribeFn(new Observer[Int] {
       override def onNext(elem: Int): Future[Ack] =

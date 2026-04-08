@@ -19,7 +19,8 @@ package monix.catnap
 
 import java.util.concurrent.atomic.AtomicLong
 
-import cats.effect.{ContextShift, IO, Timer}
+import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import cats.implicits._
 import minitest.TestSuite
 import monix.execution.BufferCapacity.{Bounded, Unbounded}
@@ -70,10 +71,6 @@ object ConcurrentQueueGlobalSuite extends BaseConcurrentQueueSuite[Scheduler] {
 }
 
 abstract class BaseConcurrentQueueSuite[S <: Scheduler] extends TestSuite[S] {
-  implicit def contextShift(implicit s: Scheduler): ContextShift[IO] =
-    SchedulerEffect.contextShift[IO](s)(IO.ioEffect)
-  implicit def timer(implicit s: Scheduler): Timer[IO] =
-    SchedulerEffect.timerLiftIO[IO](s)(IO.ioEffect)
 
   val repeatForFastTests = {
     if (Platform.isJVM) 1000 else 100
@@ -135,8 +132,8 @@ abstract class BaseConcurrentQueueSuite[S <: Scheduler] extends TestSuite[S] {
     for {
       p <- producer(count).start
       c <- consumer(count).start
-      _ <- p.join
-      r <- c.join
+      _ <- p.joinWithNever
+      r <- c.joinWithNever
     } yield {
       assertEquals(r, count.toLong * (count - 1) / 2)
     }
@@ -151,7 +148,7 @@ abstract class BaseConcurrentQueueSuite[S <: Scheduler] extends TestSuite[S] {
         case true =>
           producer(n - 1)
         case false =>
-          IO.shift *> producer(n)
+          IO.cede *> producer(n)
       }
       else {
         IO.unit
@@ -161,7 +158,7 @@ abstract class BaseConcurrentQueueSuite[S <: Scheduler] extends TestSuite[S] {
       if (n > 0)
         queue.tryPoll.flatMap {
           case Some(a) => consumer(n - 1, acc.enqueue(a))
-          case None => IO.shift *> consumer(n, acc)
+          case None => IO.cede *> consumer(n, acc)
         }
       else
         IO.pure(acc.foldLeft(0L)(_ + _))
@@ -169,8 +166,8 @@ abstract class BaseConcurrentQueueSuite[S <: Scheduler] extends TestSuite[S] {
     for {
       p <- producer(count).start
       c <- consumer(count).start
-      _ <- p.join
-      r <- c.join
+      _ <- p.joinWithNever
+      r <- c.joinWithNever
     } yield {
       assertEquals(r, count.toLong * (count - 1) / 2)
     }
@@ -216,8 +213,8 @@ abstract class BaseConcurrentQueueSuite[S <: Scheduler] extends TestSuite[S] {
       queue <- ConcurrentQueue[IO].withConfig[Int](bc, ct)
       f1    <- queue.drain(1000, 1000).start
       f2    <- queue.offerMany(elems).start
-      _     <- f2.join
-      r     <- f1.join
+      _     <- f2.joinWithNever
+      r     <- f1.joinWithNever
     } yield {
       assertEquals(r.sum, count * (count - 1) / 2)
     }
@@ -349,7 +346,7 @@ abstract class BaseConcurrentQueueSuite[S <: Scheduler] extends TestSuite[S] {
       def pollViaTry: IO[Int] =
         queue.tryPoll.flatMap {
           case Some(v) => IO.pure(v)
-          case None => IO.shift *> pollViaTry
+          case None => IO.cede *> pollViaTry
         }
 
       val poll = if (idx % 2 == 0) queue.poll else pollViaTry

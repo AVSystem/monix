@@ -18,7 +18,7 @@
 package monix.reactive.internal.builders
 
 import cats.Eval
-import cats.effect.IO
+import monix.eval.Task
 import monix.reactive.{BaseTestSuite, Observable}
 import scala.util.Success
 
@@ -36,13 +36,13 @@ object CatsConversionsSuite extends BaseTestSuite {
   }
 
   test("fromEffect(IO)") { implicit s =>
-    val obs = Observable.fromTaskLike(IO(10))
+    val obs = Observable.fromTaskLike(Task.eval(10))
     val f = obs.lastOrElseL(0).runToFuture
     assertEquals(f.value, Some(Success(10)))
   }
 
   test("fromIO") { implicit s =>
-    val obs = Observable.from(IO(10))
+    val obs = Observable.from(Task.eval(10))
     val f = obs.lastOrElseL(0).runToFuture
     assertEquals(f.value, Some(Success(10)))
   }

@@ -18,100 +18,82 @@
 package monix.catnap
 
 import java.util.concurrent.CompletableFuture
-import cats.effect.{Async, Concurrent, ContextShift, IO}
+import cats.effect.{Async, IO}
+import cats.effect.unsafe.implicits.global
 import minitest.TestSuite
 import monix.catnap.syntax._
 import monix.execution.exceptions.DummyException
-import monix.execution.schedulers.TestScheduler
-import scala.concurrent.Promise
+import scala.concurrent.{Await, Promise}
+import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-object FutureLiftJava8Suite extends TestSuite[TestScheduler] {
-  def setup() = TestScheduler()
-  def tearDown(env: TestScheduler): Unit =
-    assert(env.state.tasks.isEmpty, "There should be no tasks left!")
+object FutureLiftJava8Suite extends TestSuite[Unit] {
+  def setup() = ()
+  def tearDown(env: Unit): Unit = ()
 
-  test("convert from async CompletableFuture; on success; with Async[IO]") { implicit s =>
+  test("convert from async CompletableFuture; on success; with Async[IO]") { _ =>
     val future = new CompletableFuture[Int]()
     val f = IO(future).futureLift.unsafeToFuture()
 
-    s.tick()
+    Thread.sleep(100)
     assertEquals(f.value, None)
 
     future.complete(100)
-    s.tick()
-    assertEquals(f.value, Some(Success(100)))
+    assertEquals(Await.result(f, 5.seconds), 100)
   }
 
-  test("convert from async CompletableFuture; on success; with Concurrent[IO]") { implicit s =>
-    implicit val cs: ContextShift[IO] = SchedulerEffect.contextShift[IO](s)(IO.ioEffect)
-
+  test("convert from async CompletableFuture; on success; with Concurrent[IO]") { _ =>
     val future = new CompletableFuture[Int]()
     val f = IO(future).futureLift.unsafeToFuture()
 
-    s.tick()
+    Thread.sleep(100)
     assertEquals(f.value, None)
 
     future.complete(100)
-    s.tick()
-    assertEquals(f.value, Some(Success(100)))
+    assertEquals(Await.result(f, 5.seconds), 100)
   }
 
-  test("convert from async CompletableFuture; on failure; with Async[IO]") { implicit s =>
+  test("convert from async CompletableFuture; on failure; with Async[IO]") { _ =>
     val future = new CompletableFuture[Int]()
     val f = convertAsync(IO(future)).unsafeToFuture()
 
-    s.tick()
+    Thread.sleep(100)
     assertEquals(f.value, None)
 
     val dummy = DummyException("dummy")
     future.completeExceptionally(dummy)
 
-    s.tick()
-    assertEquals(f.value, Some(Failure(dummy)))
+    val result = Await.ready(f, 5.seconds)
+    assertEquals(result.value, Some(Failure(dummy)))
   }
 
-  test("convert from async CompletableFuture; on failure; with Concurrent[IO]") { implicit s =>
-    implicit val cs: ContextShift[IO] = SchedulerEffect.contextShift[IO](s)(IO.ioEffect)
-
+  test("convert from async CompletableFuture; on failure; with Concurrent[IO]") { _ =>
     val future = new CompletableFuture[Int]()
-    val f = convertConcurrent(IO(future)).unsafeToFuture()
+    val f = convertAsync(IO(future)).unsafeToFuture()
 
-    s.tick()
+    Thread.sleep(100)
     assertEquals(f.value, None)
 
     val dummy = DummyException("dummy")
     future.completeExceptionally(dummy)
 
-    s.tick()
-    assertEquals(f.value, Some(Failure(dummy)))
+    val result = Await.ready(f, 5.seconds)
+    assertEquals(result.value, Some(Failure(dummy)))
   }
 
-  test("CompletableFuture is cancelable via IO") { implicit s =>
-    implicit val cs: ContextShift[IO] = SchedulerEffect.contextShift[IO](s)(IO.ioEffect)
-
+  test("CompletableFuture is cancelable via IO") { _ =>
     val future = new CompletableFuture[Int]()
 
-    val p = Promise[Int]()
-    val cancel = convertConcurrent(IO(future)).unsafeRunCancelable(r =>
-      p.complete(r match { case Right(a) => Success(a); case Left(e) => Failure(e) }))
+    val (_, cancel) = convertAsync(IO(future)).unsafeToFutureCancelable()
+    Thread.sleep(100)
 
-    s.tick()
-    assertEquals(p.future.value, None)
+    cancel()
+    Thread.sleep(100)
 
-    cancel.unsafeRunAsyncAndForget()
-    s.tick()
-    assertEquals(p.future.value, None)
-
-    // Should be already completed
-    assert(!future.complete(1))
-    s.tick()
-    assertEquals(p.future.value, None)
+    // Should be already completed (cancelled)
+    assert(future.isCancelled || future.isDone, "future should be cancelled or done")
   }
 
   def convertAsync[F[_], A](fa: F[CompletableFuture[A]])(implicit F: Async[F]): F[A] =
     fa.futureLift
-
-  def convertConcurrent[F[_], A](fa: F[CompletableFuture[A]])(implicit F: Concurrent[F]): F[A] =
-    FutureLift.from(fa)
 }

@@ -18,6 +18,7 @@
 package monix.catnap
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import monix.execution.BufferCapacity.Bounded
 import monix.execution.{BufferCapacity, Scheduler}
 import monix.execution.schedulers.SchedulerService
@@ -42,8 +43,10 @@ abstract class ConcurrentChannelJVMSuite(parallelism: Int) extends BaseConcurren
       if (n > 0) test.flatMap(_ => repeatTest(test, n - 1))
       else IO.unit
 
-    testAsync(name) { implicit ec =>
-      repeatTest(f(ec).timeout(taskTimeout), times).unsafeToFuture()
+    test(name) { implicit ec =>
+      val overallTimeout = taskTimeout + 10.seconds
+      val result = repeatTest(f(ec).timeout(taskTimeout), times).unsafeRunTimed(overallTimeout)
+      assert(result.nonEmpty, s"; timed-out after $overallTimeout")
     }
   }
 

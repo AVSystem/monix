@@ -19,6 +19,7 @@ package monix.catnap
 package cancelables
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import minitest.SimpleTestSuite
 
 object BooleanCancelableFSuite extends SimpleTestSuite {

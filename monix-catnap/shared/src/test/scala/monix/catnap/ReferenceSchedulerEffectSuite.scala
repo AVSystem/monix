@@ -17,6 +17,7 @@
 
 package monix.catnap
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import minitest.SimpleTestSuite
 import monix.execution.schedulers.ReferenceSchedulerSuite.DummyScheduler
 
@@ -24,27 +25,22 @@ import scala.concurrent.duration._
 import scala.util.Success
 
 class ReferenceSchedulerEffectSuite extends SimpleTestSuite {
-  test("clock.monotonic") {
+  test("monotonic") {
     val s = new DummyScheduler
-    val clock = SchedulerEffect.clock[IO](s)
-
-    val clockMonotonic = clock.monotonic(MILLISECONDS).unsafeRunSync()
-    assert(clockMonotonic > 0)
+    val clockMonotonic = SchedulerEffect.monotonic[IO](s).unsafeRunSync()
+    assert(clockMonotonic > 0.seconds)
   }
 
-  test("clock.realTime") {
+  test("realTime") {
     val s = new DummyScheduler
-    val clock = SchedulerEffect.clock[IO](s)
-
-    val clockRealTime = clock.realTime(MILLISECONDS).unsafeRunSync()
-    assert(clockRealTime > 0)
+    val clockRealTime = SchedulerEffect.realTime[IO](s).unsafeRunSync()
+    assert(clockRealTime > 0.seconds)
   }
 
-  test("timer.sleep") {
+  test("sleep") {
     val s = new DummyScheduler
-    val timer = SchedulerEffect.timerLiftIO[IO](s)
 
-    val f = timer.sleep(10.seconds).unsafeToFuture()
+    val f = SchedulerEffect.sleep[IO](s, 10.seconds).unsafeToFuture()
     assertEquals(f.value, None)
 
     s.tick(5.seconds)
@@ -52,33 +48,5 @@ class ReferenceSchedulerEffectSuite extends SimpleTestSuite {
 
     s.tick(5.seconds)
     assertEquals(f.value, Some(Success(())))
-  }
-
-  test("contextShift.shift") {
-    val s = new DummyScheduler
-    val contextShift = SchedulerEffect.contextShift[IO](s)
-
-    val f = contextShift.shift.unsafeToFuture()
-    assertEquals(f.value, None)
-
-    s.tick()
-    assertEquals(f.value, Some(Success(())))
-  }
-
-  test("contextShift.evalOn") {
-    val s = new DummyScheduler
-    val contextShift = SchedulerEffect.contextShift[IO](s)
-    val s2 = new DummyScheduler()
-
-    val f = contextShift.evalOn(s2)(IO(1)).unsafeToFuture()
-    assertEquals(f.value, None)
-
-    s.tick()
-    assertEquals(f.value, None)
-
-    s2.tick()
-    assertEquals(f.value, None)
-    s.tick()
-    assertEquals(f.value, Some(Success(1)))
   }
 }

@@ -19,6 +19,7 @@ package monix.catnap
 package cancelables
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import minitest.SimpleTestSuite
 import monix.execution.exceptions.{CompositeException, DummyException}
 

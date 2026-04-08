@@ -18,6 +18,7 @@
 package monix.tail
 
 import cats.effect._
+import cats.effect.std.Dispatcher
 import cats.laws._
 import cats.laws.discipline._
 import monix.eval.Task
@@ -31,6 +32,36 @@ import org.reactivestreams.{Subscriber, Subscription}
 import scala.util.{Failure, Success}
 
 object IterantToReactivePublisherSuite extends BaseTestSuite {
+  import monix.execution.Scheduler
+
+  /** Creates a simple Dispatcher[Task] for tests, backed by the given scheduler. */
+  implicit def taskDispatcher(implicit s: Scheduler): Dispatcher[Task] =
+    new Dispatcher[Task] {
+      def unsafeToFutureCancelable[A](fa: Task[A]): (scala.concurrent.Future[A], () => scala.concurrent.Future[Unit]) = {
+        val f = fa.runToFuture(s)
+        (f, () => { f.cancel(); scala.concurrent.Future.successful(()) })
+      }
+      override def unsafeRunAndForget[A](fa: Task[A]): Unit =
+        fa.runAsyncAndForget(s)
+      override def reportFailure(t: Throwable): Unit =
+        s.reportFailure(t)
+    }
+
+  /** Creates a simple Dispatcher[IO] for tests, backed by the global IO runtime. */
+  implicit val ioDispatcher: Dispatcher[IO] = {
+    import cats.effect.unsafe.implicits.{global => ioRuntime}
+    new Dispatcher[IO] {
+      def unsafeToFutureCancelable[A](fa: IO[A]): (scala.concurrent.Future[A], () => scala.concurrent.Future[Unit]) = {
+        val (future, cancel) = fa.unsafeToFutureCancelable()
+        (future, () => cancel())
+      }
+      override def unsafeRunAndForget[A](fa: IO[A]): Unit =
+        fa.unsafeRunAndForget()
+      override def reportFailure(t: Throwable): Unit =
+        ioRuntime.compute.reportFailure(t)
+    }
+  }
+
   test("sum with Task and request(1)") { implicit s =>
     check1 { (stream: Iterant[Task, Int]) =>
       sum(stream, 1) <-> stream.foldLeftL(0L)(_ + _)
@@ -78,13 +109,6 @@ object IterantToReactivePublisherSuite extends BaseTestSuite {
   test("works with IO") { implicit s =>
     check1 { (stream: Iterant[IO, Int]) =>
       sum(stream, 1) <-> Task.from(stream.foldLeftL(0L)(_ + _))
-    }
-  }
-
-  test("works with any Effect") { implicit s =>
-    implicit val ioEffect: Effect[IO] = new CustomIOEffect()(IO.contextShift(s))
-    check1 { (stream: Iterant[IO, Int]) =>
-      sum(stream, 1) <-> Task.fromEffect(stream.foldLeftL(0L)(_ + _))
     }
   }
 
@@ -335,7 +359,7 @@ object IterantToReactivePublisherSuite extends BaseTestSuite {
     assertEquals(wasCompleted, None)
   }
 
-  def sum[F[_]](stream: Iterant[F, Int], request: Long)(implicit F: Effect[F]): Task[Long] =
+  def sum[F[_]](stream: Iterant[F, Int], request: Long)(implicit F: Async[F], dispatcher: Dispatcher[F]): Task[Long] =
     Task.create { (scheduler, cb) =>
       val subscription = SingleAssignSubscription()
 
@@ -369,30 +393,4 @@ object IterantToReactivePublisherSuite extends BaseTestSuite {
 
       subscription
     }
-
-  class CustomIOEffect(implicit contextShift: ContextShift[IO]) extends Effect[IO] {
-    def runAsync[A](fa: IO[A])(cb: (Either[Throwable, A]) => IO[Unit]): SyncIO[Unit] =
-      fa.runAsync(cb)
-    def async[A](k: ((Either[Throwable, A]) => Unit) => Unit): IO[A] =
-      IO.async(k)
-    def asyncF[A](k: ((Either[Throwable, A]) => Unit) => IO[Unit]): IO[A] =
-      IO.asyncF(k)
-    def suspend[A](thunk: => IO[A]): IO[A] =
-      IO.defer(thunk)
-    def flatMap[A, B](fa: IO[A])(f: (A) => IO[B]): IO[B] =
-      fa.flatMap(f)
-    def tailRecM[A, B](a: A)(f: (A) => IO[Either[A, B]]): IO[B] =
-      IO.ioConcurrentEffect.tailRecM(a)(f)
-    def raiseError[A](e: Throwable): IO[A] =
-      IO.raiseError(e)
-    def handleErrorWith[A](fa: IO[A])(f: (Throwable) => IO[A]): IO[A] =
-      IO.ioConcurrentEffect.handleErrorWith(fa)(f)
-    def pure[A](x: A): IO[A] =
-      IO.pure(x)
-    override def liftIO[A](ioa: IO[A]): IO[A] =
-      ioa
-    override def bracketCase[A, B](acquire: IO[A])(use: A => IO[B])(
-      release: (A, ExitCase[Throwable]) => IO[Unit]): IO[B] =
-      acquire.bracketCase(use)(release)
-  }
 }

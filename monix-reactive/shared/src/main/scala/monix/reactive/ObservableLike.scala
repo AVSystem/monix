@@ -133,7 +133,7 @@ object ObservableLike extends ObservableLikeImplicits0 {
   implicit val fromSyncIO: ObservableLike[SyncIO] =
     new ObservableLike[SyncIO] {
       def apply[A](fa: SyncIO[A]): Observable[A] =
-        Observable.from(fa.toIO)
+        Observable.eval(fa.unsafeRunSync())
     }
 
   /**

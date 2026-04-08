@@ -18,6 +18,7 @@
 package monix.catnap
 
 import cats.effect._
+import cats.effect.unsafe.implicits.global
 import cats.implicits._
 import minitest.TestSuite
 import monix.catnap.CircuitBreaker.{Closed, Open}
@@ -32,12 +33,6 @@ object CircuitBreakerSuite extends TestSuite[TestScheduler] {
   def tearDown(env: TestScheduler): Unit =
     assert(env.state.tasks.isEmpty, "There should be no tasks left!")
 
-  implicit def timer(implicit ec: TestScheduler): Timer[IO] =
-    SchedulerEffect.timerLiftIO[IO](ec)
-
-  implicit def contextShift(implicit ec: TestScheduler): ContextShift[IO] =
-    SchedulerEffect.contextShift[IO](ec)(IO.ioEffect)
-
   test("should work for successful async tasks") { implicit s =>
     val circuitBreaker = CircuitBreaker.unsafe[IO](
       maxFailures = 5,
@@ -45,7 +40,7 @@ object CircuitBreakerSuite extends TestSuite[TestScheduler] {
     )
 
     var effect = 0
-    val task = circuitBreaker.protect(IO.shift *> IO {
+    val task = circuitBreaker.protect(IO.cede *> IO {
       effect += 1
     })
 
@@ -78,7 +73,7 @@ object CircuitBreakerSuite extends TestSuite[TestScheduler] {
     def loop(n: Int, acc: Int): IO[Int] = {
       if (n > 0)
         circuitBreaker
-          .protect(IO.shift *> IO(acc + 1))
+          .protect(IO.cede *> IO(acc + 1))
           .flatMap(s => loop(n - 1, s))
       else
         IO.pure(acc)
@@ -97,7 +92,7 @@ object CircuitBreakerSuite extends TestSuite[TestScheduler] {
       .unsafeRunSync()
 
     def loop(n: Int, acc: Int): IO[Int] =
-      IO.shift *> IO.defer {
+      IO.cede *> IO.defer {
         if (n > 0)
           circuitBreaker.protect(loop(n - 1, acc + 1))
         else
@@ -380,7 +375,6 @@ object CircuitBreakerSuite extends TestSuite[TestScheduler] {
   }
 
   test("works with Sync only") { implicit s =>
-    implicit val clock: Clock[SyncIO] = SchedulerEffect.clock[SyncIO](s)
     val cb = CircuitBreaker.unsafe[SyncIO](1, 1.second)
 
     val dummy = DummyException("dummy")
@@ -414,7 +408,7 @@ object CircuitBreakerSuite extends TestSuite[TestScheduler] {
 
   test("awaitClose with polymorphic code") { implicit s =>
     // Forcing the use of Sync[IO]
-    def mkInstance[F[_]](implicit F: Sync[F], clock: Clock[F]) =
+    def mkInstance[F[_]](implicit F: Sync[F]) =
       CircuitBreaker.unsafe[F](1, 1.second)
 
     val cb = mkInstance[IO]
@@ -446,7 +440,7 @@ object CircuitBreakerSuite extends TestSuite[TestScheduler] {
     // Overriding Sync[IO]
     import Overrides.syncIO
     // Forcing the use of Sync[IO]
-    def mkInstance[F[_]](implicit F: Sync[F], clock: Clock[F]) =
+    def mkInstance[F[_]](implicit F: Sync[F]) =
       CircuitBreaker.unsafe[F](1, 1.second)
 
     val cb = mkInstance[IO]

@@ -19,7 +19,7 @@ package monix.eval.internal
 
 import java.util.concurrent.RejectedExecutionException
 
-import cats.effect.{CancelToken, IO}
+import cats.effect.IO
 import monix.eval.Task.Context
 import monix.eval.{Coeval, Task}
 import monix.execution.atomic.AtomicInt
@@ -34,15 +34,15 @@ private[eval] object TaskCreate {
   /**
     * Implementation for `cats.effect.Concurrent#cancelable`.
     */
-  def cancelableEffect[A](k: (Either[Throwable, A] => Unit) => CancelToken[Task]): Task[A] =
+  def cancelableEffect[A](k: (Either[Throwable, A] => Unit) => Task[Unit]): Task[A] =
     cancelable0((_, cb) => k(cb))
 
   /**
     * Implementation for `Task.cancelable`
     */
-  def cancelable0[A](fn: (Scheduler, Callback[Throwable, A]) => CancelToken[Task]): Task[A] = {
-    val start = new Cancelable0Start[A, CancelToken[Task]](fn) {
-      def setConnection(ref: TaskConnectionRef, token: CancelToken[Task])(implicit s: Scheduler): Unit =
+  def cancelable0[A](fn: (Scheduler, Callback[Throwable, A]) => Task[Unit]): Task[A] = {
+    val start = new Cancelable0Start[A, Task[Unit]](fn) {
+      def setConnection(ref: TaskConnectionRef, token: Task[Unit])(implicit s: Scheduler): Unit =
         ref := token
     }
     TracedAsync[A](start, trampolineBefore = false, trampolineAfter = false, traceKey = fn)
@@ -51,7 +51,7 @@ private[eval] object TaskCreate {
   /**
     * Implementation for `Task.create`, used via `TaskBuilder`.
     */
-  def cancelableIO[A](start: (Scheduler, Callback[Throwable, A]) => CancelToken[IO]): Task[A] =
+  def cancelableIO[A](start: (Scheduler, Callback[Throwable, A]) => IO[Unit]): Task[A] =
     cancelable0((sc, cb) => Task.from(start(sc, cb)))
 
   /**

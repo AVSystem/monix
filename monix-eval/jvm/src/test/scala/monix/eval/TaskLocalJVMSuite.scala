@@ -18,6 +18,7 @@
 package monix.eval
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.{global => ioRuntime}
 import cats.implicits.catsStdInstancesForList
 import cats.syntax.foldable._
 import minitest.SimpleTestSuite

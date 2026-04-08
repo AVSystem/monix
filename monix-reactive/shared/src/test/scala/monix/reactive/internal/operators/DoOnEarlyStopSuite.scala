@@ -17,7 +17,6 @@
 
 package monix.reactive.internal.operators
 
-import cats.effect.IO
 import minitest.TestSuite
 import monix.eval.Task
 import monix.execution.Ack
@@ -41,7 +40,7 @@ object DoOnEarlyStopSuite extends TestSuite[TestScheduler] {
 
     Observable
       .now(1)
-      .doOnEarlyStopF(IO { wasCanceled += 1 })
+      .doOnEarlyStopF(Task.eval { wasCanceled += 1 })
       .unsafeSubscribeFn(new Subscriber[Int] {
         val scheduler = s
         def onNext(elem: Int) = Stop

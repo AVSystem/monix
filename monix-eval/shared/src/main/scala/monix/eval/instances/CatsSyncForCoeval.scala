@@ -18,9 +18,11 @@
 package monix.eval.instances
 
 import cats.{CoflatMap, Eval, SemigroupK}
-import cats.effect.{ExitCase, Sync, SyncEffect}
+import cats.effect.{Outcome, Sync, Unique}
+import cats.effect.kernel.{CancelScope, Poll}
 import monix.eval.Coeval
 
+import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
 
 /** Cats type class instances for [[monix.eval.Coeval Coeval]].
@@ -35,12 +37,12 @@ import scala.util.Try
   *  - [[https://typelevel.org/cats/ typelevel/cats]]
   *  - [[https://github.com/typelevel/cats-effect typelevel/cats-effect]]
   */
-class CatsSyncForCoeval extends SyncEffect[Coeval] with CoflatMap[Coeval] with SemigroupK[Coeval] {
+class CatsSyncForCoeval extends Sync[Coeval] with CoflatMap[Coeval] with SemigroupK[Coeval] {
   override def pure[A](a: A): Coeval[A] =
     Coeval.now(a)
   override def delay[A](thunk: => A): Coeval[A] =
     Coeval.eval(thunk)
-  override def suspend[A](fa: => Coeval[A]): Coeval[A] =
+  override def defer[A](fa: => Coeval[A]): Coeval[A] =
     Coeval.defer(fa)
   override val unit: Coeval[Unit] =
     Coeval.now(())
@@ -78,15 +80,51 @@ class CatsSyncForCoeval extends SyncEffect[Coeval] with CoflatMap[Coeval] with S
     Coeval.now(f(fa))
   override def coflatten[A](fa: Coeval[A]): Coeval[Coeval[A]] =
     Coeval.now(fa)
-  override def bracket[A, B](acquire: Coeval[A])(use: A => Coeval[B])(release: A => Coeval[Unit]): Coeval[B] =
-    acquire.bracket(use)(release)
-  override def bracketCase[A, B](acquire: Coeval[A])(use: A => Coeval[B])(
-    release: (A, ExitCase[Throwable]) => Coeval[Unit]): Coeval[B] =
-    acquire.bracketCase(use)(release)
   override def combineK[A](x: Coeval[A], y: Coeval[A]): Coeval[A] =
     x.onErrorHandleWith(_ => y)
-  override def runSync[G[_], A](fa: Coeval[A])(implicit G: Sync[G]): G[A] =
-    fa.toSync[G]
+
+  // --- CE3 MonadCancel ---
+
+  override def canceled: Coeval[Unit] =
+    Coeval.unit // Coeval is synchronous, cancellation is a no-op
+
+  override def forceR[A, B](fa: Coeval[A])(fb: Coeval[B]): Coeval[B] =
+    fa.attempt.flatMap(_ => fb)
+
+  override def onCancel[A](fa: Coeval[A], fin: Coeval[Unit]): Coeval[A] =
+    fa // Coeval is synchronous, no cancellation
+
+  override def uncancelable[A](body: Poll[Coeval] => Coeval[A]): Coeval[A] =
+    body(new Poll[Coeval] {
+      def apply[B](fa: Coeval[B]): Coeval[B] = fa
+    })
+
+  override def rootCancelScope: CancelScope =
+    CancelScope.Uncancelable
+
+  // --- CE3 Clock ---
+
+  override def monotonic: Coeval[FiniteDuration] =
+    Coeval.eval(FiniteDuration(System.nanoTime(), java.util.concurrent.TimeUnit.NANOSECONDS))
+
+  override def realTime: Coeval[FiniteDuration] =
+    Coeval.eval(FiniteDuration(System.currentTimeMillis() * 1000000L, java.util.concurrent.TimeUnit.NANOSECONDS))
+
+  // --- CE3 Unique ---
+
+  override def unique: Coeval[Unique.Token] =
+    Coeval.eval(new Unique.Token)
+
+  // --- CE3 Sync additional ---
+
+  override def blocking[A](thunk: => A): Coeval[A] =
+    Coeval.eval(thunk)
+
+  override def interruptible[A](thunk: => A): Coeval[A] =
+    Coeval.eval(thunk)
+
+  override def suspend[A](hint: cats.effect.kernel.Sync.Type)(thunk: => A): Coeval[A] =
+    Coeval.eval(thunk)
 }
 
 /** Default and reusable instance for [[CatsSyncForCoeval]].

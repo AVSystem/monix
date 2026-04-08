@@ -17,7 +17,7 @@
 
 package monix.eval
 
-import cats.effect.{Fiber => _, _}
+import cats.effect.{IO, SyncIO}
 import cats.{CommutativeApplicative, Monoid, Semigroup, ~>}
 import monix.catnap.FutureLift
 import monix.eval.instances._
@@ -354,7 +354,7 @@ import scala.util.{Failure, Success, Try}
   *         that can be used to cancel a running task
   *
   * @define cancelTokenDesc a `Task[Unit]`, aliased via Cats-Effect
-  *         as a `CancelToken[Task]`, that can be used to cancel the
+  *         as a `Task[Unit]`, that can be used to cancel the
   *         running task. Given that this is a `Task`, it can describe
   *         asynchronous finalizers (if the source had any), therefore
   *         users can apply back-pressure on the completion of such
@@ -712,7 +712,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
   }
 
   /** Triggers the asynchronous execution, returning a `Task[Unit]`
-    * (aliased to `CancelToken[Task]` in Cats-Effect) which can
+    * (aliased to `Task[Unit]` in Cats-Effect) which can
     * cancel the running computation.
     *
     * This is the more potent version of [[runAsync]],
@@ -768,7 +768,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     * @return $cancelTokenDesc
     */
   @UnsafeBecauseImpure
-  final def runAsyncF(cb: Either[Throwable, A] => Unit)(implicit s: Scheduler): CancelToken[Task] =
+  final def runAsyncF(cb: Either[Throwable, A] => Unit)(implicit s: Scheduler): Task[Unit] =
     runAsyncOptF(cb)(s, Task.defaultOptions)
 
   /** Triggers the asynchronous execution, much like normal [[runAsyncF]], but
@@ -806,7 +806,7 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     * @return $cancelTokenDesc
     */
   @UnsafeBecauseImpure
-  def runAsyncOptF(cb: Either[Throwable, A] => Unit)(implicit s: Scheduler, opts: Options): CancelToken[Task] = {
+  def runAsyncOptF(cb: Either[Throwable, A] => Unit)(implicit s: Scheduler, opts: Options): Task[Unit] = {
     val opts2 = opts.withSchedulerFeatures
     Local.bindCurrentIf(opts2.localContextPropagation) {
       TaskRunLoop.startLight(this, s, opts2, Callback.fromAttempt(cb))
@@ -2274,52 +2274,13 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     *        evaluate tasks; when evaluating tasks, this is the pure
     *        alternative to demanding a `Scheduler`
     */
-  final def toConcurrent[F[_]](implicit F: Concurrent[F], eff: ConcurrentEffect[Task]): F[A @uV] =
-    TaskConversions.toConcurrent(this)(F, eff)
+  @deprecated("Not available in CE3; use task.to[F] via TaskLift instead", "4.0.0")
+  final def toConcurrent[F[_]](implicit F: TaskLift[F]): F[A @uV] =
+    F(this)
 
-  /** Converts the source `Task` to any data type that implements
-    * [[https://typelevel.org/cats-effect/typeclasses/async.html Async]].
-    *
-    * Example:
-    *
-    * {{{
-    *   import cats.effect.IO
-    *   import monix.execution.Scheduler.Implicits.global
-    *   import scala.concurrent.duration._
-    *
-    *   Task.eval(println("Hello!"))
-    *     .delayExecution(5.seconds)
-    *     .toAsync[IO]
-    * }}}
-    *
-    * An `Effect[Task]` instance is needed in scope,
-    * which might need a [[monix.execution.Scheduler Scheduler]] to
-    * be available. Such a requirement is needed because the `Task`
-    * has to be evaluated in order to be converted.
-    *
-    * NOTE: the resulting instance will NOT be cancelable, as in
-    * Task's cancelation token doesn't get carried over. This is
-    * implicit in the usage of `cats.effect.Async` type class.
-    * In the example above what this means is that the task will
-    * still print `"Hello!"` after 5 seconds, even if the resulting
-    * task gets cancelled.
-    *
-    * @see [[to]] that is able to convert to any data type that has
-    *      a [[TaskLift]] implementation
-    *
-    * @see [[toConcurrent]] that is able to convert to cancelable values via the
-    *      [[https://typelevel.org/cats-effect/typeclasses/concurrent.html Concurrent]]
-    *      type class.
-    *
-    * @param F is the `cats.effect.Async` instance required in
-    *        order to perform the conversion
-    *
-    * @param eff is the `Effect[Task]` instance needed to
-    *        evaluate tasks; when evaluating tasks, this is the pure
-    *        alternative to demanding a `Scheduler`
-    */
-  final def toAsync[F[_]](implicit F: Async[F], eff: Effect[Task]): F[A @uV] =
-    TaskConversions.toAsync(this)(F, eff)
+  @deprecated("Not available in CE3; use task.to[F] via TaskLift instead", "4.0.0")
+  final def toAsync[F[_]](implicit F: TaskLift[F]): F[A @uV] =
+    F(this)
 
   /** Converts a [[Task]] to an `org.reactivestreams.Publisher` that
     * emits a single item on success, or just the error on failure.
@@ -2535,9 +2496,9 @@ sealed abstract class Task[+A] extends Serializable with TaskDeprecated.BinCompa
     */
   final def timed: Task[(FiniteDuration, A)] =
     for {
-      start <- Task.clock.monotonic(NANOSECONDS)
+      start <- Task.deferAction(sc => Task.now(sc.clockMonotonic(NANOSECONDS)))
       a     <- this
-      end   <- Task.clock.monotonic(NANOSECONDS)
+      end   <- Task.deferAction(sc => Task.now(sc.clockMonotonic(NANOSECONDS)))
     } yield (FiniteDuration(end - start, NANOSECONDS), a)
 
   /**
@@ -2829,79 +2790,19 @@ object Task extends TaskInstancesLevel1 {
   def fromReactivePublisher[A](source: Publisher[A]): Task[Option[A]] =
     TaskConversions.fromReactivePublisher(source)
 
-  /** Builds a [[Task]] instance out of any data type that implements
-    * [[https://typelevel.org/cats-effect/typeclasses/concurrent.html Concurrent]] and
-    * [[https://typelevel.org/cats-effect/typeclasses/concurrent-effect.html ConcurrentEffect]].
-    *
-    * Example:
-    *
-    * {{{
-    *   import cats.effect._
-    *   import cats.syntax.all._
-    *   import monix.execution.Scheduler.Implicits.global
-    *   import scala.concurrent.duration._
-    *
-    *   implicit val timer = IO.timer(global)
-    *
-    *   val io = IO.sleep(5.seconds) *> IO(println("Hello!"))
-    *
-    *   // Resulting task is cancelable
-    *   val task: Task[Unit] = Task.fromEffect(io)
-    * }}}
-    *
-    * Cancellation / finalization behavior is carried over, so the
-    * resulting task can be safely cancelled.
-    *
-    * @see [[Task.liftToConcurrent]] for its dual
-    *
-    * @see [[Task.fromEffect]] for a version that works with simpler,
-    *      non-cancelable `Async` data types
-    *
-    * @see [[Task.from]] for a more generic version that works with
-    *      any [[TaskLike]] data type
-    *
-    * @param F is the `cats.effect.Effect` type class instance necessary
-    *        for converting to `Task`; this instance can also be a
-    *        `cats.effect.Concurrent`, in which case the resulting
-    *        `Task` value is cancelable if the source is
+  /** DEPRECATED - ConcurrentEffect does not exist in CE3.
+    * Use `Task.from` with a `TaskLike` instance instead.
     */
-  def fromConcurrentEffect[F[_], A](fa: F[A])(implicit F: ConcurrentEffect[F]): Task[A] =
-    TaskConversions.fromConcurrentEffect(fa)(F)
+  @deprecated("ConcurrentEffect removed in CE3; use Task.from instead", "4.0.0")
+  def fromConcurrentEffect[F[_], A](fa: F[A])(implicit F: TaskLike[F]): Task[A] =
+    F(fa)
 
-  /** Builds a [[Task]] instance out of any data type that implements
-    * [[https://typelevel.org/cats-effect/typeclasses/async.html Async]] and
-    * [[https://typelevel.org/cats-effect/typeclasses/effect.html Effect]].
-    *
-    * Example:
-    *
-    * {{{
-    *   import cats.effect._
-    *
-    *   val io = IO(println("Hello!"))
-    *
-    *   val task: Task[Unit] = Task.fromEffect(io)
-    * }}}
-    *
-    * WARNING: the resulting task might not carry the source's
-    * cancelation behavior if the source is cancelable!
-    * This is implicit in the usage of `Effect`.
-    *
-    * @see [[Task.fromConcurrentEffect]] for a version that can use
-    *      [[https://typelevel.org/cats-effect/typeclasses/concurrent.html Concurrent]]
-    *      for converting cancelable tasks.
-    *
-    * @see [[Task.from]] for a more generic version that works with
-    *      any [[TaskLike]] data type
-    *
-    * @see [[Task.liftToAsync]] for its dual
-    *
-    * @param F is the `cats.effect.Effect` type class instance necessary
-    *        for converting to `Task`; this instance can also be a
-    *        `cats.effect.Concurrent`, in which case the resulting
-    *        `Task` value is cancelable if the source is
+  /** DEPRECATED - Effect does not exist in CE3.
+    * Use `Task.from` with a `TaskLike` instance instead.
     */
-  def fromEffect[F[_], A](fa: F[A])(implicit F: Effect[F]): Task[A] =
-    TaskConversions.fromEffect(fa)
+  @deprecated("Effect removed in CE3; use Task.from instead", "4.0.0")
+  def fromEffect[F[_], A](fa: F[A])(implicit F: TaskLike[F]): Task[A] =
+    F(fa)
 
   /** Builds a [[Task]] instance out of a Scala `Try`. */
   def fromTry[A](a: Try[A]): Task[A] =
@@ -3204,7 +3105,7 @@ object Task extends TaskInstancesLevel1 {
     *
     * @param register $registerParamDesc
     */
-  def cancelable[A](register: Callback[Throwable, A] => CancelToken[Task]): Task[A] =
+  def cancelable[A](register: Callback[Throwable, A] => Task[Unit]): Task[A] =
     cancelable0((_, cb) => register(cb))
 
   /** Create a cancelable `Task` from an asynchronous computation,
@@ -3308,7 +3209,7 @@ object Task extends TaskInstancesLevel1 {
     *
     * @param register $registerParamDesc
     */
-  def cancelable0[A](register: (Scheduler, Callback[Throwable, A]) => CancelToken[Task]): Task[A] =
+  def cancelable0[A](register: (Scheduler, Callback[Throwable, A]) => Task[Unit]): Task[A] =
     TaskCreate.cancelable0(register)
 
   /** Returns a cancelable boundary — a `Task` that checks for the
@@ -4293,8 +4194,9 @@ object Task extends TaskInstancesLevel1 {
     * Prefer to use [[liftTo]], this alternative is provided in order to force
     * the usage of `cats.effect.Async`, since [[TaskLift]] is lawless.
     */
-  def liftToAsync[F[_]](implicit F: cats.effect.Async[F], eff: cats.effect.Effect[Task]): (Task ~> F) =
-    TaskLift.toAsync[F]
+  @deprecated("Use liftTo instead", "4.0.0")
+  def liftToAsync[F[_]](implicit F: TaskLift[F]): (Task ~> F) =
+    F
 
   /**
     * Generates `cats.FunctionK` values for converting from `Task` to
@@ -4305,10 +4207,9 @@ object Task extends TaskInstancesLevel1 {
     * Prefer to use [[liftTo]], this alternative is provided in order to force
     * the usage of `cats.effect.Concurrent`, since [[TaskLift]] is lawless.
     */
-  def liftToConcurrent[F[_]](
-    implicit F: cats.effect.Concurrent[F],
-    eff: cats.effect.ConcurrentEffect[Task]): (Task ~> F) =
-    TaskLift.toConcurrent[F]
+  @deprecated("Use liftTo instead", "4.0.0")
+  def liftToConcurrent[F[_]](implicit F: TaskLift[F]): (Task ~> F) =
+    F
 
   /**
     * Returns a `F ~> Coeval` (`FunctionK`) for transforming any
@@ -4348,7 +4249,8 @@ object Task extends TaskInstancesLevel1 {
     * [[https://typelevel.org/cats-effect/typeclasses/concurrent-effect.html ConcurrentEffect]]
     * for where it matters.
     */
-  def liftFromConcurrentEffect[F[_]](implicit F: ConcurrentEffect[F]): (F ~> Task) =
+  @deprecated("ConcurrentEffect removed in CE3; use liftFrom instead", "4.0.0")
+  def liftFromConcurrentEffect[F[_]](implicit F: TaskLike[F]): (F ~> Task) =
     liftFrom[F]
 
   /**
@@ -4363,7 +4265,8 @@ object Task extends TaskInstancesLevel1 {
     * [[https://typelevel.org/cats-effect/typeclasses/effect.html Effect]]
     * for where it matters.
     */
-  def liftFromEffect[F[_]](implicit F: Effect[F]): (F ~> Task) =
+  @deprecated("Effect removed in CE3; use liftFrom instead", "4.0.0")
+  def liftFromEffect[F[_]](implicit F: TaskLike[F]): (F ~> Task) =
     liftFrom[F]
 
   /** Returns the current [[Task.Options]] configuration, which determine the
@@ -4517,7 +4420,7 @@ object Task extends TaskInstancesLevel1 {
       */
     implicit val forIO: AsyncBuilder[IO[Unit]] =
       new AsyncBuilder[IO[Unit]] {
-        def create[A](register: (Scheduler, Callback[Throwable, A]) => CancelToken[IO]): Task[A] =
+        def create[A](register: (Scheduler, Callback[Throwable, A]) => IO[Unit]): Task[A] =
           TaskCreate.cancelableIO(register)
       }
 
@@ -4526,7 +4429,7 @@ object Task extends TaskInstancesLevel1 {
       */
     implicit val forTask: AsyncBuilder[Task[Unit]] =
       new AsyncBuilder[Task[Unit]] {
-        def create[A](register: (Scheduler, Callback[Throwable, A]) => CancelToken[Task]): Task[A] =
+        def create[A](register: (Scheduler, Callback[Throwable, A]) => Task[Unit]): Task[A] =
           TaskCreate.cancelable0(register)
       }
 
@@ -4626,7 +4529,7 @@ object Task extends TaskInstancesLevel1 {
   private[eval] final case class Now[A](value: A) extends Task[A] {
     // Optimization to avoid the run-loop
     override def runAsyncOptF(
-      cb: Either[Throwable, A] => Unit)(implicit s: Scheduler, opts: Task.Options): CancelToken[Task] = {
+      cb: Either[Throwable, A] => Unit)(implicit s: Scheduler, opts: Task.Options): Task[Unit] = {
       if (s.executionModel != AlwaysAsyncExecution) {
         Callback.callSuccess(cb, value)
         Task.unit
@@ -4670,7 +4573,7 @@ object Task extends TaskInstancesLevel1 {
   private[eval] final case class Error[A](e: Throwable) extends Task[A] {
     // Optimization to avoid the run-loop
     override def runAsyncOptF(
-      cb: Either[Throwable, A] => Unit)(implicit s: Scheduler, opts: Task.Options): CancelToken[Task] = {
+      cb: Either[Throwable, A] => Unit)(implicit s: Scheduler, opts: Task.Options): Task[Unit] = {
       if (s.executionModel != AlwaysAsyncExecution) {
         Callback.callError(cb, e)
         Task.unit
@@ -4859,8 +4762,8 @@ private[eval] abstract class TaskInstancesLevel1 extends TaskInstancesLevel0 {
     *  - [[https://typelevel.org/cats/ typelevel/cats]]
     *  - [[https://github.com/typelevel/cats-effect typelevel/cats-effect]]
     */
-  implicit def catsAsync: CatsConcurrentForTask =
-    CatsConcurrentForTask
+  implicit def catsAsync: CatsAsyncForTask =
+    CatsAsyncForTask
 
   /** Global instance for `cats.Parallel`.
     *
@@ -4900,45 +4803,10 @@ private[eval] abstract class TaskInstancesLevel1 extends TaskInstancesLevel0 {
     * a `Monoid[ Task[A] ]` implementation.
     */
   implicit def catsMonoid[A](implicit A: Monoid[A]): Monoid[Task[A]] =
-    new CatsMonadToMonoid[Task, A]()(CatsConcurrentForTask, A)
+    new CatsMonadToMonoid[Task, A]()(CatsAsyncForTask, A)
 }
 
 private[eval] abstract class TaskInstancesLevel0 extends TaskParallelNewtype {
-  /** Global instance for `cats.effect.Effect` and for
-    * `cats.effect.ConcurrentEffect`.
-    *
-    * Implied are `cats.CoflatMap`, `cats.Applicative`, `cats.Monad`,
-    * `cats.MonadError`, `cats.effect.Sync` and `cats.effect.Async`.
-    *
-    * Note this is different from
-    * [[monix.eval.Task.catsAsync Task.catsAsync]] because we need an
-    * implicit [[monix.execution.Scheduler Scheduler]] in scope in
-    * order to trigger the execution of a `Task`. It's also lower
-    * priority in order to not trigger conflicts, because
-    * `Effect <: Async` and `ConcurrentEffect <: Concurrent with Effect`.
-    *
-    * As trivia, it's named "catsEffect" and not "catsConcurrentEffect"
-    * because it represents the `cats.effect.Effect` lineage, as in the
-    * minimum that this value will support in the future. So by naming the
-    * lineage, not the concrete sub-type implemented, we avoid breaking
-    * compatibility whenever a new type class (that we can implement)
-    * gets added into Cats.
-    *
-    * Seek more info about Cats, the standard library for FP, at:
-    *
-    *  - [[https://typelevel.org/cats/ typelevel/cats]]
-    *  - [[https://github.com/typelevel/cats-effect typelevel/cats-effect]]
-    *
-    * @param s is a [[monix.execution.Scheduler Scheduler]] that needs
-    *        to be available in scope
-    */
-  implicit def catsEffect(
-    implicit s: Scheduler,
-    opts: Task.Options = Task.defaultOptions): CatsConcurrentEffectForTask = {
-
-    new CatsConcurrentEffectForTask
-  }
-
   /** Given an `A` type that has a `cats.Semigroup[A]` implementation,
     * then this provides the evidence that `Task[A]` also has
     * a `Semigroup[ Task[A] ]` implementation.
@@ -4947,10 +4815,10 @@ private[eval] abstract class TaskInstancesLevel0 extends TaskParallelNewtype {
     * in order to avoid conflicts.
     */
   implicit def catsSemigroup[A](implicit A: Semigroup[A]): Semigroup[Task[A]] =
-    new CatsMonadToSemigroup[Task, A]()(CatsConcurrentForTask, A)
+    new CatsMonadToSemigroup[Task, A]()(CatsAsyncForTask, A)
 }
 
-private[eval] abstract class TaskParallelNewtype extends TaskContextShift {
+private[eval] abstract class TaskParallelNewtype extends TaskDeprecatedCompanion {
   /** Newtype encoding for a `Task` data type that has a [[cats.Applicative]]
     * capable of doing parallel processing in `ap` and `map2`, needed
     * for implementing `cats.Parallel`.
@@ -4970,93 +4838,6 @@ private[eval] abstract class TaskParallelNewtype extends TaskContextShift {
   object Par extends Newtype1[Task]
 }
 
-private[eval] abstract class TaskContextShift extends TaskTimers {
-  /**
-    * Default, pure, globally visible `cats.effect.ContextShift`
-    * implementation that shifts the evaluation to `Task`'s default
-    * [[monix.execution.Scheduler Scheduler]]
-    * (that's being injected in [[Task.runToFuture]]).
-    */
-  implicit val contextShift: ContextShift[Task] =
-    new ContextShift[Task] {
-      override def shift: Task[Unit] =
-        Task.shift
-      override def evalOn[A](ec: ExecutionContext)(fa: Task[A]): Task[A] =
-        ec match {
-          case ref: Scheduler => fa.executeOn(ref, forceAsync = true)
-          case _ => fa.executeOn(Scheduler(ec), forceAsync = true)
-        }
-
-    }
-
-  /** Builds a `cats.effect.ContextShift` instance, given a
-    * [[monix.execution.Scheduler Scheduler]] reference.
-    */
-  def contextShift(s: Scheduler): ContextShift[Task] =
-    new ContextShift[Task] {
-      override def shift: Task[Unit] =
-        Task.shift(s)
-      override def evalOn[A](ec: ExecutionContext)(fa: Task[A]): Task[A] =
-        ec match {
-          case ref: Scheduler => fa.executeOn(ref, forceAsync = true)
-          case _ => fa.executeOn(Scheduler(ec), forceAsync = true)
-        }
-
-    }
-}
-
-private[eval] abstract class TaskTimers extends TaskClocks {
-
-  /**
-    * Default, pure, globally visible `cats.effect.Timer`
-    * implementation that defers the evaluation to `Task`'s default
-    * [[monix.execution.Scheduler Scheduler]]
-    * (that's being injected in [[Task.runToFuture]]).
-    */
-  implicit val timer: Timer[Task] =
-    new Timer[Task] {
-      override def sleep(duration: FiniteDuration): Task[Unit] =
-        Task.sleep(duration)
-      override def clock: Clock[Task] =
-        Task.clock
-    }
-
-  /** Builds a `cats.effect.Timer` instance, given a
-    * [[monix.execution.Scheduler Scheduler]] reference.
-    */
-  def timer(s: Scheduler): Timer[Task] =
-    new Timer[Task] {
-      override def sleep(duration: FiniteDuration): Task[Unit] =
-        Task.sleep(duration).executeOn(s)
-      override def clock: Clock[Task] =
-        Task.clock(s)
-    }
-}
-
-private[eval] abstract class TaskClocks extends TaskDeprecated.Companion {
-  /**
-    * Default, pure, globally visible `cats.effect.Clock`
-    * implementation that defers the evaluation to `Task`'s default
-    * [[monix.execution.Scheduler Scheduler]]
-    * (that's being injected in [[Task.runToFuture]]).
-    */
-  val clock: Clock[Task] =
-    new Clock[Task] {
-      override def realTime(unit: TimeUnit): Task[Long] =
-        Task.deferAction(sc => Task.now(sc.clockRealTime(unit)))
-      override def monotonic(unit: TimeUnit): Task[Long] =
-        Task.deferAction(sc => Task.now(sc.clockMonotonic(unit)))
-    }
-
-  /**
-    * Builds a `cats.effect.Clock` instance, given a
-    * [[monix.execution.Scheduler Scheduler]] reference.
-    */
-  def clock(s: Scheduler): Clock[Task] =
-    new Clock[Task] {
-      override def realTime(unit: TimeUnit): Task[Long] =
-        Task.eval(s.clockRealTime(unit))
-      override def monotonic(unit: TimeUnit): Task[Long] =
-        Task.eval(s.clockMonotonic(unit))
-    }
+// ContextShift and Timer removed in CE3 — functionality is now in Async/Temporal
+private[eval] abstract class TaskDeprecatedCompanion extends TaskDeprecated.Companion {
 }

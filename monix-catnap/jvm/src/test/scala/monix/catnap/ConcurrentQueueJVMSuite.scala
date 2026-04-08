@@ -18,6 +18,7 @@
 package monix.catnap
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import monix.execution.Scheduler
 import monix.execution.schedulers.SchedulerService
 import scala.concurrent.duration._
@@ -35,13 +36,17 @@ abstract class ConcurrentQueueJVMSuite(parallelism: Int) extends BaseConcurrentQ
     assert(env.awaitTermination(30.seconds), "env.awaitTermination")
   }
 
+  val taskTimeout = 60.seconds
+
   def testIO(name: String, times: Int = 1)(f: Scheduler => IO[Unit]): Unit = {
     def repeatTest(test: IO[Unit], n: Int): IO[Unit] =
       if (n > 0) test.flatMap(_ => repeatTest(test, n - 1))
       else IO.unit
 
-    testAsync(name) { implicit ec =>
-      repeatTest(f(ec).timeout(60.second), times).unsafeToFuture()
+    test(name) { implicit ec =>
+      val overallTimeout = taskTimeout + 10.seconds
+      val result = repeatTest(f(ec).timeout(taskTimeout), times).unsafeRunTimed(overallTimeout)
+      assert(result.nonEmpty, s"; timed-out after $overallTimeout")
     }
   }
 }

@@ -17,7 +17,6 @@
 
 package monix.eval.internal
 
-import cats.effect.CancelToken
 import monix.catnap.CancelableF
 import monix.execution.Callback
 import monix.eval.Task
@@ -57,7 +56,7 @@ private[eval] object TaskRaceList {
           task,
           taskContext,
           new Callback[Throwable, A] {
-            private def popAndCancelRest(): CancelToken[Task] = {
+            private def popAndCancelRest(): Task[Unit] = {
               conn.pop()
               val arr2 = cancelableArray.collect {
                 case cc if cc ne taskCancelable =>

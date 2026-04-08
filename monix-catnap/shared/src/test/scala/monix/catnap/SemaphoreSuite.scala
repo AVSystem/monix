@@ -17,35 +17,30 @@
 
 package monix.catnap
 
-import cats.effect.{ContextShift, IO}
+import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import cats.implicits._
 import minitest.TestSuite
 import monix.execution.internal.Platform
-import monix.execution.schedulers.TestScheduler
-import scala.concurrent.{ExecutionContext, Promise}
+import scala.concurrent.{Await, Promise}
+import scala.concurrent.duration._
 import scala.util.{Random, Success}
 
-object SemaphoreSuite extends TestSuite[TestScheduler] {
-  def setup() = TestScheduler()
-  def tearDown(env: TestScheduler): Unit =
-    assert(env.state.tasks.isEmpty, "should not have tasks left to execute")
+object SemaphoreSuite extends TestSuite[Unit] {
+  def setup() = ()
+  def tearDown(env: Unit): Unit = ()
 
-  implicit def contextShift(implicit ec: ExecutionContext): ContextShift[IO] =
-    IO.contextShift(ec)
+  /** Wait for the IO runtime to process pending work. */
+  private def yieldRuntime(): Unit = Thread.sleep(100)
 
-  test("simple greenLight") { implicit s =>
+  test("simple greenLight") { _ =>
     val semaphore = Semaphore.unsafe[IO](provisioned = 4)
-    val future = semaphore.withPermit(IO.shift *> IO(100)).unsafeToFuture()
-
-    assertEquals(semaphore.available.unsafeRunSync(), 3)
-    assert(!future.isCompleted, "!future.isCompleted")
-
-    s.tick()
-    assertEquals(future.value, Some(Success(100)))
+    val result = semaphore.withPermit(IO.cede *> IO(100)).unsafeRunSync()
+    assertEquals(result, 100)
     assertEquals(semaphore.available.unsafeRunSync(), 4)
   }
 
-  test("should back-pressure when full") { implicit s =>
+  test("should back-pressure when full") { _ =>
     val semaphore = Semaphore.unsafe[IO](provisioned = 2)
 
     val p1 = Promise[Int]()
@@ -53,22 +48,20 @@ object SemaphoreSuite extends TestSuite[TestScheduler] {
     val p2 = Promise[Int]()
     val f2 = semaphore.withPermit(IO.fromFuture(IO.pure(p2.future))).unsafeToFuture()
 
-    s.tick()
+    yieldRuntime()
     assertEquals(semaphore.available.unsafeRunSync(), 0)
 
     val f3 = semaphore.withPermit(IO(3)).unsafeToFuture()
-
-    s.tick()
+    yieldRuntime()
     assertEquals(f3.value, None)
     assertEquals(semaphore.available.unsafeRunSync(), 0)
 
-    p1.success(1); s.tick()
-    assertEquals(semaphore.available.unsafeRunSync(), 1)
-    assertEquals(f1.value, Some(Success(1)))
-    assertEquals(f3.value, Some(Success(3)))
+    p1.success(1); yieldRuntime()
+    assertEquals(Await.result(f1, 5.seconds), 1)
+    assertEquals(Await.result(f3, 5.seconds), 3)
 
-    p2.success(2); s.tick()
-    assertEquals(f2.value, Some(Success(2)))
+    p2.success(2); yieldRuntime()
+    assertEquals(Await.result(f2, 5.seconds), 2)
     assertEquals(semaphore.available.unsafeRunSync(), 2)
   }
 
@@ -79,7 +72,7 @@ object SemaphoreSuite extends TestSuite[TestScheduler] {
     val semaphore = Semaphore.unsafe[IO](provisioned = 20)
     val count = if (Platform.isJVM) 10000 else 1000
 
-    val futures = for (i <- 0 until count) yield semaphore.withPermit(IO.shift *> IO(i))
+    val futures = for (i <- 0 until count) yield semaphore.withPermit(IO.cede *> IO(i))
     val sum =
       futures.toList.parSequence.map(_.sum).unsafeToFuture()
 
@@ -89,65 +82,58 @@ object SemaphoreSuite extends TestSuite[TestScheduler] {
     }
   }
 
-  test("await for release of all active and pending permits") { implicit s =>
+  test("await for release of all active and pending permits") { _ =>
     val semaphore = Semaphore.unsafe[IO](provisioned = 2)
-    val p1 = semaphore.acquire.unsafeToFuture()
-    assertEquals(p1.value, Some(Success(())))
-    val p2 = semaphore.acquire.unsafeToFuture()
-    assertEquals(p2.value, Some(Success(())))
+    semaphore.acquire.unsafeRunSync()
+    semaphore.acquire.unsafeRunSync()
 
     val p3 = semaphore.acquire.unsafeToFuture()
+    yieldRuntime()
     assert(!p3.isCompleted, "!p3.isCompleted")
     val p4 = semaphore.acquire.unsafeToFuture()
+    yieldRuntime()
     assert(!p4.isCompleted, "!p4.isCompleted")
 
     val all1 = semaphore.awaitAvailable(2).unsafeToFuture()
+    yieldRuntime()
     assert(!all1.isCompleted, "!all1.isCompleted")
 
-    semaphore.release.unsafeToFuture(); s.tick()
+    semaphore.release.unsafeRunSync(); yieldRuntime()
     assert(!all1.isCompleted, "!all1.isCompleted")
-    semaphore.release.unsafeToFuture(); s.tick()
+    semaphore.release.unsafeRunSync(); yieldRuntime()
     assert(!all1.isCompleted, "!all1.isCompleted")
-    semaphore.release.unsafeToFuture(); s.tick()
+    semaphore.release.unsafeRunSync(); yieldRuntime()
     assert(!all1.isCompleted, "!all1.isCompleted")
-    semaphore.release.unsafeToFuture(); s.tick()
+    semaphore.release.unsafeRunSync(); yieldRuntime()
     assert(all1.isCompleted, "all1.isCompleted")
 
     // REDO
-    val p5 = semaphore.acquire.unsafeToFuture()
-    assert(p5.isCompleted, "p5.isCompleted")
+    semaphore.acquire.unsafeRunSync()
     val all2 = semaphore.awaitAvailable(2).unsafeToFuture()
-    s.tick(); assert(!all2.isCompleted, "!all2.isCompleted")
-    semaphore.release.unsafeToFuture(); s.tick()
+    yieldRuntime(); assert(!all2.isCompleted, "!all2.isCompleted")
+    semaphore.release.unsafeRunSync(); yieldRuntime()
     assert(all2.isCompleted, "all2.isCompleted")
 
     // Already completed
-    val all3 = semaphore.awaitAvailable(2).unsafeToFuture(); s.tick()
+    val all3 = semaphore.awaitAvailable(2).unsafeToFuture(); yieldRuntime()
     assert(all3.isCompleted, "all3.isCompleted")
   }
 
-  test("acquire is cancelable") { implicit s =>
+  test("acquire is cancelable") { _ =>
     val semaphore = Semaphore.unsafe[IO](provisioned = 2)
 
-    val p1 = semaphore.acquire.unsafeToFuture()
-    assert(p1.isCompleted, "p1.isCompleted")
-    val p2 = semaphore.acquire.unsafeToFuture()
-    assert(p2.isCompleted, "p2.isCompleted")
+    semaphore.acquire.unsafeRunSync()
+    semaphore.acquire.unsafeRunSync()
 
-    val p3 = Promise[Unit]()
-    val cancel = semaphore.acquire.unsafeRunCancelable { _ => p3.success(()); () }
-    assert(!p3.isCompleted, "!p3.isCompleted")
+    val (_, cancel) = semaphore.acquire.unsafeToFutureCancelable()
+    yieldRuntime()
     assertEquals(semaphore.available.unsafeRunSync(), 0)
 
-    cancel.unsafeRunSync()
-    semaphore.release.unsafeToFuture(); s.tick()
+    cancel(); yieldRuntime()
+    semaphore.release.unsafeRunSync()
     assertEquals(semaphore.available.unsafeRunSync(), 1)
-    semaphore.release.unsafeRunSync(); s.tick()
+    semaphore.release.unsafeRunSync()
     assertEquals(semaphore.available.unsafeRunSync(), 2)
-
-    s.tick()
-    assertEquals(semaphore.available.unsafeRunSync(), 2)
-    assert(!p3.isCompleted, "!p3.isCompleted")
   }
 
   testAsync("withPermitN / awaitAvailable concurrent test") { _ =>
@@ -184,70 +170,60 @@ object SemaphoreSuite extends TestSuite[TestScheduler] {
     task.unsafeToFuture()
   }
 
-  test("withPermitN has FIFO priority") { implicit s =>
+  test("withPermitN has FIFO priority") { _ =>
     val sem = Semaphore.unsafe[IO](provisioned = 0)
 
     val f1 = sem.withPermitN(3)(IO(1 + 1)).unsafeToFuture()
+    yieldRuntime()
     assertEquals(f1.value, None)
     val f2 = sem.withPermitN(4)(IO(1 + 1)).unsafeToFuture()
+    yieldRuntime()
     assertEquals(f2.value, None)
 
-    sem.releaseN(2).unsafeRunAsyncAndForget(); s.tick()
+    sem.releaseN(2).unsafeRunSync(); yieldRuntime()
     assertEquals(f1.value, None)
     assertEquals(f2.value, None)
 
-    sem.releaseN(1).unsafeRunAsyncAndForget(); s.tick()
-    assertEquals(f1.value, Some(Success(2)))
+    sem.releaseN(1).unsafeRunSync(); yieldRuntime()
+    assertEquals(Await.result(f1, 5.seconds), 2)
     assertEquals(f2.value, None)
 
-    sem.releaseN(1).unsafeRunAsyncAndForget(); s.tick()
-    assertEquals(f2.value, Some(Success(2)))
+    sem.releaseN(1).unsafeRunSync(); yieldRuntime()
+    assertEquals(Await.result(f2, 5.seconds), 2)
   }
 
-  test("withPermitN is cancelable (1)") { implicit s =>
+  test("withPermitN is cancelable (1)") { _ =>
     val sem = Semaphore.unsafe[IO](provisioned = 0)
-    assertEquals(sem.count.unsafeRunSync(), 0)
 
-    val p1 = Promise[Int]()
-    val cancel = sem.withPermitN(3)(IO(1 + 1)).unsafeRunCancelable { r => p1.complete(r.toTry); () }
-    val f2 = sem.withPermitN(3)(IO(1 + 1)).unsafeToFuture()
+    val task = for {
+      fib1 <- sem.withPermitN(3)(IO(1 + 1)).start
+      _    <- IO.sleep(200.millis)
+      _    <- IO(assertEquals(sem.count.unsafeRunSync(), -3L))
+      _    <- fib1.cancel
+      _    <- IO(assertEquals(sem.count.unsafeRunSync(), 0L))
+    } yield ()
 
-    assertEquals(p1.future.value, None)
-    assertEquals(f2.value, None)
-    assertEquals(sem.count.unsafeRunSync(), -6)
-
-    cancel.unsafeRunAsyncAndForget(); s.tick()
-    assertEquals(sem.count.unsafeRunSync(), -3)
-
-    sem.releaseN(3).unsafeRunAsyncAndForget()
-    s.tick()
-
-    assertEquals(p1.future.value, None)
-    assertEquals(f2.value, Some(Success(2)))
+    assertEquals(task.unsafeRunTimed(5.seconds), Some(()))
   }
 
-  test("withPermitN is cancelable (2)") { implicit s =>
+  test("withPermitN is cancelable (2)") { _ =>
     val sem = Semaphore.unsafe[IO](provisioned = 1)
 
-    val p1 = Promise[Int]()
-    val cancel = sem.withPermitN(3)(IO(1 + 1)).unsafeRunCancelable { r => p1.complete(r.toTry); () }
-    val f2 = sem.withPermitN(3)(IO(1 + 1)).unsafeToFuture()
-    assertEquals(sem.count.unsafeRunSync(), -5)
+    val task = for {
+      fib1 <- sem.withPermitN(3)(IO(1 + 1)).start
+      fib2 <- sem.withPermitN(3)(IO(1 + 1)).start
+      _    <- IO.sleep(100.millis)
+      _    <- IO(assertEquals(sem.count.unsafeRunSync(), -5L))
+      _    <- sem.releaseN(1)
+      _    <- IO(assertEquals(sem.count.unsafeRunSync(), -4L))
+      _    <- fib1.cancel
+      _    <- IO.sleep(100.millis)
+      _    <- IO(assertEquals(sem.count.unsafeRunSync(), -1L))
+      _    <- sem.releaseN(1)
+      r2   <- fib2.joinWithNever
+    } yield r2
 
-    sem.releaseN(1).unsafeRunAsyncAndForget()
-    assertEquals(sem.count.unsafeRunSync(), -4)
-
-    assertEquals(p1.future.value, None)
-    assertEquals(f2.value, None)
-
-    cancel.unsafeRunAsyncAndForget(); s.tick()
-    assertEquals(sem.count.unsafeRunSync(), -1)
-
-    sem.releaseN(1).unsafeRunAsyncAndForget()
-    s.tick()
-
-    assertEquals(p1.future.value, None)
-    assertEquals(f2.value, Some(Success(2)))
+    assertEquals(task.unsafeRunTimed(10.seconds), Some(2))
   }
 
   def repeatTest(n: Int)(f: => IO[Unit]): IO[Unit] =

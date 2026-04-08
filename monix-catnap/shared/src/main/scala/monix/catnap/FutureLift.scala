@@ -18,7 +18,7 @@
 package monix.catnap
 
 import cats.~>
-import cats.effect.{Async, Concurrent}
+import cats.effect.Async
 import monix.execution.CancelableFuture
 import monix.execution.internal.AttemptCallback
 import monix.execution.schedulers.TrampolineExecutionContext.immediate
@@ -34,7 +34,7 @@ import scala.concurrent.{Future => ScalaFuture}
   *   import scala.concurrent.Future
   *   // Used here only for Future.apply as the ExecutionContext
   *   import monix.execution.Scheduler.Implicits.global
-  *   // Can use any data type implementing Async or Concurrent
+  *   // Can use any data type implementing Async
   *   import cats.effect.IO
   *
   *   val io = IO(Future(1 + 1)).futureLift
@@ -109,24 +109,6 @@ object FutureLift extends internal.FutureLiftForPlatform {
     F.flatMap(fa) { future =>
       future.value match {
         case Some(value) => F.fromTry(value)
-        case _ => startAsync(future)
-      }
-    }
-
-  /**
-    * Utility for converting [[scala.concurrent.Future Future]] values into
-    * data types that implement
-    * [[https://typelevel.org/cats-effect/typeclasses/concurrent.html cats.effect.Concurrent]].
-    *
-    * N.B. the implementation discriminates
-    * [[monix.execution.CancelableFuture CancelableFuture]] via sub-typing,
-    * and if the given future is cancelable, then the resulting instance
-    * is also cancelable.
-    */
-  def scalaToConcurrent[F[_], MF[T] <: ScalaFuture[T], A](fa: F[MF[A]])(implicit F: Concurrent[F]): F[A] =
-    F.flatMap(fa) { future =>
-      future.value match {
-        case Some(value) => F.fromTry(value)
         case _ =>
           future match {
             case cf: CancelableFuture[A] @unchecked =>
@@ -138,44 +120,16 @@ object FutureLift extends internal.FutureLiftForPlatform {
     }
 
   /**
-    * A generic function that subsumes both [[scalaToAsync]] and
-    * [[scalaToConcurrent]].
-    *
-    * N.B. this works with [[monix.execution.CancelableFuture]]
-    * if the given `Future` is such an instance.
-    */
-  def scalaToConcurrentOrAsync[F[_], MF[T] <: ScalaFuture[T], A](fa: F[MF[A]])(
-    implicit F: Concurrent[F] OrElse Async[F]): F[A] = {
-
-    F.unify match {
-      case ref: Concurrent[F] @unchecked =>
-        scalaToConcurrent[F, MF, A](fa)(ref)
-      case ref =>
-        scalaToAsync[F, MF, A](fa)(ref)
-    }
-  }
-
-  /**
     * Implicit instance of [[FutureLift]] for converting from
     * [[scala.concurrent.Future]] or [[monix.execution.CancelableFuture]] to
-    * any `Concurrent` or `Async` data type.
+    * any `Async` data type.
     */
-  implicit def scalaFutureLiftForConcurrentOrAsync[F[_], MF[T] <: ScalaFuture[T]](
-    implicit F: Concurrent[F] OrElse Async[F]): FutureLift[F, MF] = {
-
-    F.unify match {
-      case ref: Concurrent[F] @unchecked =>
-        new FutureLift[F, MF] {
-          def apply[A](fa: F[MF[A]]): F[A] =
-            scalaToConcurrent[F, MF, A](fa)(ref)
-        }
-      case ref =>
-        new FutureLift[F, MF] {
-          def apply[A](fa: F[MF[A]]): F[A] =
-            scalaToAsync[F, MF, A](fa)(ref)
-        }
+  implicit def scalaFutureLiftForAsync[F[_], MF[T] <: ScalaFuture[T]](
+    implicit F: Async[F]): FutureLift[F, MF] =
+    new FutureLift[F, MF] {
+      def apply[A](fa: F[MF[A]]): F[A] =
+        scalaToAsync[F, MF, A](fa)
     }
-  }
 
   /**
     * Provides extension methods when imported in scope via [[syntax]].
@@ -215,13 +169,18 @@ object FutureLift extends internal.FutureLiftForPlatform {
   }
 
   private def startAsync[F[_], A](fa: ScalaFuture[A])(implicit F: Async[F]): F[A] =
-    F.async { cb =>
-      start(fa, cb)
+    F.async[A] { cb =>
+      F.delay {
+        start(fa, cb)
+        Some(F.unit) // cancelable with no-op cleanup (regular Futures can't be cancelled)
+      }
     }
 
-  private def startCancelable[F[_], A](fa: CancelableFuture[A])(implicit F: Concurrent[F]): F[A] =
-    F.cancelable { cb =>
-      start(fa, cb)
-      F.delay(fa.cancel())
+  private def startCancelable[F[_], A](fa: CancelableFuture[A])(implicit F: Async[F]): F[A] =
+    F.async[A] { cb =>
+      F.delay {
+        start(fa, cb)
+        Some(F.delay(fa.cancel()))
+      }
     }
 }

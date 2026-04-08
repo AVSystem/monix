@@ -19,11 +19,22 @@ package monix.tail
 
 import cats.syntax.all._
 import cats.effect.Sync
+import cats.effect.kernel.Outcome
+import monix.execution.ExitCase
 import monix.tail.Iterant.{Concat, Scope}
 
 package object internal {
+
+  /** Converts a CE3 Outcome to monix ExitCase. */
+  private[tail] def outcomeToExitCase[F[_], A](outcome: Outcome[F, Throwable, A]): ExitCase[Throwable] =
+    outcome match {
+      case Outcome.Succeeded(_) => ExitCase.Completed
+      case Outcome.Errored(e) => ExitCase.Error(e)
+      case Outcome.Canceled() => ExitCase.Canceled
+    }
+
   /**
-    * Internal API — extension methods used in the implementation.
+    * Internal API — extension methods used in the implementation.
     */
   private[tail] implicit class ScopeExtensions[F[_], S, A](val self: Scope[F, S, A]) extends AnyVal {
 
@@ -34,11 +45,13 @@ package object internal {
       F.pure(self.copy(use = AndThen(self.use).andThen(F.flatMap(_)(f))))
 
     def runFold[B](f: Iterant[F, A] => F[B])(implicit F: Sync[F]): F[B] =
-      F.bracketCase(self.acquire)(AndThen(self.use).andThen(_.flatMap(f)))(self.release)
+      F.bracketCase(self.acquire)(AndThen(self.use).andThen(_.flatMap(f))) { (a, outcome) =>
+        self.release(a, outcomeToExitCase(outcome))
+      }
   }
 
   /**
-    * Internal API — extension methods used in the implementation.
+    * Internal API — extension methods used in the implementation.
     */
   private[tail] implicit class ConcatExtensions[F[_], A](val self: Concat[F, A]) extends AnyVal {
 

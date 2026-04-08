@@ -17,14 +17,30 @@
 
 package monix.tail
 
-import cats.effect.{IO, Timer}
+import cats.effect.IO
+import cats.effect.unsafe.{IORuntime, IORuntimeConfig, Scheduler => CEScheduler}
 import monix.eval.Task
+import monix.execution.schedulers.TestScheduler
 
 import scala.util.Success
 import scala.concurrent.duration._
-import monix.catnap.SchedulerEffect
 
 object IntervalIntervalSuite extends BaseTestSuite {
+
+  /** Creates an IORuntime backed by a monix TestScheduler,
+    * so that `IO.sleep` and `unsafeToFuture()` use virtual time. */
+  private def ioRuntimeFromScheduler(s: TestScheduler): IORuntime = {
+    val ceScheduler = new CEScheduler {
+      def sleep(delay: FiniteDuration, task: Runnable): Runnable = {
+        val cancelable = s.scheduleOnce(delay.length, delay.unit, task)
+        () => cancelable.cancel()
+      }
+      def nowMillis(): Long = s.clockMonotonic(MILLISECONDS)
+      def monotonicNanos(): Long = s.clockMonotonic(NANOSECONDS)
+    }
+    IORuntime(s, s, ceScheduler, () => (), IORuntimeConfig())
+  }
+
   test("Iterant[Task].intervalWithFixedDelay(1.second, 2.seconds)") { implicit s =>
     var effect = 0
     val lst = Iterant[Task]
@@ -58,7 +74,7 @@ object IntervalIntervalSuite extends BaseTestSuite {
   }
 
   test("Iterant[IO].intervalWithFixedDelay(1.second, 2.seconds)") { s =>
-    implicit val timer: Timer[IO] = SchedulerEffect.timerLiftIO[IO](s)(IO.ioEffect)
+    implicit val runtime: IORuntime = ioRuntimeFromScheduler(s)
 
     var effect = 0
     val lst = Iterant[IO]
@@ -118,7 +134,7 @@ object IntervalIntervalSuite extends BaseTestSuite {
   }
 
   test("Iterant[IO].intervalWithFixedDelay(2.seconds)") { s =>
-    implicit val timer: Timer[IO] = SchedulerEffect.timerLiftIO[IO](s)(IO.ioEffect)
+    implicit val runtime: IORuntime = ioRuntimeFromScheduler(s)
 
     var effect = 0
     val lst = Iterant[IO]
@@ -169,13 +185,13 @@ object IntervalIntervalSuite extends BaseTestSuite {
   }
 
   test("Iterant[IO].intervalAtFixedRate(1.second)") { s =>
-    implicit val timer: Timer[IO] = SchedulerEffect.timerLiftIO[IO](s)(IO.ioEffect)
+    implicit val runtime: IORuntime = ioRuntimeFromScheduler(s)
 
     var effect = 0
     val lst = Iterant[IO]
       .intervalAtFixedRate(1.second)
       .mapEval(e =>
-        timer.sleep(100.millis).map { _ =>
+        IO.sleep(100.millis).map { _ =>
           effect += 1; e
         })
       .take(3)
@@ -222,13 +238,13 @@ object IntervalIntervalSuite extends BaseTestSuite {
   }
 
   test("Iterant[IO].intervalAtFixedRate(2.seconds, 1.second)") { s =>
-    implicit val timer: Timer[IO] = SchedulerEffect.timerLiftIO[IO](s)(IO.ioEffect)
+    implicit val runtime: IORuntime = ioRuntimeFromScheduler(s)
 
     var effect = 0
     val lst = Iterant[IO]
       .intervalAtFixedRate(2.seconds, 1.second)
       .mapEval(e =>
-        timer.sleep(100.millis).map { _ =>
+        IO.sleep(100.millis).map { _ =>
           effect += 1; e
         })
       .take(3)
@@ -276,13 +292,13 @@ object IntervalIntervalSuite extends BaseTestSuite {
   }
 
   test("Iterant[IO].intervalAtFixedRate accounts for time it takes task to finish") { s =>
-    implicit val timer: Timer[IO] = SchedulerEffect.timerLiftIO[IO](s)(IO.ioEffect)
+    implicit val runtime: IORuntime = ioRuntimeFromScheduler(s)
 
     var effect = 0
     val lst = Iterant[IO]
       .intervalAtFixedRate(1.second)
       .mapEval(e =>
-        timer.sleep(2.seconds).map { _ =>
+        IO.sleep(2.seconds).map { _ =>
           effect += 1; e
         })
       .take(3)

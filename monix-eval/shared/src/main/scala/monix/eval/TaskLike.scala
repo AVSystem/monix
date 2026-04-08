@@ -49,7 +49,7 @@ import scala.util.Try
   *   val task2 = TaskLike[IO].apply(source2)
   * }}}
   *
-  * This is an alternative to usage of `cats.effect.Effect`
+  * This is an alternative to the Cats Effect type class hierarchy
   * where the internals are specialized to `Task` anyway, like for
   * example the implementation of `monix.reactive.Observable`.
   */
@@ -113,7 +113,13 @@ object TaskLike extends TaskLikeImplicits0 {
   implicit val fromIO: TaskLike[IO] =
     new TaskLike[IO] {
       def apply[A](fa: IO[A]): Task[A] =
-        Concurrent.liftIO[Task, A](fa)
+        Task.async { cb =>
+          import cats.effect.unsafe.implicits.global
+          fa.unsafeRunAsync {
+            case Right(a) => cb.onSuccess(a)
+            case Left(e) => cb.onError(e)
+          }
+        }
     }
 
   /**
@@ -122,7 +128,7 @@ object TaskLike extends TaskLikeImplicits0 {
   implicit val fromSyncIO: TaskLike[SyncIO] =
     new TaskLike[SyncIO] {
       def apply[A](fa: SyncIO[A]): Task[A] =
-        Concurrent.liftIO[Task, A](fa.toIO)
+        Task.eval(fa.unsafeRunSync())
     }
 
   /**
@@ -178,30 +184,6 @@ object TaskLike extends TaskLikeImplicits0 {
 
 private[eval] abstract class TaskLikeImplicits0 extends TaskLikeImplicits1 {
   /**
-    * Converts to `Task` from
-    * [[https://typelevel.org/cats-effect/typeclasses/concurrent-effect.html cats.effect.ConcurrentEffect]].
-    */
-  implicit def fromConcurrentEffect[F[_]](implicit F: ConcurrentEffect[F]): TaskLike[F] =
-    new TaskLike[F] {
-      def apply[A](fa: F[A]): Task[A] =
-        Task.fromConcurrentEffect(fa)
-    }
-}
-
-private[eval] abstract class TaskLikeImplicits1 extends TaskLikeImplicits2 {
-  /**
-    * Converts to `Task` from
-    * [[https://typelevel.org/cats-effect/typeclasses/concurrent-effect.html cats.effect.Async]].
-    */
-  implicit def fromEffect[F[_]](implicit F: Effect[F]): TaskLike[F] =
-    new TaskLike[F] {
-      def apply[A](fa: F[A]): Task[A] =
-        Task.fromEffect(fa)
-    }
-}
-
-private[eval] abstract class TaskLikeImplicits2 {
-  /**
     * Converts from any `Future`-like type, via [[monix.catnap.FutureLift]].
     */
   implicit def fromAnyFutureViaLift[F[_]](implicit F: FutureLift[Task, F]): TaskLike[F] =
@@ -209,4 +191,8 @@ private[eval] abstract class TaskLikeImplicits2 {
       def apply[A](fa: F[A]): Task[A] =
         Task.fromFutureLike(Task.now(fa))
     }
+}
+
+private[eval] abstract class TaskLikeImplicits1 {
+  // empty — placeholder for future extension
 }

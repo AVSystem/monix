@@ -17,107 +17,56 @@
 
 package monix.eval
 
-import java.util.concurrent.TimeUnit
-
-import cats.effect.{Clock, ContextShift, Timer}
+import cats.effect.{Async, Temporal}
 import monix.execution.exceptions.DummyException
 import monix.execution.schedulers.TestScheduler
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
+/**
+  * Tests for Task's CE3 temporal/async/clock functionality.
+  *
+  * In CE3, Timer, ContextShift and Clock are no longer separate type classes.
+  * Clock is built into Sync, Timer into Temporal, ContextShift into Async.
+  */
 object TaskClockTimerAndContextShiftSuite extends BaseTestSuite {
-  test("Task.clock is implicit") { _ =>
-    assertEquals(Task.clock, implicitly[Clock[Task]])
-  }
-
-  test("Task.clock.monotonic") { implicit s =>
+  test("Task monotonic clock via Temporal") { implicit s =>
     s.tick(1.seconds)
 
-    val f = Task.clock.monotonic(TimeUnit.SECONDS).runToFuture
+    val f = Temporal[Task].monotonic.runToFuture
     s.tick()
 
-    assertEquals(f.value, Some(Success(1)))
+    assertEquals(f.value, Some(Success(1.second)))
   }
 
-  test("Task.clock.realTime") { implicit s =>
+  test("Task realTime clock via Temporal") { implicit s =>
     s.tick(1.seconds)
 
-    val f = Task.clock.realTime(TimeUnit.SECONDS).runToFuture
+    val f = Temporal[Task].realTime.runToFuture
     s.tick()
 
-    assertEquals(f.value, Some(Success(1)))
+    assertEquals(f.value, Some(Success(1.second)))
   }
 
-  test("Task.clock(s2).monotonic") { implicit s =>
-    val s2 = TestScheduler()
-    s2.tick(1.seconds)
-
-    val f = Task.clock(s2).monotonic(TimeUnit.SECONDS).runToFuture
-    s.tick()
-
-    assertEquals(f.value, Some(Success(1)))
-  }
-
-  test("Task.clock(s).realTime") { implicit s =>
-    val s2 = TestScheduler()
-    s2.tick(1.seconds)
-
-    val f = Task.clock(s2).realTime(TimeUnit.SECONDS).runToFuture
-    s.tick()
-
-    assertEquals(f.value, Some(Success(1)))
-  }
-
-  test("Task.timer is implicit") { implicit s =>
-    assertEquals(Task.timer, implicitly[Timer[Task]])
-    assertEquals(Task.timer.clock, implicitly[Clock[Task]])
-  }
-
-  test("Task.timer") { implicit s =>
-    val f = Task.timer.sleep(1.second).runToFuture
+  test("Task sleep via Temporal") { implicit s =>
+    val f = Temporal[Task].sleep(1.second).runToFuture
     s.tick()
     assertEquals(f.value, None)
     s.tick(1.second)
     assertEquals(f.value, Some(Success(())))
   }
 
-  test("Task.timer(s)") { implicit s =>
-    val s2 = TestScheduler()
-    val f = Task.timer(s2).sleep(1.second).runToFuture
-
-    s.tick()
-    assertEquals(f.value, None)
-    s.tick(1.second)
-    assertEquals(f.value, None)
-    s2.tick(1.second)
-    s.tick(1.second)
-    assertEquals(f.value, Some(Success(())))
-  }
-
-  test("Task.timer(s).clock") { implicit s =>
-    val s2 = TestScheduler()
-    s2.tick(1.second)
-
-    val f = Task.timer(s2).clock.monotonic(TimeUnit.SECONDS).runToFuture
-    s.tick()
-    assertEquals(f.value, Some(Success(1)))
-  }
-
-  test("Task.contextShift is implicit") { implicit s =>
-    assertEquals(Task.contextShift, implicitly[ContextShift[Task]])
-  }
-
-  test("Task.contextShift.shift") { implicit s =>
-    val f = Task.contextShift.shift.runToFuture
+  test("Task cede via Async") { implicit s =>
+    val f = Async[Task].cede.runToFuture
     assertEquals(f.value, None)
     s.tick()
     assertEquals(f.value, Some(Success(())))
   }
 
-  test("Task.contextShift.evalOn(s2)") { implicit s =>
+  test("Task evalOn via Async") { implicit s =>
     val s2 = TestScheduler()
-    val f = Task.contextShift.evalOn(s2)(Task(1)).runToFuture
+    val f = Async[Task].evalOn(Task(1), s2).runToFuture
 
     assertEquals(f.value, None)
     s.tick()
@@ -127,10 +76,10 @@ object TaskClockTimerAndContextShiftSuite extends BaseTestSuite {
     assertEquals(f.value, Some(Success(1)))
   }
 
-  test("Task.contextShift.evalOn(s2) failure") { implicit s =>
+  test("Task evalOn via Async - failure") { implicit s =>
     val s2 = TestScheduler()
     val dummy = DummyException("dummy")
-    val f = Task.contextShift.evalOn(s2)(Task.raiseError(dummy)).runToFuture
+    val f = Async[Task].evalOn(Task.raiseError(dummy), s2).runToFuture
 
     assertEquals(f.value, None)
     s.tick()
@@ -139,107 +88,5 @@ object TaskClockTimerAndContextShiftSuite extends BaseTestSuite {
     assertEquals(f.value, None)
     s.tick()
     assertEquals(f.value, Some(Failure(dummy)))
-  }
-
-  test("Task.contextShift.evalOn(s2) uses s2 for async boundaries") { implicit s =>
-    val s2 = TestScheduler()
-    val f = Task.contextShift.evalOn(s2)(Task(1).delayExecution(100.millis)).runToFuture
-
-    assertEquals(f.value, None)
-    s.tick()
-    assertEquals(f.value, None)
-    s2.tick()
-    s.tick(100.millis)
-    assertEquals(f.value, None)
-    s2.tick(100.millis)
-    s.tick()
-    assertEquals(f.value, Some(Success(1)))
-  }
-
-  test("Task.contextShift.evalOn(s2) injects s2 to Task.deferAction") { implicit s =>
-    val s2 = TestScheduler()
-
-    var wasScheduled = false
-    val runnable = new Runnable {
-      override def run(): Unit = wasScheduled = true
-    }
-
-    val f = Task.contextShift.evalOn(s2)(Task.deferAction(scheduler => Task(scheduler.execute(runnable)))).runToFuture
-
-    assertEquals(f.value, None)
-    s.tick()
-    assertEquals(f.value, None)
-    s2.tick()
-    assertEquals(wasScheduled, true)
-    s.tick()
-    assertEquals(f.value, Some(Success(())))
-  }
-
-  test("Task.contextShift(s).shift") { implicit s =>
-    val f = Task.contextShift(s).shift.runToFuture
-    assertEquals(f.value, None)
-    s.tick()
-    assertEquals(f.value, Some(Success(())))
-  }
-
-  test("Task.contextShift(s).evalOn(s2)") { implicit s =>
-    val s2 = TestScheduler()
-    val f = Task.contextShift(s).evalOn(s2)(Task(1)).runToFuture
-
-    assertEquals(f.value, None)
-    s.tick()
-    assertEquals(f.value, None)
-    s2.tick()
-    s.tick()
-    assertEquals(f.value, Some(Success(1)))
-  }
-
-  test("Task.contextShift(s).evalOn(s2) failure") { implicit s =>
-    val s2 = TestScheduler()
-    val dummy = DummyException("dummy")
-    val f = Task.contextShift(s).evalOn(s2)(Task.raiseError(dummy)).runToFuture
-
-    assertEquals(f.value, None)
-    s.tick()
-    assertEquals(f.value, None)
-    s2.tick()
-    assertEquals(f.value, None)
-    s.tick()
-    assertEquals(f.value, Some(Failure(dummy)))
-  }
-
-  test("Task.contextShift(s).evalOn(s2) uses s2 for async boundaries") { implicit s =>
-    val s2 = TestScheduler()
-    val f = Task.contextShift(s).evalOn(s2)(Task(1).delayExecution(100.millis)).runToFuture
-
-    assertEquals(f.value, None)
-    s.tick()
-    assertEquals(f.value, None)
-    s2.tick()
-    s.tick(100.millis)
-    assertEquals(f.value, None)
-    s2.tick(100.millis)
-    s.tick()
-    assertEquals(f.value, Some(Success(1)))
-  }
-
-  test("Task.contextShift(s).evalOn(s2) injects s2 to Task.deferAction") { implicit s =>
-    val s2 = TestScheduler()
-
-    var wasScheduled = false
-    val runnable = new Runnable {
-      override def run(): Unit = wasScheduled = true
-    }
-
-    val f =
-      Task.contextShift(s).evalOn(s2)(Task.deferAction(scheduler => Task(scheduler.execute(runnable)))).runToFuture
-
-    assertEquals(f.value, None)
-    s.tick()
-    assertEquals(f.value, None)
-    s2.tick()
-    assertEquals(wasScheduled, true)
-    s.tick()
-    assertEquals(f.value, Some(Success(())))
   }
 }

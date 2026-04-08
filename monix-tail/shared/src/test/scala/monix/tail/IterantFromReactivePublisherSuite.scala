@@ -18,6 +18,8 @@
 package monix.tail
 
 import cats.effect.IO
+import cats.effect.std.Dispatcher
+import cats.effect.unsafe.implicits.{global => ioRuntime}
 import cats.laws._
 import cats.laws.discipline._
 import monix.eval.Task
@@ -32,6 +34,19 @@ import scala.util.{Failure, Success}
 import scala.concurrent.duration._
 
 object IterantFromReactivePublisherSuite extends BaseTestSuite {
+  /** Simple Dispatcher[IO] for tests. */
+  implicit val ioDispatcher: Dispatcher[IO] =
+    new Dispatcher[IO] {
+      def unsafeToFutureCancelable[A](fa: IO[A]): (scala.concurrent.Future[A], () => scala.concurrent.Future[Unit]) = {
+        val (future, cancel) = fa.unsafeToFutureCancelable()
+        (future, () => cancel())
+      }
+      override def unsafeRunAndForget[A](fa: IO[A]): Unit =
+        fa.unsafeRunAndForget()
+      override def reportFailure(t: Throwable): Unit =
+        ioRuntime.compute.reportFailure(t)
+    }
+
 
   implicit val arbRange: Arbitrary[Range] = Arbitrary {
     for {

@@ -17,7 +17,7 @@
 
 package monix.reactive.internal.deprecated
 
-import cats.effect.{Effect, ExitCase}
+import monix.execution.ExitCase
 import cats.{Monoid, Order}
 import monix.eval.{Task, TaskLike}
 import monix.execution.Ack
@@ -404,7 +404,7 @@ private[reactive] trait ObservableDeprecatedMethods[+A] extends Any {
     * DEPRECATED — renamed to [[Observable.doOnStartF]]
     */
   @deprecated("Renamed to doOnStartF", "3.0.0")
-  def doOnStartEval[F[_]](cb: A => F[Unit])(implicit F: Effect[F]): Observable[A] = {
+  def doOnStartEval[F[_]](cb: A => F[Unit])(implicit F: TaskLike[F]): Observable[A] = {
     // $COVERAGE-OFF$
     self.doOnStartF(cb)
     // $COVERAGE-ON$

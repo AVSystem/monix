@@ -17,7 +17,6 @@
 
 package monix.eval.internal
 
-import cats.effect.CancelToken
 import monix.catnap.CancelableF
 import monix.eval.Task
 import monix.eval.internal.TaskConnectionComposite.{Active, Cancelled, State}
@@ -29,7 +28,7 @@ import scala.annotation.tailrec
 
 private[eval] final class TaskConnectionComposite private (stateRef: AtomicAny[State]) {
 
-  val cancel: CancelToken[Task] =
+  val cancel: Task[Unit] =
     Task.suspend {
       stateRef.getAndSet(Cancelled) match {
         case Cancelled => Task.unit
@@ -42,11 +41,11 @@ private[eval] final class TaskConnectionComposite private (stateRef: AtomicAny[S
     * this connection hasn't been cancelled yet, otherwise it
     * cancels the given token.
     */
-  def add(token: CancelToken[Task])(implicit s: Scheduler): Unit =
+  def add(token: Task[Unit])(implicit s: Scheduler): Unit =
     addAny(token)
 
   /** Alias for [[add(token* add]]. */
-  def `+=`(token: CancelToken[Task])(implicit s: Scheduler): Unit =
+  def `+=`(token: Task[Unit])(implicit s: Scheduler): Unit =
     add(token)
 
   /** Adds a [[monix.execution.Cancelable]] to the underlying
@@ -72,7 +71,7 @@ private[eval] final class TaskConnectionComposite private (stateRef: AtomicAny[S
     add(conn)
 
   @tailrec
-  private def addAny(ref: AnyRef /* CancelToken[Task] | CancelableF[Task] | Cancelable */ )(
+  private def addAny(ref: AnyRef /* Task[Unit] | CancelableF[Task] | Cancelable */ )(
     implicit s: Scheduler): Unit = {
 
     stateRef.get() match {
@@ -92,9 +91,9 @@ private[eval] final class TaskConnectionComposite private (stateRef: AtomicAny[S
     * connection is still active, or cancels the whole collection
     * otherwise.
     */
-  def addAll(that: Iterable[CancelToken[Task]])(implicit s: Scheduler): Unit = {
+  def addAll(that: Iterable[Task[Unit]])(implicit s: Scheduler): Unit = {
 
-    @tailrec def loop(that: Iterable[CancelToken[Task]]): Unit =
+    @tailrec def loop(that: Iterable[Task[Unit]]): Unit =
       stateRef.get() match {
         case Cancelled =>
           UnsafeCancelUtils.cancelAllUnsafe(that).runAsyncAndForget
@@ -112,7 +111,7 @@ private[eval] final class TaskConnectionComposite private (stateRef: AtomicAny[S
   /**
     * Removes the given token reference from the underlying collection.
     */
-  def remove(token: CancelToken[Task]): Unit =
+  def remove(token: Task[Unit]): Unit =
     removeAny(token)
 
   /**
@@ -146,11 +145,11 @@ private[eval] object TaskConnectionComposite {
   /**
     * Builder for [[TaskConnectionComposite]].
     */
-  def apply(initial: CancelToken[Task]*): TaskConnectionComposite =
+  def apply(initial: Task[Unit]*): TaskConnectionComposite =
     new TaskConnectionComposite(Atomic.withPadding(Active(Set(initial: _*)): State, LeftRight128))
 
   private sealed abstract class State
-  private final case class Active(set: Set[AnyRef /* CancelToken[Task] | CancelableF[Task] | Cancelable */ ])
+  private final case class Active(set: Set[AnyRef /* Task[Unit] | CancelableF[Task] | Cancelable */ ])
     extends State
   private case object Cancelled extends State
 }

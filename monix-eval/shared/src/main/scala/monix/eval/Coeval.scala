@@ -17,7 +17,8 @@
 
 package monix.eval
 
-import cats.effect.{ExitCase, Sync}
+import monix.execution.ExitCase
+import cats.effect.Sync
 import cats.kernel.Semigroup
 import cats.{Monoid, ~>}
 import monix.eval.instances.{CatsMonadToMonoid, CatsMonadToSemigroup, CatsSyncForCoeval}

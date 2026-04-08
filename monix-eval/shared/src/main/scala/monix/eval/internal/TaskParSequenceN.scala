@@ -17,8 +17,8 @@
 
 package monix.eval.internal
 
-import cats.effect.ExitCase
-import cats.effect.concurrent.Deferred
+import monix.execution.ExitCase
+import cats.effect.Deferred
 import monix.catnap.ConcurrentQueue
 import monix.eval.Task
 import monix.execution.{BufferCapacity, ChannelType}

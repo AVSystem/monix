@@ -18,7 +18,6 @@
 package monix.eval
 package internal
 
-import cats.effect.CancelToken
 import monix.catnap.CancelableF
 import monix.execution.{Cancelable, Scheduler}
 import monix.execution.atomic.Atomic
@@ -28,7 +27,7 @@ private[eval] final class TaskConnectionRef extends CancelableF[Task] {
   import TaskConnectionRef._
 
   @throws(classOf[IllegalStateException])
-  def `:=`(token: CancelToken[Task])(implicit s: Scheduler): Unit =
+  def `:=`(token: Task[Unit])(implicit s: Scheduler): Unit =
     unsafeSet(token)
 
   @throws(classOf[IllegalStateException])
@@ -40,7 +39,7 @@ private[eval] final class TaskConnectionRef extends CancelableF[Task] {
     unsafeSet(conn.cancel)
 
   @tailrec
-  private def unsafeSet(ref: AnyRef /* CancelToken[Task] | CancelableF[Task] | Cancelable */ )(
+  private def unsafeSet(ref: AnyRef /* Task[Unit] | CancelableF[Task] | Cancelable */ )(
     implicit s: Scheduler): Unit = {
 
     if (!state.compareAndSet(Empty, IsActive(ref))) {
@@ -64,8 +63,8 @@ private[eval] final class TaskConnectionRef extends CancelableF[Task] {
     }
   }
 
-  val cancel: CancelToken[Task] = {
-    @tailrec def loop(): CancelToken[Task] =
+  val cancel: Task[Unit] = {
+    @tailrec def loop(): Task[Unit] =
       state.get() match {
         case IsCanceled | IsEmptyCanceled =>
           Task.unit
@@ -101,7 +100,7 @@ private[eval] object TaskConnectionRef {
 
   private sealed trait State
   private case object Empty extends State
-  private final case class IsActive(token: AnyRef /* CancelToken[Task] | CancelableF[Task] | Cancelable */ )
+  private final case class IsActive(token: AnyRef /* Task[Unit] | CancelableF[Task] | Cancelable */ )
     extends State
   private case object IsCanceled extends State
   private case object IsEmptyCanceled extends State

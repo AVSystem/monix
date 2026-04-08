@@ -17,8 +17,8 @@
 
 package monix.reactive.consumers
 
-import cats.effect.IO
 import minitest.TestSuite
+import monix.eval.Task
 import monix.execution.exceptions.DummyException
 import monix.execution.schedulers.TestScheduler
 import monix.reactive.{Consumer, Observable}
@@ -73,7 +73,7 @@ object HeadOptionConsumerSuite extends TestSuite[TestScheduler] {
         wasStopped = true
       }
       .doOnErrorF { _ =>
-        IO { wasCompleted = true }
+        Task.eval { wasCompleted = true }
       }
 
     val f = obs.consumeWith(Consumer.headOption).runToFuture

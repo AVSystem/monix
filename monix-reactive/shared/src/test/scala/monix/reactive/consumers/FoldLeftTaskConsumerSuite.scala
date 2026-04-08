@@ -19,7 +19,6 @@ package monix.reactive.consumers
 
 import cats.laws._
 import cats.laws.discipline._
-import cats.effect.IO
 import monix.eval.Task
 import monix.execution.exceptions.DummyException
 import monix.reactive.{BaseTestSuite, Consumer, Observable}
@@ -77,7 +76,7 @@ object FoldLeftTaskConsumerSuite extends BaseTestSuite {
   test("foldLeftTask <-> foldLeftEval") { implicit s =>
     check1 { (source: Observable[Int]) =>
       val fa1 = source.consumeWith(Consumer.foldLeftTask(0L)((s, a) => Task.evalAsync(s + a)))
-      val fa2 = source.consumeWith(Consumer.foldLeftEval(0L)((s, a) => IO(s + a)))
+      val fa2 = source.consumeWith(Consumer.foldLeftEval(0L)((s, a) => Task.eval(s + a)))
       fa1 <-> fa2
     }
   }

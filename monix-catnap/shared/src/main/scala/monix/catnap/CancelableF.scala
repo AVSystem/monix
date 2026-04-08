@@ -18,7 +18,7 @@
 package monix.catnap
 
 import cats.Applicative
-import cats.effect.{CancelToken, Sync}
+import cats.effect.Sync
 import cats.syntax.either._
 import monix.catnap.cancelables.BooleanCancelableF
 import monix.execution.annotations.UnsafeBecauseImpure
@@ -38,7 +38,7 @@ import scala.collection.mutable.ListBuffer
   * over `F[_]`.
   */
 trait CancelableF[F[_]] {
-  def cancel: CancelToken[F]
+  def cancel: F[Unit]
 }
 
 object CancelableF {
@@ -77,7 +77,7 @@ object CancelableF {
     * this value, we don't need to return the value in `F[_]`,
     * like in [[apply]].
     */
-  def wrap[F[_]](token: CancelToken[F]): CancelableF[F] =
+  def wrap[F[_]](token: F[Unit]): CancelableF[F] =
     new CancelableF[F] { def cancel = token }
 
   /**
@@ -101,7 +101,7 @@ object CancelableF {
     *  - for the JVM "Suppressed Exceptions" are used
     *  - for JS they are wrapped in a `CompositeException`
     */
-  def cancelAll[F[_]](seq: CancelableF[F]*)(implicit F: Sync[F]): CancelToken[F] = {
+  def cancelAll[F[_]](seq: CancelableF[F]*)(implicit F: Sync[F]): F[Unit] = {
 
     if (seq.isEmpty) F.unit
     else
@@ -119,7 +119,7 @@ object CancelableF {
     *  - for the JVM "Suppressed Exceptions" are used
     *  - for JS they are wrapped in a `CompositeException`
     */
-  def cancelAllTokens[F[_]](seq: CancelToken[F]*)(implicit F: Sync[F]): CancelToken[F] = {
+  def cancelAllTokens[F[_]](seq: F[Unit]*)(implicit F: Sync[F]): F[Unit] = {
 
     if (seq.isEmpty) F.unit
     else
@@ -135,12 +135,12 @@ object CancelableF {
   trait IsDummy[F[_]] { self: CancelableF[F] => }
 
   // Optimization for `cancelAll`
-  private final class CancelAllFrame[F[_]](cursor: Iterator[CancelToken[F]])(implicit F: Sync[F])
+  private final class CancelAllFrame[F[_]](cursor: Iterator[F[Unit]])(implicit F: Sync[F])
     extends (Either[Throwable, Unit] => F[Unit]) {
 
     private[this] val errors = ListBuffer.empty[Throwable]
 
-    def loop: CancelToken[F] = {
+    def loop: F[Unit] = {
       if (cursor.hasNext) {
         F.flatMap(F.attempt(cursor.next()))(this)
       } else {

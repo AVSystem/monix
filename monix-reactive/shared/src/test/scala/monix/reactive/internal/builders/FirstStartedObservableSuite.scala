@@ -17,9 +17,9 @@
 
 package monix.reactive.internal.builders
 
-import cats.effect.IO
 import cats.laws._
 import cats.laws.discipline._
+import monix.eval.Task
 import monix.reactive.{BaseTestSuite, Observable}
 import scala.concurrent.duration._
 
@@ -53,7 +53,7 @@ object FirstStartedObservableSuite extends BaseTestSuite {
     var obs1Canceled = false
     val obs1 = Observable
       .intervalAtFixedRate(1.second, 1.second)
-      .doOnNextF(_ => IO { received += 1 })
+      .doOnNextF(_ => Task.eval { received += 1 })
       .doOnSubscriptionCancelF { () =>
         obs1Canceled = true
       }
@@ -62,7 +62,7 @@ object FirstStartedObservableSuite extends BaseTestSuite {
     val obs2 = Observable
       .eval(2)
       .delayExecution(10.second)
-      .doOnNextF(_ => IO { received += 1 })
+      .doOnNextF(_ => Task.eval { received += 1 })
       .doOnSubscriptionCancelF { () =>
         obs2Canceled = true
       }
@@ -89,7 +89,7 @@ object FirstStartedObservableSuite extends BaseTestSuite {
     var obs1Canceled = false
     val obs1 = Observable
       .intervalAtFixedRate(10.seconds, 1.second)
-      .doOnNextF(_ => IO { received += 1 })
+      .doOnNextF(_ => Task.eval { received += 1 })
       .doOnSubscriptionCancelF { () =>
         obs1Canceled = true
       }
@@ -97,7 +97,7 @@ object FirstStartedObservableSuite extends BaseTestSuite {
     var obs2Canceled = false
     val obs2 = Observable
       .intervalAtFixedRate(1.second, 1.second)
-      .doOnNextF(_ => IO { received += 1 })
+      .doOnNextF(_ => Task.eval { received += 1 })
       .doOnSubscriptionCancelF { () =>
         obs2Canceled = true
       }
@@ -124,7 +124,7 @@ object FirstStartedObservableSuite extends BaseTestSuite {
     var obs1Canceled = false
     val obs1 = Observable
       .intervalAtFixedRate(1.seconds, 1.second)
-      .doOnNextF(_ => IO { received += 1 })
+      .doOnNextF(_ => Task.eval { received += 1 })
       .doOnSubscriptionCancelF { () =>
         obs1Canceled = true
       }
@@ -132,7 +132,7 @@ object FirstStartedObservableSuite extends BaseTestSuite {
     var obs2Canceled = false
     val obs2 = Observable
       .intervalAtFixedRate(1.second, 1.second)
-      .doOnNextF(_ => IO { received += 1 })
+      .doOnNextF(_ => Task.eval { received += 1 })
       .doOnSubscriptionCancelF { () =>
         obs2Canceled = true
       }

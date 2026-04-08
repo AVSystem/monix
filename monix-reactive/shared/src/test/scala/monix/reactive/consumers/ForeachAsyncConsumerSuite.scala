@@ -17,7 +17,6 @@
 
 package monix.reactive.consumers
 
-import cats.effect.IO
 import minitest.TestSuite
 import monix.eval.Task
 import monix.execution.exceptions.DummyException
@@ -40,7 +39,7 @@ object ForeachAsyncConsumerSuite extends TestSuite[TestScheduler] {
     val f = obs
       .consumeWith(
         Consumer
-          .foreachEval(x => IO(sum += x)))
+          .foreachEval(x => Task.eval(sum += x)))
       .runToFuture
 
     s.tick()

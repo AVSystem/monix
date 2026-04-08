@@ -19,7 +19,7 @@ package monix.reactive
 package internal
 package builders
 
-import cats.effect.ExitCase
+import monix.execution.ExitCase
 import monix.execution.Callback
 import monix.eval.Task
 import monix.execution.Ack.{Continue, Stop}

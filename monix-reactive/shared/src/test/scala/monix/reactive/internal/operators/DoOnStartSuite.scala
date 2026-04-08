@@ -17,7 +17,6 @@
 
 package monix.reactive.internal.operators
 
-import cats.effect.IO
 import minitest.TestSuite
 import monix.eval.Task
 import monix.execution.Ack
@@ -42,7 +41,7 @@ object DoOnStartSuite extends TestSuite[TestScheduler] {
 
     Observable
       .range(0, 20)
-      .doOnStartF(_ => IO { wasTriggered += 1 })
+      .doOnStartF(_ => Task.eval { wasTriggered += 1 })
       .unsafeSubscribeFn(new Subscriber[Long] {
         val scheduler = s
         def onNext(elem: Long) = Continue

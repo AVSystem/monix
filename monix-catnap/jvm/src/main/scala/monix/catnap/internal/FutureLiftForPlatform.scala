@@ -20,66 +20,33 @@ package internal
 
 import java.util.concurrent.{CancellationException, CompletableFuture, CompletionException}
 import java.util.function.BiFunction
-import cats.effect.{Async, Concurrent}
+import cats.effect.Async
 
 private[catnap] abstract class FutureLiftForPlatform {
   /**
     * Lifts Java's `java.util.concurrent.CompletableFuture` to
-    * any data type implementing `cats.effect.Concurrent`.
-    */
-  def javaCompletableToConcurrent[F[_], A](fa: F[CompletableFuture[A]])(implicit F: Concurrent[F]): F[A] =
-    F.flatMap(fa) { cf =>
-      F.cancelable { cb =>
-        subscribeToCompletable(cf, cb)
-        F.delay { cf.cancel(true); () }
-      }
-    }
-
-  /**
-    * Lifts Java's `java.util.concurrent.CompletableFuture` to
     * any data type implementing `cats.effect.Async`.
+    *
+    * The resulting effect is cancelable if the underlying `CompletableFuture` supports it.
     */
   def javaCompletableToAsync[F[_], A](fa: F[CompletableFuture[A]])(implicit F: Async[F]): F[A] =
     F.flatMap(fa) { cf =>
       F.async { cb =>
         subscribeToCompletable(cf, cb)
+        F.pure(Some(F.delay { cf.cancel(true); () }))
       }
     }
 
   /**
-    * A generic function that subsumes both [[javaCompletableToConcurrent]]
-    * and [[javaCompletableToAsync]].
-    */
-  def javaCompletableToConcurrentOrAsync[F[_], A](fa: F[CompletableFuture[A]])(
-    implicit F: Concurrent[F] OrElse Async[F]): F[A] = {
-
-    F.unify match {
-      case ref: Concurrent[F] @unchecked => javaCompletableToConcurrent(fa)(ref)
-      case ref => javaCompletableToAsync(fa)(ref)
-    }
-  }
-
-  /**
     * Implicit instance of [[FutureLift]] for converting from
-    * `java.util.concurrent.CompletableFuture` to any `Concurrent`
-    * or `Async` data type.
+    * `java.util.concurrent.CompletableFuture` to any `Async` data type.
     */
-  implicit def javaCompletableLiftForConcurrentOrAsync[F[_]](
-    implicit F: Concurrent[F] OrElse Async[F]): FutureLift[F, CompletableFuture] = {
-
-    F.unify match {
-      case ref: Concurrent[F] @unchecked =>
-        new FutureLift[F, CompletableFuture] {
-          def apply[A](fa: F[CompletableFuture[A]]): F[A] =
-            javaCompletableToConcurrent(fa)(ref)
-        }
-      case ref =>
-        new FutureLift[F, CompletableFuture] {
-          def apply[A](fa: F[CompletableFuture[A]]): F[A] =
-            javaCompletableToAsync(fa)(ref)
-        }
+  implicit def javaCompletableLiftForAsync[F[_]](
+    implicit F: Async[F]): FutureLift[F, CompletableFuture] =
+    new FutureLift[F, CompletableFuture] {
+      def apply[A](fa: F[CompletableFuture[A]]): F[A] =
+        javaCompletableToAsync(fa)
     }
-  }
 
   private def subscribeToCompletable[A, F[_]](cf: CompletableFuture[A], cb: Either[Throwable, A] => Unit): Unit = {
     cf.handle[Unit](new BiFunction[A, Throwable, Unit] {

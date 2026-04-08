@@ -20,6 +20,7 @@ package monix.tail
 import cats.laws._
 import cats.laws.discipline._
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import monix.eval.{Coeval, Task}
 import monix.execution.exceptions.DummyException
 import scala.util.{Failure, Success}

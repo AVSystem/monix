@@ -20,7 +20,8 @@ package monix.reactive
 import java.io.{BufferedReader, InputStream, PrintStream, Reader}
 
 import cats.{Alternative, Applicative, Apply, CoflatMap, Eq, FlatMap, Functor, FunctorFilter, Monoid, NonEmptyParallel, Order, ~>}
-import cats.effect.{Bracket, Effect, ExitCase, Resource}
+import cats.effect.Resource
+import monix.execution.ExitCase
 import monix.eval.{Coeval, Task, TaskLift, TaskLike}
 import monix.eval.Task.defaultOptions
 import monix.execution.Ack.{Continue, Stop}
@@ -1537,8 +1538,8 @@ abstract class Observable[+A] extends Serializable { self =>
     *     }
     * }}}
     */
-  final def doOnStartF[F[_]](cb: A => F[Unit])(implicit F: Effect[F]): Observable[A] =
-    doOnStart(a => Task.fromEffect(cb(a))(F))
+  final def doOnStartF[F[_]](cb: A => F[Unit])(implicit F: TaskLike[F]): Observable[A] =
+    doOnStart(a => Task.from(cb(a)))
 
   /** Executes the given callback just _before_ the subscription
     * to the source happens.
@@ -5155,21 +5156,32 @@ object Observable extends ObservableDeprecatedBuilders {
     *     }
     * }}}
     */
-  def fromResource[F[_], A](resource: Resource[F, A])(implicit F: TaskLike[F]): Observable[A] =
+  def fromResource[F[_], A](resource: Resource[F, A])(implicit F: TaskLike[F]): Observable[A] = {
+    val identityPoll: cats.effect.kernel.Poll[F] = new cats.effect.kernel.Poll[F] {
+      def apply[B](fa: F[B]): F[B] = fa
+    }
     resource match {
       case ra: Resource.Allocate[F, A] @unchecked =>
         Observable
-          .resourceCase(F(ra.resource)) { case ((_, release), exitCase) => F(release(exitCase)) }
+          .resourceCase(Task.from(ra.resource(identityPoll))) { case ((_, release), exitCase) =>
+            val ceExitCase = exitCase match {
+              case ExitCase.Completed => Resource.ExitCase.Succeeded
+              case ExitCase.Error(e) => Resource.ExitCase.Errored(e)
+              case ExitCase.Canceled => Resource.ExitCase.Canceled
+            }
+            Task.from(release(ceExitCase))
+          }
           .map(_._1)
-      case ra: Resource.Suspend[F, A] @unchecked =>
-        Observable.from(ra.resource).flatMap { res =>
-          fromResource(res)
-        }
+      case ra: Resource.Eval[F, A] @unchecked =>
+        Observable.fromTask(Task.from(ra.fa))
+      case ra: Resource.Pure[F, A] @unchecked =>
+        Observable.now(ra.a)
       case ra: Resource.Bind[F, Any, A] @unchecked =>
         fromResource(ra.source).flatMap { s =>
           fromResource(ra.fs(s))
         }
     }
+  }
 
   /** Safely converts a `java.io.InputStream` into an observable that will
     * emit `Array[Byte]` elements.
@@ -6296,7 +6308,7 @@ object Observable extends ObservableDeprecatedBuilders {
 
   /** Cats instances for [[Observable]]. */
   class CatsInstances
-    extends Bracket[Observable, Throwable] with Alternative[Observable] with CoflatMap[Observable]
+    extends cats.MonadError[Observable, Throwable] with Alternative[Observable] with CoflatMap[Observable]
     with FunctorFilter[Observable] with TaskLift[Observable] {
 
     override def unit: Observable[Unit] =
@@ -6333,18 +6345,18 @@ object Observable extends ObservableDeprecatedBuilders {
       Observable.empty[A]
     override def apply[A](task: Task[A]): Observable[A] =
       Observable.fromTask(task)
-    override def bracketCase[A, B](acquire: Observable[A])(use: A => Observable[B])(
+    def bracketCase[A, B](acquire: Observable[A])(use: A => Observable[B])(
       release: (A, ExitCase[Throwable]) => Observable[Unit]): Observable[B] =
       acquire.bracketCase(use)((a, e) => release(a, e).completedL)
-    override def bracket[A, B](acquire: Observable[A])(use: A => Observable[B])(
+    def bracket[A, B](acquire: Observable[A])(use: A => Observable[B])(
       release: A => Observable[Unit]): Observable[B] =
       acquire.bracket(use)(release.andThen(_.completedL))
-    override def guarantee[A](fa: Observable[A])(finalizer: Observable[Unit]): Observable[A] =
+    def guarantee[A](fa: Observable[A])(finalizer: Observable[Unit]): Observable[A] =
       fa.guarantee(finalizer.completedL)
-    override def guaranteeCase[A](fa: Observable[A])(
+    def guaranteeCase[A](fa: Observable[A])(
       finalizer: ExitCase[Throwable] => Observable[Unit]): Observable[A] =
       fa.guaranteeCase(e => finalizer(e).completedL)
-    override def uncancelable[A](fa: Observable[A]): Observable[A] =
+    def uncancelable[A](fa: Observable[A]): Observable[A] =
       fa.uncancelable
     override def functor: Functor[Observable] = this
     override def mapFilter[A, B](fa: Observable[A])(f: A => Option[B]): Observable[B] =
@@ -6363,7 +6375,7 @@ object Observable extends ObservableDeprecatedBuilders {
 
       override type F[A] = CombineObservable.Type[A]
 
-      override def flatMap: FlatMap[Observable] = implicitly[FlatMap[Observable]]
+      override def flatMap: FlatMap[Observable] = catsInstances
       override def apply: Apply[CombineObservable.Type] = CombineObservable.combineObservableApplicative
 
       override val sequential = new (CombineObservable.Type ~> Observable) {

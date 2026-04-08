@@ -18,6 +18,7 @@
 package monix.tail
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import cats.syntax.either._
 import cats.syntax.eq._
 import cats.laws._

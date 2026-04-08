@@ -17,7 +17,6 @@
 
 package monix.eval.internal
 
-import cats.effect.CancelToken
 import monix.catnap.CancelableF
 import monix.eval.Task
 import monix.execution.{Cancelable, Scheduler}
@@ -39,7 +38,7 @@ private[eval] object UnsafeCancelUtils {
     * Internal API — very unsafe!
     */
   private[internal] def cancelAllUnsafe(
-    cursor: Iterable[AnyRef /* Cancelable | Task[Unit] | CancelableF[Task] */ ]): CancelToken[Task] = {
+    cursor: Iterable[AnyRef /* Cancelable | Task[Unit] | CancelableF[Task] */ ]): Task[Unit] = {
 
     if (cursor.isEmpty)
       Task.unit
@@ -54,7 +53,7 @@ private[eval] object UnsafeCancelUtils {
     * Internal API — very unsafe!
     */
   private[internal] def unsafeCancel(
-    task: AnyRef /* Cancelable | Task[Unit] | CancelableF[Task] */ ): CancelToken[Task] = {
+    task: AnyRef /* Cancelable | Task[Unit] | CancelableF[Task] */ ): Task[Unit] = {
 
     task match {
       case ref: Task[Unit] @unchecked =>
@@ -74,7 +73,7 @@ private[eval] object UnsafeCancelUtils {
   /**
     * Internal API — very unsafe!
     */
-  private[internal] def getToken(task: AnyRef /* Cancelable | Task[Unit] | CancelableF[Task] */ ): CancelToken[Task] =
+  private[internal] def getToken(task: AnyRef /* Cancelable | Task[Unit] | CancelableF[Task] */ ): Task[Unit] =
     task match {
       case ref: Task[Unit] @unchecked =>
         ref
@@ -117,7 +116,7 @@ private[eval] object UnsafeCancelUtils {
 
     private[this] val errors = ListBuffer.empty[Throwable]
 
-    def loop(): CancelToken[Task] = {
+    def loop(): Task[Unit] = {
       var task: Task[Unit] = null
 
       while ((task eq null) && cursor.hasNext) {

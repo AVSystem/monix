@@ -18,7 +18,7 @@
 package monix.tail.internal
 
 import cats.syntax.all._
-import cats.effect.{Async, Clock, Timer}
+import cats.effect.Async
 import monix.tail.Iterant
 import monix.tail.Iterant.Suspend
 import scala.concurrent.duration._
@@ -29,29 +29,30 @@ private[tail] object IterantIntervalAtFixedRate {
     */
   def apply[F[_]](
     initialDelay: FiniteDuration,
-    interval: FiniteDuration)(implicit F: Async[F], timer: Timer[F], clock: Clock[F]): Iterant[F, Long] = {
+    interval: FiniteDuration)(implicit F: Async[F]): Iterant[F, Long] = {
 
-    def loop(time: F[Long], index: Long): F[Iterant[F, Long]] =
+    val time: F[Long] = F.monotonic.map(_.toNanos)
+
+    def loop(index: Long): F[Iterant[F, Long]] =
       time.map { startTime =>
         val rest = time.flatMap { endTime =>
           val elapsed = (endTime - startTime).nanos
           val timespan = interval - elapsed
 
           if (timespan > Duration.Zero) {
-            F.flatMap(timer.sleep(timespan))(_ => loop(time, index + 1))
+            F.flatMap(F.sleep(timespan))(_ => loop(index + 1))
           } else {
-            loop(time, index + 1)
+            loop(index + 1)
           }
         }
         Iterant.nextS[F, Long](index, rest)
       }
 
-    val time = clock.monotonic(NANOSECONDS)
     initialDelay match {
       case Duration.Zero =>
-        Suspend(loop(time, 0))
+        Suspend(loop(0))
       case _ =>
-        Suspend(F.flatMap(timer.sleep(initialDelay))(_ => loop(time, 0)))
+        Suspend(F.flatMap(F.sleep(initialDelay))(_ => loop(0)))
     }
   }
 }

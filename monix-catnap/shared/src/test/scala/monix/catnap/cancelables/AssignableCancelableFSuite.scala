@@ -18,6 +18,7 @@
 package monix.catnap.cancelables
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import minitest.SimpleTestSuite
 import monix.catnap.CancelableF
 

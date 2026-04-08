@@ -61,10 +61,10 @@ object TaskLift extends TaskLiftImplicits0 {
     * Instance for converting to
     * [[https://typelevel.org/cats-effect/datatypes/io.html cats.effect.IO]].
     */
-  implicit def toIO(implicit eff: ConcurrentEffect[Task]): TaskLift[IO] =
+  implicit def toIO(implicit async: Async[Task]): TaskLift[IO] =
     new TaskLift[IO] {
       def apply[A](task: Task[A]): IO[A] =
-        TaskConversions.toIO(task)(eff)
+        TaskConversions.toIO(task)(async)
     }
 
   /**
@@ -83,36 +83,15 @@ object TaskLift extends TaskLiftImplicits0 {
 
 private[eval] abstract class TaskLiftImplicits0 extends TaskLiftImplicits1 {
   /**
-    * Instance for converting to any type implementing
-    * [[https://typelevel.org/cats-effect/typeclasses/concurrent.html cats.effect.Concurrent]].
+    * Instance for converting to any type that has a `LiftIO` instance.
     */
-  implicit def toConcurrent[F[_]](implicit F: Concurrent[F], eff: ConcurrentEffect[Task]): TaskLift[F] =
+  implicit def toAnyLiftIO[F[_]](implicit F: LiftIO[F], async: Async[Task]): TaskLift[F] =
     new TaskLift[F] {
       def apply[A](task: Task[A]): F[A] =
-        task.toConcurrent(F, eff)
+        F.liftIO(TaskConversions.toIO(task)(async))
     }
 }
 
-private[eval] abstract class TaskLiftImplicits1 extends TaskLiftImplicits2 {
-  /**
-    * Instance for converting to any type implementing
-    * [[https://typelevel.org/cats-effect/typeclasses/async.html cats.effect.Async]].
-    */
-  implicit def toAsync[F[_]](implicit F: Async[F], eff: Effect[Task]): TaskLift[F] =
-    new TaskLift[F] {
-      def apply[A](task: Task[A]): F[A] =
-        task.toAsync(F, eff)
-    }
-}
-
-private[eval] abstract class TaskLiftImplicits2 {
-  /**
-    * Instance for converting to any type implementing
-    * [[https://typelevel.org/cats-effect/typeclasses/liftio.html cats.effect.Async]].
-    */
-  implicit def toAnyLiftIO[F[_]](implicit F: LiftIO[F], eff: ConcurrentEffect[Task]): TaskLift[F] =
-    new TaskLift[F] {
-      def apply[A](task: Task[A]): F[A] =
-        F.liftIO(TaskConversions.toIO(task)(eff))
-    }
+private[eval] abstract class TaskLiftImplicits1 {
+  // empty — placeholder for future extension
 }

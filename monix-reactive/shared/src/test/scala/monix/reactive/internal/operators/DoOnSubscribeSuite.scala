@@ -17,7 +17,7 @@
 
 package monix.reactive.internal.operators
 
-import cats.effect.{ExitCase, IO}
+import monix.execution.ExitCase
 import minitest.TestSuite
 import monix.eval.Task
 import monix.execution.Ack.Continue
@@ -82,7 +82,7 @@ object DoOnSubscribeSuite extends TestSuite[TestScheduler] {
     var wasThrown: Throwable = null
     Observable
       .range(1, 10)
-      .doAfterSubscribeF(IO.raiseError[Unit](dummy))
+      .doAfterSubscribeF(Task.raiseError[Unit](dummy))
       .unsafeSubscribeFn(new Observer[Long] {
         def onNext(elem: Long) = Continue
         def onComplete() = ()

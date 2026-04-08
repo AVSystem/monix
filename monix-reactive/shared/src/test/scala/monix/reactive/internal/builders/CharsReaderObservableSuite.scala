@@ -18,7 +18,7 @@
 package monix.reactive.internal.builders
 
 import java.io.{Reader, StringReader}
-import cats.effect.ExitCase
+import monix.execution.ExitCase
 import minitest.SimpleTestSuite
 import minitest.laws.Checkers
 import monix.eval.Task

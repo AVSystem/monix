@@ -17,14 +17,13 @@
 
 package monix.reactive
 
-import cats.effect.laws.discipline.BracketTests
 import cats.laws.discipline.arbitrary.catsLawsArbitraryForPartialFunction
-import cats.laws.discipline.{AlternativeTests, ApplyTests, CoflatMapTests, FunctorFilterTests, MonoidKTests, NonEmptyParallelTests}
+import cats.laws.discipline.{AlternativeTests, ApplyTests, CoflatMapTests, FunctorFilterTests, MonadErrorTests, MonoidKTests, NonEmptyParallelTests}
 import monix.reactive.observables.CombineObservable
 
 object TypeClassLawsForObservableSuite extends BaseLawsTestSuite {
-  checkAllAsync("Bracket[Observable, Throwable]") { implicit ec =>
-    BracketTests[Observable, Throwable].bracket[Int, Int, Int]
+  checkAllAsync("MonadError[Observable, Throwable]") { implicit ec =>
+    MonadErrorTests[Observable, Throwable].monadError[Int, Int, Int]
   }
 
   checkAllAsync("CoflatMap[Observable]") { implicit ec =>
@@ -37,10 +36,6 @@ object TypeClassLawsForObservableSuite extends BaseLawsTestSuite {
 
   checkAllAsync("MonoidK[Observable]") { implicit ec =>
     MonoidKTests[Observable].monoidK[Int]
-  }
-
-  checkAllAsync("Bracket[Observable, Throwable]") { implicit ec =>
-    BracketTests[Observable, Throwable].bracket[Int, Int, Int]
   }
 
   checkAllAsync("Apply[CombineObservable.Type]") { implicit ec =>

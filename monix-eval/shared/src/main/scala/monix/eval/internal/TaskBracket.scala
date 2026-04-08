@@ -17,8 +17,8 @@
 
 package monix.eval.internal
 
-import cats.effect.ExitCase
-import cats.effect.ExitCase.{Canceled, Completed, Error}
+import monix.execution.ExitCase
+import monix.execution.ExitCase.{Canceled, Completed, Error}
 import monix.eval.Task.{Context, ContextSwitch}
 import monix.execution.Callback
 import monix.eval.Task

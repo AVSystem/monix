@@ -17,7 +17,6 @@
 
 package monix.reactive.internal.operators
 
-import cats.effect.IO
 import minitest.TestSuite
 import monix.eval.Task
 import monix.execution.Ack.Continue
@@ -38,7 +37,7 @@ object DoOnNextAckSuite extends TestSuite[TestScheduler] {
 
     Observable
       .range(0, 20)
-      .doOnNextAckF((x, _) => IO(sum += x))
+      .doOnNextAckF((x, _) => Task.eval(sum += x))
       .unsafeSubscribeFn(new Subscriber[Long] {
         val scheduler = s
         def onError(ex: Throwable): Unit = ()

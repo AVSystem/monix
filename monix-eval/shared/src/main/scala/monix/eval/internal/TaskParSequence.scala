@@ -17,7 +17,6 @@
 
 package monix.eval.internal
 
-import cats.effect.CancelToken
 import monix.eval.Task.{Async, Context}
 import monix.execution.Callback
 import monix.eval.Task
@@ -122,7 +121,7 @@ private[eval] object TaskParSequence {
           // Collecting all cancelables in a buffer, because adding
           // cancelables one by one in our `CompositeCancelable` is
           // expensive, so we do it at the end
-          val allCancelables = ListBuffer.empty[CancelToken[Task]]
+          val allCancelables = ListBuffer.empty[Task[Unit]]
 
           // We need a composite because we are potentially starting tasks
           // in parallel and thus we need to cancel everything

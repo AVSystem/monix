@@ -17,8 +17,6 @@
 
 package monix.eval
 
-import cats.effect.CancelToken
-
 /** `Fiber` represents the (pure) result of a [[Task]] being started concurrently
   * and that can be either joined or cancelled.
   *
@@ -52,7 +50,7 @@ import cats.effect.CancelToken
   *   }
   * }}}
   */
-trait Fiber[A] extends cats.effect.Fiber[Task, A] {
+trait Fiber[A] {
   /**
     * Triggers the cancellation of the fiber.
     *
@@ -63,7 +61,7 @@ trait Fiber[A] extends cats.effect.Fiber[Task, A] {
     * of the underlying fiber is already complete, then there's nothing
     * to cancel.
     */
-  def cancel: CancelToken[Task]
+  def cancel: Task[Unit]
 
   /** Returns a new task that will await for the completion of the
     * underlying fiber, (asynchronously) blocking the current run-loop
@@ -76,8 +74,8 @@ object Fiber {
   /**
     * Builds a [[Fiber]] value out of a `task` and its cancelation token.
     */
-  def apply[A](task: Task[A], cancel: CancelToken[Task]): Fiber[A] =
+  def apply[A](task: Task[A], cancel: Task[Unit]): Fiber[A] =
     new Tuple(task, cancel)
 
-  private final case class Tuple[A](join: Task[A], cancel: CancelToken[Task]) extends Fiber[A]
+  private final case class Tuple[A](join: Task[A], cancel: Task[Unit]) extends Fiber[A]
 }

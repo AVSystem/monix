@@ -18,7 +18,7 @@
 package monix.eval
 package internal
 
-import cats.effect.ExitCase
+import monix.execution.ExitCase
 import monix.execution.internal.Platform
 import scala.util.control.NonFatal
 

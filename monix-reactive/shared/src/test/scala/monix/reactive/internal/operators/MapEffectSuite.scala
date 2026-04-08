@@ -17,14 +17,14 @@
 
 package monix.reactive.internal.operators
 
-import cats.effect.IO
+import monix.eval.Task
 import monix.execution.Scheduler
 import monix.reactive.Observable
 import scala.concurrent.duration._
 
 object MapEffectSuite extends BaseOperatorSuite {
   def createObservable(sourceCount: Int) = Some {
-    val o = Observable.range(0L, sourceCount.toLong).mapEvalF(x => IO(x))
+    val o = Observable.range(0L, sourceCount.toLong).mapEvalF(x => Task.eval(x))
     Sample(o, count(sourceCount), sum(sourceCount), waitFirst, waitNext)
   }
 
@@ -39,7 +39,7 @@ object MapEffectSuite extends BaseOperatorSuite {
     else
       Some {
         val o = createObservableEndingInError(Observable.range(0L, sourceCount.toLong), ex)
-          .mapEvalF(i => IO.pure(i))
+          .mapEvalF(i => Task.pure(i))
 
         Sample(o, count(sourceCount), sum(sourceCount), waitFirst, waitNext)
       }
@@ -53,7 +53,7 @@ object MapEffectSuite extends BaseOperatorSuite {
       if (i == sourceCount - 1)
         throw ex
       else
-        IO.pure(i)
+        Task.pure(i)
     }
 
     Sample(o, count(sourceCount - 1), sum(sourceCount - 1), waitFirst, waitNext)
@@ -69,7 +69,7 @@ object MapEffectSuite extends BaseOperatorSuite {
     val sample = Observable
       .range(0, 100)
       .delayOnNext(1.second)
-      .mapEvalF(x => IO(x))
+      .mapEvalF(x => Task.eval(x))
 
     Seq(
       Sample(sample, 0, 0, 0.seconds, 0.seconds),

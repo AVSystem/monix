@@ -18,8 +18,8 @@
 package monix.eval
 
 import cats.Eval
-import cats.effect.{ContextShift, IO, SyncIO}
-import monix.catnap.SchedulerEffect
+import cats.effect.{IO, SyncIO}
+import cats.effect.unsafe.implicits.{global => ioRuntime}
 import monix.execution.CancelablePromise
 import monix.execution.exceptions.DummyException
 
@@ -27,7 +27,7 @@ import scala.concurrent.Promise
 import scala.util.{Failure, Success, Try}
 
 object TaskLikeConversionsSuite extends BaseTestSuite {
-  import TaskConversionsSuite.{CIO, CustomConcurrentEffect, CustomEffect}
+  // CIO, CustomEffect, CustomConcurrentEffect removed — CE2 type classes gone in CE3
 
   test("Task.from(future)") { implicit s =>
     val p = Promise[Int]()
@@ -55,7 +55,7 @@ object TaskLikeConversionsSuite extends BaseTestSuite {
   }
 
   test("Task.from(IO)") { implicit s =>
-    implicit val cs: ContextShift[IO] = SchedulerEffect.contextShift[IO](s)(IO.ioEffect)
+
 
     val p = Promise[Int]()
     val f = Task.from(IO.fromFuture(IO.pure(p.future))).runToFuture
@@ -69,7 +69,7 @@ object TaskLikeConversionsSuite extends BaseTestSuite {
   }
 
   test("Task.from(IO) for errors") { implicit s =>
-    implicit val cs: ContextShift[IO] = SchedulerEffect.contextShift[IO](s)(IO.ioEffect)
+
 
     val p = Promise[Int]()
     val dummy = DummyException("dummy")
@@ -190,67 +190,8 @@ object TaskLikeConversionsSuite extends BaseTestSuite {
     assertEquals(conv.runToFuture.value, Some(Failure(dummy)))
   }
 
-  test("Task.from(custom Effect)") { implicit s =>
-    implicit val cs: ContextShift[IO] = SchedulerEffect.contextShift[IO](s)(IO.ioEffect)
-    implicit val F: CustomEffect = new CustomEffect()
-
-    var effect = false
-    val source = CIO(IO { effect = true; 1 })
-    val conv = Task.from(source)
-
-    assert(!effect)
-    val f = conv.runToFuture
-    s.tick()
-    assert(effect)
-    assertEquals(f.value, Some(Success(1)))
-  }
-
-  test("Task.from(custom Effect) for errors") { implicit s =>
-    implicit val cs: ContextShift[IO] = SchedulerEffect.contextShift[IO](s)(IO.ioEffect)
-    implicit val F: CustomEffect = new CustomEffect()
-
-    var effect = false
-    val dummy = DummyException("dummy")
-    val source = CIO(IO { effect = true; throw dummy })
-    val conv = Task.from(source)
-
-    assert(!effect)
-    val f = conv.runToFuture
-    s.tick()
-    assert(effect)
-    assertEquals(f.value, Some(Failure(dummy)))
-  }
-
-  test("Task.from(custom ConcurrentEffect)") { implicit s =>
-    implicit val cs: ContextShift[IO] = SchedulerEffect.contextShift[IO](s)(IO.ioEffect)
-    implicit val F: CustomConcurrentEffect = new CustomConcurrentEffect()(cs)
-
-    var effect = false
-    val source = CIO(IO { effect = true; 1 })
-    val conv = Task.from(source)
-
-    assert(!effect)
-    val f = conv.runToFuture
-    s.tick()
-    assert(effect)
-    assertEquals(f.value, Some(Success(1)))
-  }
-
-  test("Task.from(custom ConcurrentEffect) for errors") { implicit s =>
-    implicit val cs: ContextShift[IO] = SchedulerEffect.contextShift[IO](s)(IO.ioEffect)
-    implicit val F: CustomConcurrentEffect = new CustomConcurrentEffect()(cs)
-
-    var effect = false
-    val dummy = DummyException("dummy")
-    val source = CIO(IO { effect = true; throw dummy })
-    val conv = Task.from(source)
-
-    assert(!effect)
-    val f = conv.runToFuture
-    s.tick()
-    assert(effect)
-    assertEquals(f.value, Some(Failure(dummy)))
-  }
+  // Tests for Task.from(custom Effect/ConcurrentEffect) removed —
+  // those CE2 type classes no longer exist in Cats Effect 3.
 
   test("Task.from(Function0)") { implicit s =>
     val task = Task.from(() => 1)

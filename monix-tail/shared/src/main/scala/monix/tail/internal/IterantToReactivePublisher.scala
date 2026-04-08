@@ -17,13 +17,13 @@
 
 package monix.tail.internal
 
-import cats.effect.Effect
+import cats.effect.Async
+import cats.effect.std.Dispatcher
 import cats.implicits._
 import monix.execution.UncaughtExceptionReporter.{default => Logger}
 import monix.execution.atomic.Atomic
 import monix.execution.atomic.PaddingStrategy.LeftRight128
-import monix.execution.cancelables.SingleAssignCancelable
-import monix.execution.internal.{AttemptCallback, Platform}
+import monix.execution.internal.Platform
 import monix.execution.internal.collection.ChunkedArrayStack
 import monix.execution.rstreams.Subscription
 import monix.execution.{Cancelable, UncaughtExceptionReporter}
@@ -38,12 +38,12 @@ private[tail] object IterantToReactivePublisher {
   /**
     * Implementation for `toReactivePublisher`
     */
-  def apply[F[_], A](self: Iterant[F, A])(implicit F: Effect[F]): Publisher[A] = {
+  def apply[F[_], A](self: Iterant[F, A], dispatcher: Dispatcher[F])(implicit F: Async[F]): Publisher[A] = {
 
-    new IterantPublisher(self)
+    new IterantPublisher(self, dispatcher)
   }
 
-  private final class IterantPublisher[F[_], A](source: Iterant[F, A])(implicit F: Effect[F]) extends Publisher[A] {
+  private final class IterantPublisher[F[_], A](source: Iterant[F, A], dispatcher: Dispatcher[F])(implicit F: Async[F]) extends Publisher[A] {
 
     def subscribe(out: Subscriber[_ >: A]): Unit = {
       // Reactive Streams requirement
@@ -60,17 +60,16 @@ private[tail] object IterantToReactivePublisher {
               out.onError(err)
           }
         case _ =>
-          out.onSubscribe(new IterantSubscription[F, A](source, out))
+          out.onSubscribe(new IterantSubscription[F, A](source, out, dispatcher))
       }
     }
   }
 
-  private final class IterantSubscription[F[_], A](source: Iterant[F, A], out: Subscriber[_ >: A])(
-    implicit F: Effect[F])
+  private final class IterantSubscription[F[_], A](source: Iterant[F, A], out: Subscriber[_ >: A], dispatcher: Dispatcher[F])(
+    implicit F: Async[F])
     extends Subscription { parent =>
 
-    private[this] val cancelable =
-      SingleAssignCancelable()
+    @volatile private[this] var cancelToken: () => scala.concurrent.Future[Unit] = _
     private[this] val state =
       Atomic.withPadding(null: RequestState, LeftRight128)
 
@@ -122,8 +121,10 @@ private[tail] object IterantToReactivePublisher {
           if (!state.compareAndSet(current, Interrupt(signal)))
             cancelWithSignal(signal)
           else {
-            if (signal == None)
-              cancelable.cancel()
+            if (signal == None) {
+              val ct = cancelToken
+              if (ct != null) ct()
+            }
             if (current == null)
               startLoop()
           }
@@ -135,7 +136,10 @@ private[tail] object IterantToReactivePublisher {
           if (!state.compareAndSet(current, Interrupt(signal)))
             cancelWithSignal(signal)
           else {
-            if (signal == None) cancelable.cancel()
+            if (signal == None) {
+              val ct = cancelToken
+              if (ct != null) ct()
+            }
             cb(rightUnit)
           }
       }
@@ -143,16 +147,11 @@ private[tail] object IterantToReactivePublisher {
 
     def startLoop(): Unit = {
       val loop = new Loop
-      val token = F
-        .toIO(loop(source))
-        .unsafeRunCancelable({
-          case Left(error) => Logger.reportFailure(error)
-          case _ => ()
-        })
-      cancelable := Cancelable(() =>
-        token.unsafeRunAsync(
-          AttemptCallback.empty(UncaughtExceptionReporter.default)
-        ))
+      cancelToken = dispatcher.unsafeRunCancelable(
+        F.handleErrorWith(loop(source)) { error =>
+          F.delay(Logger.reportFailure(error))
+        }
+      )
       ()
     }
 
@@ -215,7 +214,7 @@ private[tail] object IterantToReactivePublisher {
               } else if (cb ne null) {
                 continue = !parent.state.compareAndSet(current, Await(cb))
               } else {
-                result = F.asyncF(poll)
+                result = F.async_[Unit](poll)
               }
 
             case Interrupt(signal) =>

@@ -20,6 +20,7 @@ package monix.tail
 import cats.Applicative
 import cats.effect._
 import monix.catnap.{ConsumerF, ProducerF}
+import monix.execution.ExitCase
 import monix.execution.BufferCapacity.Bounded
 import monix.execution.ChannelType.MultiProducer
 import monix.execution.internal.Platform.recommendedBufferChunkSize
@@ -228,7 +229,7 @@ object IterantBuilders {
       * Aliased builder, see documentation for
       * [[[Iterant.intervalAtFixedRate[F[_]](period* Iterant.intervalAtFixedRate]]].
       */
-    def intervalAtFixedRate(period: FiniteDuration)(implicit F: Async[F], timer: Timer[F]): Iterant[F, Long] =
+    def intervalAtFixedRate(period: FiniteDuration)(implicit F: Async[F]): Iterant[F, Long] =
       Iterant.intervalAtFixedRate(period)
 
     /**
@@ -236,15 +237,14 @@ object IterantBuilders {
       * [[[Iterant.intervalAtFixedRate[F[_]](initialDelay* Iterant.intervalAtFixedRate]]].
       */
     def intervalAtFixedRate(initialDelay: FiniteDuration, period: FiniteDuration)(
-      implicit F: Async[F],
-      timer: Timer[F]): Iterant[F, Long] =
+      implicit F: Async[F]): Iterant[F, Long] =
       Iterant.intervalAtFixedRate(initialDelay, period)
 
     /**
       * Aliased builder, see documentation for
       * [[[Iterant.intervalWithFixedDelay[F[_]](delay* Iterant.intervalAtFixedRate]]].
       */
-    def intervalWithFixedDelay(delay: FiniteDuration)(implicit F: Async[F], timer: Timer[F]): Iterant[F, Long] =
+    def intervalWithFixedDelay(delay: FiniteDuration)(implicit F: Async[F]): Iterant[F, Long] =
       Iterant.intervalWithFixedDelay(delay)
 
     /**
@@ -252,8 +252,7 @@ object IterantBuilders {
       * [[[Iterant.intervalWithFixedDelay[F[_]](initialDelay* Iterant.intervalAtFixedRate]]].
       */
     def intervalWithFixedDelay(initialDelay: FiniteDuration, delay: FiniteDuration)(
-      implicit F: Async[F],
-      timer: Timer[F]): Iterant[F, Long] =
+      implicit F: Async[F]): Iterant[F, Long] =
       Iterant.intervalWithFixedDelay(initialDelay, delay)
 
     /** Aliased builder, see documentation for [[Iterant.fromReactivePublisher]]. */
@@ -280,8 +279,7 @@ object IterantBuilders {
       bufferCapacity: BufferCapacity = Bounded(recommendedBufferChunkSize),
       maxBatchSize: Int = recommendedBufferChunkSize,
       producerType: ChannelType.ProducerSide = MultiProducer)(
-      implicit F: Concurrent[F],
-      cs: ContextShift[F]): F[(ProducerF[F, Option[Throwable], A], Iterant[F, A])] =
+      implicit F: Async[F]): F[(ProducerF[F, Option[Throwable], A], Iterant[F, A])] =
       Iterant.channel(bufferCapacity, maxBatchSize, producerType)
   }
 }

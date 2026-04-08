@@ -17,7 +17,6 @@
 
 package monix.eval.internal
 
-import cats.effect.CancelToken
 import monix.eval.Task
 import monix.eval.Task.{Async, Context, ContextSwitch, Error, Eval, FlatMap, Map, Now, Suspend, Trace}
 import monix.execution.internal.collection.ChunkedArrayStack
@@ -258,7 +257,7 @@ private[eval] object TaskRunLoop {
     scheduler: Scheduler,
     opts: Task.Options,
     cb: Callback[Throwable, A],
-    isCancelable: Boolean = true): CancelToken[Task] = {
+    isCancelable: Boolean = true): Task[Unit] = {
 
     var current = source.asInstanceOf[Task[Any]]
     var bFirst: Bind = null
@@ -716,7 +715,7 @@ private[eval] object TaskRunLoop {
     nextFrame: FrameIndex,
     isCancelable: Boolean,
     forceFork: Boolean,
-    tracingCtx: StackTracedContext): CancelToken[Task] = {
+    tracingCtx: StackTracedContext): Task[Unit] = {
 
     val context = Context(
       scheduler,

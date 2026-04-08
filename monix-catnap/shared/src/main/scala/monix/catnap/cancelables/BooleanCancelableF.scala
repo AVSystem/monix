@@ -19,7 +19,7 @@ package monix.catnap
 package cancelables
 
 import cats.Applicative
-import cats.effect.{CancelToken, Sync}
+import cats.effect.Sync
 import monix.catnap.CancelableF
 import monix.catnap.CancelableF.Empty
 import monix.execution.annotations.UnsafeBecauseImpure
@@ -52,7 +52,7 @@ object BooleanCancelableF {
     *
     * @param token is a value that can be evaluated.
     */
-  def apply[F[_]](token: CancelToken[F])(implicit F: Sync[F]): F[BooleanCancelableF[F]] =
+  def apply[F[_]](token: F[Unit])(implicit F: Sync[F]): F[BooleanCancelableF[F]] =
     F.delay(unsafeApply[F](token))
 
   /**
@@ -64,7 +64,7 @@ object BooleanCancelableF {
     * catch users by surprise.
     */
   @UnsafeBecauseImpure
-  def unsafeApply[F[_]](token: CancelToken[F])(implicit F: Sync[F]): BooleanCancelableF[F] =
+  def unsafeApply[F[_]](token: F[Unit])(implicit F: Sync[F]): BooleanCancelableF[F] =
     new Impl[F](token)
 
   /**
@@ -89,7 +89,7 @@ object BooleanCancelableF {
       def cancel = F.unit
     }
 
-  private final class Impl[F[_]](token: CancelToken[F])(implicit F: Sync[F]) extends BooleanCancelableF[F] {
+  private final class Impl[F[_]](token: F[Unit])(implicit F: Sync[F]) extends BooleanCancelableF[F] {
 
     private[this] val canceled = Atomic(false)
     private[this] var ref = token
@@ -97,11 +97,11 @@ object BooleanCancelableF {
     def isCanceled =
       F.delay(canceled.get())
 
-    def cancel: CancelToken[F] =
+    def cancel: F[Unit] =
       F.defer {
         if (!canceled.getAndSet(true)) {
           val ref = this.ref
-          this.ref = null.asInstanceOf[CancelToken[F]]
+          this.ref = null.asInstanceOf[F[Unit]]
           ref
         } else {
           F.unit

@@ -17,7 +17,7 @@
 
 package monix.reactive.internal.operators
 
-import cats.effect.IO
+import monix.eval.Task
 import monix.execution.atomic.Atomic
 import monix.reactive.{BaseTestSuite, Observable, OverflowStrategy}
 import scala.util.Success
@@ -29,7 +29,7 @@ object PublishSelectorSuite extends BaseTestSuite {
     val isStarted = Atomic(0)
     val f = Observable
       .range(0, 1000)
-      .doOnStartF(_ => IO(isStarted.increment()))
+      .doOnStartF(_ => Task.eval(isStarted.increment()))
       .publishSelector { source =>
         Observable(source, source, source).merge
       }
@@ -47,7 +47,7 @@ object PublishSelectorSuite extends BaseTestSuite {
 
     val f = Observable
       .range(0, 10000)
-      .doOnStartF(_ => IO(isStarted.increment()))
+      .doOnStartF(_ => Task.eval(isStarted.increment()))
       .doOnSubscriptionCancelF(() => isCanceled.set(true))
       .publishSelector { source =>
         source.map(_ => 1)

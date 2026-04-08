@@ -19,7 +19,6 @@ package monix.eval.internal
 
 import java.util.concurrent.atomic.AtomicReference
 
-import cats.effect.CancelToken
 import monix.eval.Task
 import monix.execution.schedulers.TrampolineExecutionContext
 import monix.execution.{Callback, Scheduler}
@@ -29,8 +28,8 @@ import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
 /**
-  * A placeholder for a [[cats.effect.CancelToken]] that will be set at a later time,
-  * the equivalent of a `Deferred[Task, CancelToken]`.
+  * A placeholder for a cancel token (`Task[Unit]`) that will be set at a later time,
+  * the equivalent of a `Deferred[Task, Task[Unit]]`.
   *
   * Used in the implementation of `bracket`, see [[TaskBracket]].
   */
@@ -39,7 +38,7 @@ final private[internal] class ForwardCancelable private () {
 
   private[this] val state = new AtomicReference[State](init)
 
-  val cancel: CancelToken[Task] = {
+  val cancel: Task[Unit] = {
     @tailrec def loop(ctx: Task.Context, cb: Callback[Throwable, Unit]): Unit =
       state.get() match {
         case current @ Empty(list) =>
@@ -57,7 +56,7 @@ final private[internal] class ForwardCancelable private () {
     Task.Async(loop)
   }
 
-  def complete(value: CancelToken[Task])(implicit s: Scheduler): Unit =
+  def complete(value: Task[Unit])(implicit s: Scheduler): Unit =
     state.get() match {
       case current @ Active(_) =>
         value.runAsyncAndForget
@@ -99,13 +98,13 @@ private[internal] object ForwardCancelable {
   sealed abstract private class State
 
   final private case class Empty(stack: List[Callback[Throwable, Unit]]) extends State
-  final private case class Active(token: CancelToken[Task]) extends State
+  final private case class Active(token: Task[Unit]) extends State
 
   private val init: State = Empty(Nil)
   private val finished: State = Active(Task.unit)
   private val context: ExecutionContext = TrampolineExecutionContext.immediate
 
-  private def execute(token: CancelToken[Task], stack: List[Callback[Throwable, Unit]])(implicit s: Scheduler): Unit =
+  private def execute(token: Task[Unit], stack: List[Callback[Throwable, Unit]])(implicit s: Scheduler): Unit =
     context.execute(new Runnable {
       def run(): Unit = {
         token.runAsync { r =>

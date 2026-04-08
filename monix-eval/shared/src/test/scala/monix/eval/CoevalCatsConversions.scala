@@ -19,6 +19,7 @@ package monix.eval
 
 import cats.Eval
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import monix.execution.atomic.Atomic
 import monix.execution.exceptions.DummyException
 import scala.util.{Failure, Success}

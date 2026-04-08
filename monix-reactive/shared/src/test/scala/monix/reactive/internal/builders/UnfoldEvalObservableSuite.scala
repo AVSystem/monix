@@ -17,7 +17,6 @@
 
 package monix.reactive.internal.builders
 
-import cats.effect.IO
 import cats.laws._
 import cats.laws.discipline._
 import monix.eval.Task
@@ -88,7 +87,7 @@ object UnfoldEvalObservableSuite extends BaseTestSuite {
     val dummy = DummyException("dummy")
     var received = 0
 
-    Observable.unfoldEvalF(0)(i => if (i < 20) IO(Option((i, i + 1))) else throw dummy).subscribe { (_: Int) =>
+    Observable.unfoldEvalF(0)(i => if (i < 20) Task.eval(Option((i, i + 1))) else throw dummy).subscribe { (_: Int) =>
       received += 1
       Continue
     }
@@ -102,8 +101,8 @@ object UnfoldEvalObservableSuite extends BaseTestSuite {
       val seed = s % (recommendedBatchSize * 2)
       val n = i    % (recommendedBatchSize * 2)
 
-      val f: Int => IO[Option[(Int, Int)]] = i => if (i < n) IO.delay(Some((i, i + 1))) else IO.pure(None)
-      val f2: Int => IO[(Int, Int)] = i => IO.delay((i, i + 1))
+      val f: Int => Task[Option[(Int, Int)]] = i => if (i < n) Task.delay(Some((i, i + 1))) else Task.now(None)
+      val f2: Int => Task[(Int, Int)] = i => Task.delay((i, i + 1))
 
       Observable.unfoldEvalF(seed)(f).toListL <-> Observable.fromAsyncStateActionF(f2)(seed).takeWhile(_ < n).toListL
     }
@@ -114,7 +113,7 @@ object UnfoldEvalObservableSuite extends BaseTestSuite {
     var sum = 0
 
     val cancelable = Observable
-      .unfoldEvalF(s.clockMonotonic(MILLISECONDS))(intOptionIO)
+      .unfoldEvalF(s.clockMonotonic(MILLISECONDS))(intOptionTask)
       .unsafeSubscribeFn(new Subscriber[Int] {
         implicit val scheduler: Scheduler = s
 
@@ -137,7 +136,7 @@ object UnfoldEvalObservableSuite extends BaseTestSuite {
   }
 
   def intNowOption(seed: Long): Task[Option[(Int, Long)]] = Task.now(Option(int(seed)))
-  def intOptionIO(seed: Long): IO[Option[(Int, Long)]] = IO.delay(Option(int(seed)))
+  def intOptionTask(seed: Long): Task[Option[(Int, Long)]] = Task.delay(Option(int(seed)))
   def intOption(seed: Long): Option[(Int, Long)] = Option(int(seed))
 
   def int(seed: Long): (Int, Long) = {

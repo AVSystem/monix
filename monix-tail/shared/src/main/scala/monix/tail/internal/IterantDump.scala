@@ -18,7 +18,8 @@
 package monix.tail.internal
 
 import java.io.PrintStream
-import cats.effect.{ExitCase, Sync}
+import cats.effect.Sync
+import cats.effect.kernel.Outcome
 import cats.syntax.all._
 import monix.tail.Iterant
 import monix.tail.Iterant.{Concat, Halt, Last, Next, NextBatch, NextCursor, Scope, Suspend}
@@ -125,17 +126,17 @@ private[tail] object IterantDump {
 
     def moveNext(rest: F[Iterant[F, A]]): F[Iterant[F, A]] =
       F.guaranteeCase(rest) {
-          case ExitCase.Error(e) =>
+          case Outcome.Errored(e) =>
             F.delay {
               out.println(s"$pos: $prefix --> effect error --> $e")
               pos += 1
             }
-          case ExitCase.Canceled =>
+          case Outcome.Canceled() =>
             F.delay {
               out.println(s"$pos: $prefix --> effect cancelled")
               pos += 1
             }
-          case ExitCase.Completed =>
+          case Outcome.Succeeded(_) =>
             F.unit
         }
         .map(this)

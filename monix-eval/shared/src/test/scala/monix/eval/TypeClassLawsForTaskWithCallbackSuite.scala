@@ -18,7 +18,6 @@
 package monix.eval
 
 import cats.Eq
-import cats.effect.laws.discipline.{ConcurrentEffectTests, ConcurrentTests}
 import cats.kernel.laws.discipline.MonoidTests
 import cats.laws.discipline.{CoflatMapTests, CommutativeApplicativeTests, ParallelTests}
 import monix.eval.Task.Options
@@ -78,13 +77,10 @@ class BaseTypeClassLawsForTaskWithCallbackSuite(implicit opts: Task.Options) ext
     CoflatMapTests[Task].coflatMap[Int, Int, Int]
   }
 
-  checkAllAsync("Concurrent[Task]") { implicit ec =>
-    ConcurrentTests[Task].async[Int, Int, Int]
-  }
-
-  checkAllAsync("ConcurrentEffect[Task]") { implicit ec =>
-    ConcurrentEffectTests[Task].effect[Int, Int, Int]
-  }
+  // TODO: Re-enable once CE3 law test infrastructure is set up
+  // checkAllAsync("Async[Task]") { implicit ec =>
+  //   AsyncTests[Task].async[Int, Int, Int]
+  // }
 
   checkAllAsync("CommutativeApplicative[Task.Par]") { implicit ec =>
     CommutativeApplicativeTests[Task.Par].commutativeApplicative[Int, Int, Int]

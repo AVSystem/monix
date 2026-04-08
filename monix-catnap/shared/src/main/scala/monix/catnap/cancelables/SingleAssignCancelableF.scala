@@ -17,7 +17,7 @@
 
 package monix.catnap.cancelables
 
-import cats.effect.{CancelToken, Sync}
+import cats.effect.Sync
 import monix.catnap.CancelableF
 import monix.execution.annotations.UnsafeBecauseImpure
 import monix.execution.atomic.Atomic
@@ -44,7 +44,7 @@ final class SingleAssignCancelableF[F[_]] private (extra: CancelableF[F])(implic
       case _ => false
     })
 
-  val cancel: CancelToken[F] = {
+  val cancel: F[Unit] = {
     @tailrec def loop(): F[Unit] =
       state.get() match {
         case IsCanceled | IsEmptyCanceled => F.unit

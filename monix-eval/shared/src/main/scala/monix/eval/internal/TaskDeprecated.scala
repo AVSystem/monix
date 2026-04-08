@@ -18,7 +18,7 @@
 package monix.eval
 package internal
 
-import cats.effect.{ConcurrentEffect, IO}
+import cats.effect.IO
 import monix.eval.Task.Options
 import monix.execution.annotations.UnsafeBecauseImpure
 import monix.execution.compat.BuildFrom
@@ -316,7 +316,7 @@ private[eval] object TaskDeprecated {
       * }}}
       */
     @deprecated("Switch to task.to[IO]", since = "3.0.0-RC3")
-    def toIO(implicit eff: ConcurrentEffect[Task]): IO[A] = {
+    def toIO(implicit eff: cats.effect.Async[Task]): IO[A] = {
       // $COVERAGE-OFF$
       TaskConversions.toIO(self)(eff)
       // $COVERAGE-ON$

@@ -17,28 +17,23 @@
 
 package monix.catnap.internal
 
-import cats.implicits._
-import cats.effect.{Async, ExitCase}
-import monix.catnap.FutureLift
-import monix.execution.Callback
-import scala.concurrent.Promise
+import cats.effect.Async
+import cats.syntax.all._
 
 private[monix] object AsyncUtils {
-  /**
-    * Describing the `cancelable` builder for any `Async` data type,
-    * in terms of `bracket`.
+  /** Describing the `cancelable` builder for any `Async` data type,
+    * using CE3's `async` which supports optional cancellation tokens.
+    *
+    * `k` registers the callback and returns an `F[Unit]` cancel token.
+    * We must NOT evaluate (flatMap/map) the cancel token — just pass it
+    * to `F.async` as `Some(cancelToken)` so it is only evaluated on
+    * actual cancellation.
     */
   def cancelable[F[_], A](k: (Either[Throwable, A] => Unit) => F[Unit])(implicit F: Async[F]): F[A] =
-    F.asyncF { cb =>
-      val p = Promise[A]()
-      val awaitPut = Callback.fromPromise(p)
-      val future = p.future
-      val futureF = FutureLift.scalaToAsync(F.pure(future)).attempt.map(cb)
-      val cancel = k(awaitPut)
-
-      F.guaranteeCase(futureF) {
-        case ExitCase.Canceled => cancel
-        case _ => F.unit
+    F.async[A] { cb =>
+      F.delay {
+        val cancelToken = k(cb)
+        Some(cancelToken)
       }
     }
 }

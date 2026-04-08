@@ -20,7 +20,9 @@ package monix.tail
 import java.io.PrintStream
 
 import cats.implicits._
-import cats.effect.{Async, Effect, Sync, _}
+import cats.effect.{Async, Sync, _}
+import cats.effect.std.Dispatcher
+import monix.execution.ExitCase
 import cats.{
   ~>,
   Applicative,
@@ -1835,8 +1837,8 @@ sealed abstract class Iterant[F[_], A] extends Product with Serializable {
     * @see [[consumeWithConfig]] for fine tuning the internal buffer of the
     *      created consumer
     */
-  final def consume(implicit F: Concurrent[F], cs: ContextShift[F]): Resource[F, Consumer[F, A]] =
-    consumeWithConfig(ConsumerF.Config.default)(F, cs)
+  final def consume(implicit F: Async[F]): Resource[F, Consumer[F, A]] =
+    consumeWithConfig(ConsumerF.Config.default)(F)
 
   /** Version of [[consume]] that allows for fine tuning the underlying
     * buffer used.
@@ -1865,16 +1867,15 @@ sealed abstract class Iterant[F[_], A] extends Product with Serializable {
     */
   @UnsafeProtocol
   final def consumeWithConfig(config: ConsumerF.Config)(
-    implicit F: Concurrent[F],
-    cs: ContextShift[F]
+    implicit F: Async[F]
   ): Resource[F, Consumer[F, A]] = {
-    IterantConsume(self, config)(F, cs)
+    IterantConsume(self, config)(F)
   }
 
   /**
     * Converts this `Iterant` to a [[monix.catnap.ChannelF]].
     */
-  final def toChannel(implicit F: Concurrent[F], cs: ContextShift[F]): Channel[F, A] =
+  final def toChannel(implicit F: Async[F]): Channel[F, A] =
     new Channel[F, A] {
       def consume: Resource[F, Consumer[F, A]] =
         self.consume
@@ -1942,8 +1943,8 @@ sealed abstract class Iterant[F[_], A] extends Product with Serializable {
     * See the [[http://www.reactive-streams.org/ Reactive Streams]]
     * for details.
     */
-  final def toReactivePublisher(implicit F: Effect[F]): Publisher[A] =
-    IterantToReactivePublisher(self)
+  final def toReactivePublisher(implicit F: Async[F], dispatcher: Dispatcher[F]): Publisher[A] =
+    IterantToReactivePublisher(self, dispatcher)
 
   /** Applies a binary operator to a start value and all elements of
     * this `Iterant`, going left to right and returns a new
@@ -2795,23 +2796,20 @@ object Iterant extends IterantInstances {
     *     }
     * }}}
     */
-  def fromResource[F[_], A](r: Resource[F, A])(implicit F: Sync[F]): Iterant[F, A] =
-    r match {
-      case fa: Resource.Allocate[F, A] @unchecked =>
-        Iterant
-          .resourceCase(fa.resource) { (a, ec) =>
-            a._2(ec)
-          }
-          .map(_._1)
-      case fa: Resource.Bind[F, Any, A] @unchecked =>
-        Iterant.suspendS(F.delay {
-          Iterant.fromResource(fa.source).flatMap { a =>
-            Iterant.fromResource(fa.fs(a))
-          }
-        })
-      case fa: Resource.Suspend[F, A] @unchecked =>
-        Iterant.suspendS(F.map(fa.resource)(fromResource(_)))
-    }
+  def fromResource[F[_], A](r: Resource[F, A])(implicit F: Sync[F]): Iterant[F, A] = {
+    Scope[F, (A, Resource.ExitCase => F[Unit]), A](
+      r.allocatedCase,
+      { case (a, _) => F.pure(Iterant.pure(a)) },
+      { case ((_, release), exitCase) =>
+        val resourceExitCase = exitCase match {
+          case ExitCase.Completed => Resource.ExitCase.Succeeded
+          case ExitCase.Error(e) => Resource.ExitCase.Errored(e)
+          case ExitCase.Canceled => Resource.ExitCase.Canceled
+        }
+        release(resourceExitCase)
+      }
+    )
+  }
 
   /**
     * Returns a [[monix.catnap.ProducerF ProducerF]] instance, along with
@@ -2840,8 +2838,7 @@ object Iterant extends IterantInstances {
     bufferCapacity: BufferCapacity = Bounded(recommendedBufferChunkSize),
     maxBatchSize: Int = recommendedBufferChunkSize,
     producerType: ChannelType.ProducerSide = MultiProducer)(
-    implicit F: Concurrent[F],
-    cs: ContextShift[F]): F[(Producer[F, A], Iterant[F, A])] = {
+    implicit F: Async[F]): F[(Producer[F, A], Iterant[F, A])] = {
 
     val channelF = ConcurrentChannel[F].withConfig[Option[Throwable], A](
       producerType = producerType
@@ -2927,7 +2924,7 @@ object Iterant extends IterantInstances {
     * @param timer is the timer implementation used to generate
     *        delays and to fetch the current time
     */
-  def intervalAtFixedRate[F[_]](period: FiniteDuration)(implicit F: Async[F], timer: Timer[F]): Iterant[F, Long] =
+  def intervalAtFixedRate[F[_]](period: FiniteDuration)(implicit F: Async[F]): Iterant[F, Long] =
     IterantIntervalAtFixedRate(Duration.Zero, period)
 
   /** $intervalAtFixedRateDesc
@@ -2941,8 +2938,7 @@ object Iterant extends IterantInstances {
     *        delays and to fetch the current time
     */
   def intervalAtFixedRate[F[_]](initialDelay: FiniteDuration, period: FiniteDuration)(
-    implicit F: Async[F],
-    timer: Timer[F]): Iterant[F, Long] =
+    implicit F: Async[F]): Iterant[F, Long] =
     IterantIntervalAtFixedRate(initialDelay, period)
 
   /** $intervalWithFixedDelayDesc
@@ -2954,7 +2950,7 @@ object Iterant extends IterantInstances {
     * @param timer is the timer implementation used to generate
     *        delays and to fetch the current time
     */
-  def intervalWithFixedDelay[F[_]](delay: FiniteDuration)(implicit F: Async[F], timer: Timer[F]): Iterant[F, Long] =
+  def intervalWithFixedDelay[F[_]](delay: FiniteDuration)(implicit F: Async[F]): Iterant[F, Long] =
     IterantIntervalWithFixedDelay(Duration.Zero, delay)
 
   /** $intervalWithFixedDelayDesc
@@ -2965,8 +2961,7 @@ object Iterant extends IterantInstances {
     *        delays and to fetch the current time
     */
   def intervalWithFixedDelay[F[_]](initialDelay: FiniteDuration, delay: FiniteDuration)(
-    implicit F: Async[F],
-    timer: Timer[F]): Iterant[F, Long] =
+    implicit F: Async[F]): Iterant[F, Long] =
     IterantIntervalWithFixedDelay(initialDelay, delay)
 
   /** Concatenates list of Iterants into a single stream

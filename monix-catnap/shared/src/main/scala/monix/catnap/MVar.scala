@@ -17,8 +17,7 @@
 
 package monix.catnap
 
-import cats.effect.concurrent.{Ref, MVar2 => CatsMVar}
-import cats.effect.{Async, Concurrent, ContextShift}
+import cats.effect.{Async, Ref}
 import monix.catnap.internal.AsyncUtils
 import monix.execution.atomic.PaddingStrategy
 import monix.execution.atomic.PaddingStrategy.NoPadding
@@ -53,18 +52,15 @@ import monix.execution.internal.GenericVar.Id
   * Given its asynchronous, non-blocking nature, it can be used on
   * top of Javascript as well.
   *
-  * N.B. this is a reimplementation of the interface exposed in Cats-Effect, see:
-  * [[https://typelevel.org/cats-effect/concurrency/mvar.html cats.effect.concurrent.MVar]]
-  *
   * Inspired by
   * [[https://hackage.haskell.org/package/base/docs/Control-Concurrent-MVar.html Control.Concurrent.MVar]]
   * from Haskell.
   */
 
-final class MVar[F[_], A] private (underlying: MVar.Impl[F, A]) extends CatsMVar[F, A] {
+final class MVar[F[_], A] private (underlying: MVar.Impl[F, A]) {
 
   /** Returns `true` if the var is empty, `false` if full. */
-  override def isEmpty: F[Boolean] =
+  def isEmpty: F[Boolean] =
     underlying.isEmpty
 
   /**
@@ -79,7 +75,7 @@ final class MVar[F[_], A] private (underlying: MVar.Impl[F, A]) extends CatsMVar
     *         with the given value being next in line to
     *         be consumed
     */
-  override def put(a: A): F[Unit] =
+  def put(a: A): F[Unit] =
     underlying.put(a)
 
   /**
@@ -87,7 +83,7 @@ final class MVar[F[_], A] private (underlying: MVar.Impl[F, A]) extends CatsMVar
     *
     * @return whether or not the put succeeded
     */
-  override def tryPut(a: A): F[Boolean] =
+  def tryPut(a: A): F[Boolean] =
     underlying.tryPut(a)
 
   /**
@@ -99,14 +95,14 @@ final class MVar[F[_], A] private (underlying: MVar.Impl[F, A]) extends CatsMVar
     * @return a task that on evaluation will be completed after
     *         a value was retrieved
     */
-  override def take: F[A] =
+  def take: F[A] =
     underlying.take
 
   /** Empty the `MVar` if full
     *
     * @return an Option holding the current value, None means it was empty
     */
-  override def tryTake: F[Option[A]] =
+  def tryTake: F[Option[A]] =
     underlying.tryTake
 
   /** Tries reading the current value, or blocks (asynchronously)
@@ -117,14 +113,14 @@ final class MVar[F[_], A] private (underlying: MVar.Impl[F, A]) extends CatsMVar
     * @return a task that on evaluation will be completed after
     *         a value has been read
     */
-  override def read: F[A] =
+  def read: F[A] =
     underlying.read
 
   /** Tries reading the current value, returning `Some(a)` if the var
     * is full, but without modifying the var in any way. Or `None`
     * if the var is empty.
     */
-  override def tryRead: F[Option[A]] =
+  def tryRead: F[Option[A]] =
     underlying.tryRead
 
   /**
@@ -135,7 +131,7 @@ final class MVar[F[_], A] private (underlying: MVar.Impl[F, A]) extends CatsMVar
     * @param newValue is a new value
     * @return the value taken
     */
-  override def swap(newValue: A): F[A] =
+  def swap(newValue: A): F[A] =
     underlying.swap(newValue)
 
   /**
@@ -147,7 +143,7 @@ final class MVar[F[_], A] private (underlying: MVar.Impl[F, A]) extends CatsMVar
     * @param f effectful function that operates on the contents of this `MVar`
     * @return the value produced by applying `f` to the contents of this `MVar`
     */
-  override def use[B](f: A => F[B]): F[B] =
+  def use[B](f: A => F[B]): F[B] =
     underlying.use(f)
 
   /**
@@ -160,7 +156,7 @@ final class MVar[F[_], A] private (underlying: MVar.Impl[F, A]) extends CatsMVar
     * @param f effectful function that operates on the contents of this `MVar`
     * @return the second value produced by applying `f` to the contents of this `MVar`
     */
-  override def modify[B](f: A => F[(A, B)]): F[B] =
+  def modify[B](f: A => F[(A, B)]): F[B] =
     underlying.modify(f)
 
   /**
@@ -172,19 +168,16 @@ final class MVar[F[_], A] private (underlying: MVar.Impl[F, A]) extends CatsMVar
     * @param f effectful function that operates on the contents of this `MVar`
     * @return no useful value. Executed only for the effects.
     */
-  override def modify_(f: A => F[A]): F[Unit] =
+  def modify_(f: A => F[A]): F[Unit] =
     underlying.modify_(f)
 }
 
 object MVar {
   /**
-    * Builds an [[MVar]] value for `F` data types that are either
-    * `Concurrent` or `Async`.
+    * Builds an [[MVar]] value for `F` data types that implement `Async`.
     *
-    * Due to `Concurrent`'s capabilities, the yielded values by [[MVar.take]]
-    * and [[MVar.put]] are cancelable. For `Async` however this isn't
-    * guaranteed, although the implementation does rely on `bracket`,
-    * so it might be.
+    * Due to `Async`'s capabilities, the yielded values by [[MVar.take]]
+    * and [[MVar.put]] are cancelable.
     *
     * This builder uses the
     * [[https://typelevel.org/cats/guidelines.html#partially-applied-type-params Partially-Applied Type]]
@@ -200,60 +193,46 @@ object MVar {
     *
     * @see [[of]] and [[empty]]
     */
-  def apply[F[_]](implicit F: Concurrent[F] OrElse Async[F]): ApplyBuilders[F] =
+  def apply[F[_]](implicit F: Async[F]): ApplyBuilders[F] =
     new ApplyBuilders[F](F)
 
   /**
     * Builds an [[MVar]] instance with an `initial` value.
     */
   def of[F[_], A](initial: A, ps: PaddingStrategy = NoPadding)(
-    implicit F: Concurrent[F] OrElse Async[F],
-    cs: ContextShift[F]): F[MVar[F, A]] = {
-
-    F.fold(
-      implicit F => F.delay(new MVar(new ConcurrentImpl(Some(initial), ps))),
-      implicit F => F.delay(new MVar(new AsyncImpl(Some(initial), ps)))
-    )
-  }
+    implicit F: Async[F]): F[MVar[F, A]] =
+    F.delay(new MVar(new ImplAsync(Some(initial), ps)))
 
   /**
     * Builds an empty [[MVar]] instance.
     */
   def empty[F[_], A](
-    ps: PaddingStrategy = NoPadding)(implicit F: Concurrent[F] OrElse Async[F], cs: ContextShift[F]): F[MVar[F, A]] = {
-
-    F.fold(
-      implicit F => F.delay(new MVar(new ConcurrentImpl(None, ps))),
-      implicit F => F.delay(new MVar(new AsyncImpl(None, ps)))
-    )
-  }
+    ps: PaddingStrategy = NoPadding)(implicit F: Async[F]): F[MVar[F, A]] =
+    F.delay(new MVar(new ImplAsync(None, ps)))
 
   /**
     * Returned by the [[apply]] builder.
     */
-  final class ApplyBuilders[F[_]](val F: Concurrent[F] OrElse Async[F]) extends AnyVal {
+  final class ApplyBuilders[F[_]](val F: Async[F]) extends AnyVal {
     /**
       * Builds an `MVar` with an initial value.
       *
       * @see documentation for [[MVar.of]]
       */
-    def of[A](a: A, ps: PaddingStrategy = NoPadding)(implicit cs: ContextShift[F]): F[MVar[F, A]] =
-      MVar.of(a, ps)(F, cs)
+    def of[A](a: A, ps: PaddingStrategy = NoPadding): F[MVar[F, A]] =
+      MVar.of(a, ps)(F)
 
     /**
       * Builds an empty `MVar`.
       *
       * @see documentation for [[MVar.empty]]
       */
-    def empty[A](ps: PaddingStrategy = NoPadding)(implicit cs: ContextShift[F]): F[MVar[F, A]] =
-      MVar.empty(ps)(F, cs)
+    def empty[A](ps: PaddingStrategy = NoPadding): F[MVar[F, A]] =
+      MVar.empty(ps)(F)
   }
 
   private trait Impl[F[_], A] { self: GenericVar[A, F[Unit]] =>
     implicit def F: Async[F]
-    implicit def cs: ContextShift[F]
-
-    protected def create[T](k: (Either[Throwable, T] => Unit) => F[Unit]): F[T]
 
     def swap(newValue: A): F[A] =
       F.flatMap(take) { oldValue =>
@@ -264,10 +243,19 @@ object MVar {
       modify(a => F.map(f(a))((a, _)))
 
     def modify[B](f: A => F[(A, B)]): F[B] =
-      F.flatMap(take) { a =>
-        F.flatMap(F.onError(f(a)) { case _ => put(a) }) {
-          case (newA, b) =>
-            F.as(put(newA), b)
+      F.bracket(Ref[F].of[Option[A]](None)) { signal =>
+        F.flatMap(take) { a =>
+          F.flatMap(F.onError(F.productL(signal.set(Some(a)))(F.unit))(_ => put(a))) { _ =>
+            F.flatMap(f(a)) {
+              case (newA, b) =>
+                F.as(signal.set(Some(newA)), b)
+            }
+          }
+        }
+      } { signal =>
+        F.flatMap(signal.get) {
+          case Some(a) => put(a)
+          case None    => F.unit
         }
       }
 
@@ -305,70 +293,20 @@ object MVar {
         unsafeRead(cb)
       }
 
-    private[this] val bindFork: (Unit => F[Unit]) = {
-      val shift = cs.shift
-      _ => shift
-    }
+    private[this] val bindFork: (Unit => F[Unit]) =
+      _ => F.cede
 
-    private[this] val bindForkA: (Any => F[Any]) = {
-      val shift = cs.shift
-      x => F.map(shift)(_ => x)
-    }
+    private[this] val bindForkA: (Any => F[Any]) =
+      x => F.map(F.cede)(_ => x)
   }
 
-  private final class AsyncImpl[F[_], A](initial: Option[A], ps: PaddingStrategy)(
-    implicit val F: Async[F],
-    val cs: ContextShift[F])
+  private final class ImplAsync[F[_], A](initial: Option[A], ps: PaddingStrategy)(
+    implicit val F: Async[F])
     extends GenericVar[A, F[Unit]](initial, ps) with Impl[F, A] {
 
-    protected def create[T](k: (Either[Throwable, T] => Unit) => F[Unit]): F[T] =
-      AsyncUtils.cancelable(k)
     override protected def makeCancelable(f: Id => Unit, id: Id): F[Unit] =
       F.delay(f(id))
     override protected def emptyCancelable: F[Unit] =
       F.unit
-  }
-
-  private final class ConcurrentImpl[F[_], A](initial: Option[A], ps: PaddingStrategy)(
-    implicit val F: Concurrent[F],
-    val cs: ContextShift[F])
-    extends GenericVar[A, F[Unit]](initial, ps) with Impl[F, A] {
-
-    protected def create[T](k: (Either[Throwable, T] => Unit) => F[Unit]): F[T] =
-      F.cancelable(k)
-    override protected def makeCancelable(f: Id => Unit, id: Id): F[Unit] =
-      F.delay(f(id))
-    override protected def emptyCancelable: F[Unit] =
-      F.unit
-
-    override def swap(newValue: A): F[A] =
-      F.continual(take) {
-        case Left(t)         => F.raiseError(t)
-        case Right(oldValue) => F.as(put(newValue), oldValue)
-      }
-
-    override def use[B](f: A => F[B]): F[B] =
-      modify(a => F.map(f(a))((a, _)))
-
-    override def modify[B](f: A => F[(A, B)]): F[B] =
-      F.bracket(Ref[F].of[Option[A]](None)) { signal =>
-        F.flatMap(F.continual[A, A](take) {
-          case Left(t)  => F.raiseError(t)
-          case Right(a) => F.as(signal.set(Some(a)), a)
-        }) { a =>
-          F.continual[(A, B), B](f(a)) {
-            case Left(t)          => F.raiseError(t)
-            case Right((newA, b)) => F.as(signal.set(Some(newA)), b)
-          }
-        }
-      } { signal =>
-        F.flatMap(signal.get) {
-          case Some(a) => put(a)
-          case None    => F.unit
-        }
-      }
-
-    override def modify_(f: A => F[A]): F[Unit] =
-      modify(a => F.map(f(a))((_, ())))
   }
 }

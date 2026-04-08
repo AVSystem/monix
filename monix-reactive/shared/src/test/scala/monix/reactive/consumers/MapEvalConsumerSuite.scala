@@ -19,7 +19,7 @@ package monix.reactive.consumers
 
 import cats.laws._
 import cats.laws.discipline._
-import cats.effect.IO
+import monix.eval.Task
 import monix.execution.exceptions.DummyException
 import monix.reactive.{BaseTestSuite, Consumer, Observable}
 import scala.util.Failure
@@ -28,7 +28,7 @@ object MapEvalConsumerSuite extends BaseTestSuite {
   test("consumer.mapEval equivalence with task.map") { implicit s =>
     check1 { (obs: Observable[Int]) =>
       val consumer = Consumer.foldLeft[Long, Int](0L)(_ + _)
-      val t1 = obs.consumeWith(consumer.mapEval(x => IO(x + 100)))
+      val t1 = obs.consumeWith(consumer.mapEval(x => Task.eval(x + 100)))
       val t2 = obs.consumeWith(consumer).map(_ + 100)
       t1 <-> t2
     }
@@ -39,7 +39,7 @@ object MapEvalConsumerSuite extends BaseTestSuite {
       val withError = obs.endWithError(ex)
       val consumer = Consumer.foldLeft[Long, Int](0L)(_ + _)
 
-      val t1 = withError.consumeWith(consumer.mapEval(x => IO(x + 100)))
+      val t1 = withError.consumeWith(consumer.mapEval(x => Task.eval(x + 100)))
       val t2 = withError.consumeWith(consumer).map(_ + 100)
       t1 <-> t2
     }
@@ -48,7 +48,7 @@ object MapEvalConsumerSuite extends BaseTestSuite {
   test("consumer.mapEval handles task errors") { implicit s =>
     val ex = DummyException("dummy")
     val f = Observable(1)
-      .consumeWith(Consumer.head[Int].mapEval(_ => IO.raiseError(ex)))
+      .consumeWith(Consumer.head[Int].mapEval(_ => Task.raiseError(ex)))
       .runToFuture
 
     s.tick()
@@ -58,7 +58,7 @@ object MapEvalConsumerSuite extends BaseTestSuite {
   test("consumer.mapEval protects against user code") { implicit s =>
     val ex = DummyException("dummy")
     val f = Observable(1)
-      .consumeWith(Consumer.head[Int].mapEval(_ => (throw ex): IO[Int]))
+      .consumeWith(Consumer.head[Int].mapEval(_ => (throw ex): Task[Int]))
       .runToFuture
 
     s.tick()
@@ -68,7 +68,7 @@ object MapEvalConsumerSuite extends BaseTestSuite {
   test("consumer.mapEval(sync) equivalence with task.map") { implicit s =>
     check1 { (obs: Observable[Int]) =>
       val consumer = Consumer.foldLeft[Long, Int](0L)(_ + _)
-      val t1 = obs.consumeWith(consumer.mapEval(x => IO(x + 100)))
+      val t1 = obs.consumeWith(consumer.mapEval(x => Task.eval(x + 100)))
       val t2 = obs.consumeWith(consumer).map(_ + 100)
       t1 <-> t2
     }
@@ -79,7 +79,7 @@ object MapEvalConsumerSuite extends BaseTestSuite {
       val withError = obs.endWithError(ex)
       val consumer = Consumer.foldLeft[Long, Int](0L)(_ + _)
 
-      val t1 = withError.consumeWith(consumer.mapEval(x => IO(x + 100)))
+      val t1 = withError.consumeWith(consumer.mapEval(x => Task.eval(x + 100)))
       val t2 = withError.consumeWith(consumer).map(_ + 100)
       t1 <-> t2
     }
@@ -88,7 +88,7 @@ object MapEvalConsumerSuite extends BaseTestSuite {
   test("consumer.mapEval(sync) protects against user code") { implicit s =>
     val ex = DummyException("dummy")
     val f = Observable(1)
-      .consumeWith(Consumer.head[Int].mapEval(_ => IO(throw ex)))
+      .consumeWith(Consumer.head[Int].mapEval(_ => Task.eval(throw ex)))
       .runToFuture
 
     s.tick()

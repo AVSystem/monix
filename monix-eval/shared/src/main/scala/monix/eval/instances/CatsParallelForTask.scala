@@ -35,7 +35,7 @@ class CatsParallelForTask extends Parallel[Task] {
   override type F[A] = Task.Par[A]
 
   override def applicative: Applicative[Task.Par] = CatsParallelForTask.NondetApplicative
-  override def monad: Monad[Task] = CatsConcurrentForTask
+  override def monad: Monad[Task] = CatsAsyncForTask
 
   override val sequential: Task.Par ~> Task = new (Task.Par ~> Task) {
     def apply[A](fa: Task.Par[A]): Task[A] = Task.Par.unwrap(fa)

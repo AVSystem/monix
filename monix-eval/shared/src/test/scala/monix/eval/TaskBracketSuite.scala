@@ -17,7 +17,7 @@
 
 package monix.eval
 
-import cats.effect.concurrent.Deferred
+import cats.effect.Deferred
 import cats.laws._
 import cats.laws.discipline._
 import cats.syntax.all._
