@@ -113,12 +113,14 @@ object TaskLike extends TaskLikeImplicits0 {
   implicit val fromIO: TaskLike[IO] =
     new TaskLike[IO] {
       def apply[A](fa: IO[A]): Task[A] =
-        Task.async { cb =>
+        Task.cancelable0 { (_, cb) =>
           import cats.effect.unsafe.implicits.global
-          fa.unsafeRunAsync {
-            case Right(a) => cb.onSuccess(a)
-            case Left(e) => cb.onError(e)
-          }
+          val (future, cancel) = fa.unsafeToFutureCancelable()
+          future.onComplete {
+            case scala.util.Success(a) => cb.onSuccess(a)
+            case scala.util.Failure(e) => cb.onError(e)
+          }(monix.execution.schedulers.TrampolineExecutionContext.immediate)
+          Task.delay { cancel(); () }
         }
     }
 

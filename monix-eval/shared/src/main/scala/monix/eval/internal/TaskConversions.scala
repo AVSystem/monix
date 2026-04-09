@@ -32,14 +32,14 @@ private[eval] object TaskConversions {
       case Task.Error(e) => IO.raiseError(e)
       case Task.Eval(thunk) => IO(thunk())
       case _ =>
-        IO.async_ { cb =>
+        IO.async[A] { cb =>
           // Run the task and feed results into the IO callback
           implicit val s = monix.execution.Scheduler.global
-          source.runAsync {
+          val cancelable = source.runAsync {
             case Right(a) => cb(Right(a))
             case Left(e) => cb(Left(e))
           }
-          ()
+          IO.pure(Some(IO.delay(cancelable.cancel())))
         }
     }
 

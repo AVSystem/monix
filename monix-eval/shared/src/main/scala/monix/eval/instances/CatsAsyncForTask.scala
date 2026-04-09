@@ -69,6 +69,14 @@ class CatsAsyncForTask extends CatsBaseForTask with Async[Task] {
 
   // --- MonadCancel ---
 
+  // TODO: Monix Task does not have a direct self-cancellation primitive.
+  // Ideally `canceled` should produce `Outcome.Canceled` (not `Outcome.Errored`),
+  // but Task lacks the internal machinery to trigger cancellation from within a
+  // running task. Using `CancellationException` is a workaround: `wrapFiber.join`
+  // maps this exception to `Outcome.Canceled`, so `start`+`join` behaves correctly.
+  // However, `onCancel` finalizers will NOT fire for direct `canceled` usage
+  // outside of fiber-based workflows, because the exception surfaces as an error
+  // rather than true cooperative cancellation.
   override def canceled: Task[Unit] =
     Task.raiseError(new java.util.concurrent.CancellationException("Task was canceled"))
 
@@ -82,12 +90,19 @@ class CatsAsyncForTask extends CatsBaseForTask with Async[Task] {
     }
 
   override def uncancelable[A](body: Poll[Task] => Task[A]): Task[A] = {
-    // Task's cancellation model: we wrap the body result in uncancelable.
-    // The Poll allows selectively re-enabling cancellation, but in Task's
-    // simpler model, we use identity (cancellation points are handled internally).
-    body(new Poll[Task] {
-      def apply[B](fa: Task[B]): Task[B] = fa
-    }).uncancelable
+    // TODO: Monix Task's `.uncancelable` is all-or-nothing — it wraps the entire
+    // task and there is no way to selectively re-enable cancellation for an inner
+    // region. CE3's `Poll` is supposed to "unmask" cancellation (undo the outer
+    // uncancelable), but Task has no `.cancelable` counterpart to `.uncancelable`.
+    // As a result, `poll(fa)` cannot truly re-enable cancellation for `fa`.
+    // This means code that relies on `poll` to create cancellation windows inside
+    // `uncancelable` blocks will behave as fully uncancelable under Monix.
+    Task.suspend {
+      val poll = new Poll[Task] {
+        def apply[B](fa: Task[B]): Task[B] = fa
+      }
+      body(poll).uncancelable
+    }
   }
 
   // --- GenSpawn ---
@@ -150,11 +165,19 @@ class CatsAsyncForTask extends CatsBaseForTask with Async[Task] {
     Task.deferAction(sc => Task.pure(sc: ExecutionContext))
 
   override def async[A](k: (Either[Throwable, A] => Unit) => Task[Option[Task[Unit]]]): Task[A] =
-    Task.cancelable0 { (_, cb) =>
-      // Execute the registration, get optional cancel token
-      k(cb).flatMap {
-        case Some(cancelToken) => cancelToken.map(_ => ())
-        case None => Task.unit
+    Task.cancelable0 { (scheduler, cb) =>
+      implicit val s: Scheduler = scheduler
+      // Run registration eagerly — CE3 async registration is typically synchronous (F.delay{...}).
+      // Task.cancelable0 stores the returned Task as a cancel token WITHOUT running it,
+      // so we must execute k(cb) here to perform the actual registration.
+      k(cb).runSyncStep match {
+        case Right(Some(cancelToken)) => cancelToken
+        case Right(None) => Task.unit
+        case Left(asyncRegistration) =>
+          // Rare: truly async registration — run it and store cancel token
+          val ref = monix.execution.atomic.Atomic(Option.empty[Task[Unit]])
+          asyncRegistration.foreach(opt => ref.set(opt))(scheduler)
+          Task.suspend(ref.getAndSet(None).getOrElse(Task.unit))
       }
     }
 
@@ -164,13 +187,13 @@ class CatsAsyncForTask extends CatsBaseForTask with Async[Task] {
   override def cont[K, R](body: Cont[Task, K, R]): Task[R] = {
     // Implementation of cont using Deferred + uncancelable
     // This follows the reference pattern from cats-effect IO
-    Task.defer {
+    Task.deferAction { scheduler =>
       for {
         d <- Deferred[Task, Either[Throwable, K]](this)
         r <- uncancelable { poll =>
           val cb: Either[Throwable, K] => Unit = { result =>
-            d.complete(result)
-            ()
+            // d.complete returns Task[Boolean] — must actually run it
+            d.complete(result).runAsyncAndForget(scheduler)
           }
           val get: Task[K] = poll(d.get).flatMap {
             case Right(k) => Task.now(k)

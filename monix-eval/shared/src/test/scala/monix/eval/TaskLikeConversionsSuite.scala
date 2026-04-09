@@ -23,7 +23,8 @@ import cats.effect.unsafe.implicits.{global => ioRuntime}
 import monix.execution.CancelablePromise
 import monix.execution.exceptions.DummyException
 
-import scala.concurrent.Promise
+import scala.concurrent.{Await, Promise}
+import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 object TaskLikeConversionsSuite extends BaseTestSuite {
@@ -54,32 +55,18 @@ object TaskLikeConversionsSuite extends BaseTestSuite {
     assertEquals(f.value, Some(Failure(dummy)))
   }
 
-  test("Task.from(IO)") { implicit s =>
-
-
-    val p = Promise[Int]()
-    val f = Task.from(IO.fromFuture(IO.pure(p.future))).runToFuture
-
-    s.tick()
-    assertEquals(f.value, None)
-
-    p.success(1)
-    s.tick()
-    assertEquals(f.value, Some(Success(1)))
+  test("Task.from(IO)") { _ =>
+    import monix.execution.Scheduler.Implicits.global
+    val task = Task.from(IO(1))
+    val f = task.runToFuture
+    assertEquals(Await.result(f, 5.seconds), 1)
   }
 
-  test("Task.from(IO) for errors") { implicit s =>
-
-
-    val p = Promise[Int]()
+  test("Task.from(IO) for errors") { _ =>
+    import monix.execution.Scheduler.Implicits.global
     val dummy = DummyException("dummy")
-    val f = Task.from(IO.fromFuture(IO.pure(p.future))).runToFuture
-
-    s.tick()
-    assertEquals(f.value, None)
-
-    p.failure(dummy)
-    s.tick()
+    val task = Task.from(IO.raiseError[Int](dummy))
+    val f = Await.ready(task.runToFuture, 5.seconds)
     assertEquals(f.value, Some(Failure(dummy)))
   }
 

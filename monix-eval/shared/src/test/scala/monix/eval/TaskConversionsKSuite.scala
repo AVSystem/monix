@@ -20,6 +20,8 @@ package monix.eval
 import cats.effect.IO
 import cats.effect.unsafe.implicits.{global => ioRuntime}
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.util.Success
 
 object TaskConversionsKSuite extends BaseTestSuite {
@@ -50,36 +52,33 @@ object TaskConversionsKSuite extends BaseTestSuite {
     assertEquals(io.unsafeRunSync(), 2)
   }
 
-  test("Task.liftFrom[IO]") { implicit s =>
+  test("Task.liftFrom[IO]") { _ =>
+    import monix.execution.Scheduler.Implicits.global
     var effect = 0
     val io0 = IO { effect += 1; effect }
     val task = Task.liftFrom[IO].apply(io0)
 
-    val f1 = task.runToFuture; s.tick()
-    assertEquals(f1.value, Some(Success(1)))
-    val f2 = task.runToFuture; s.tick()
-    assertEquals(f2.value, Some(Success(2)))
+    assertEquals(Await.result(task.runToFuture, 5.seconds), 1)
+    assertEquals(Await.result(task.runToFuture, 5.seconds), 2)
   }
 
-  test("Task.liftFromEffect[IO]") { implicit s =>
+  test("Task.liftFromEffect[IO]") { _ =>
+    import monix.execution.Scheduler.Implicits.global
     var effect = 0
     val io0 = IO { effect += 1; effect }
     val task = Task.liftFromEffect[IO].apply(io0)
 
-    val f1 = task.runToFuture; s.tick()
-    assertEquals(f1.value, Some(Success(1)))
-    val f2 = task.runToFuture; s.tick()
-    assertEquals(f2.value, Some(Success(2)))
+    assertEquals(Await.result(task.runToFuture, 5.seconds), 1)
+    assertEquals(Await.result(task.runToFuture, 5.seconds), 2)
   }
 
-  test("Task.liftFromConcurrentEffect[IO]") { implicit s =>
+  test("Task.liftFromConcurrentEffect[IO]") { _ =>
+    import monix.execution.Scheduler.Implicits.global
     var effect = 0
     val io0 = IO { effect += 1; effect }
     val task = Task.liftFromConcurrentEffect[IO].apply(io0)
 
-    val f1 = task.runToFuture; s.tick()
-    assertEquals(f1.value, Some(Success(1)))
-    val f2 = task.runToFuture; s.tick()
-    assertEquals(f2.value, Some(Success(2)))
+    assertEquals(Await.result(task.runToFuture, 5.seconds), 1)
+    assertEquals(Await.result(task.runToFuture, 5.seconds), 2)
   }
 }

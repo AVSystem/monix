@@ -81,12 +81,12 @@ trait TaskApp {
         val task = self.run(args)
         implicit val s: Scheduler = self.scheduler
         implicit val opts: Task.Options = self.options
-        IO.async_[ExitCode] { cb =>
-          task.runAsyncOpt {
+        IO.async[ExitCode] { cb =>
+          val cancelable = task.runAsyncOpt {
             case Right(exitCode) => cb(Right(exitCode))
             case Left(e) => cb(Left(e))
           }
-          ()
+          IO.pure(Some(IO.delay(cancelable.cancel())))
         }
       }
     }
