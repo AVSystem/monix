@@ -15,7 +15,9 @@ TAGS
 .tags
 .metals
 .bloop
+.bsp
 metals.sbt
 .vscode
 .bsp
-.planning/
+*.sublime*
+.sisyphus/

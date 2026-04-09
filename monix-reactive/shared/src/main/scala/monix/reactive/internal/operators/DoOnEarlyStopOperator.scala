@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,8 +18,9 @@
 package monix.reactive.internal.operators
 
 import monix.eval.Task
-import monix.execution.{Ack, Scheduler}
-import monix.execution.Ack.{Continue, Stop}
+import monix.execution.Ack
+import monix.execution.Ack.{ Continue, Stop }
+import monix.execution.Scheduler
 import monix.execution.atomic.Atomic
 
 import scala.util.control.NonFatal
@@ -35,7 +36,7 @@ private[reactive] final class DoOnEarlyStopOperator[A](onStop: Task[Unit]) exten
   def apply(out: Subscriber[A]): Subscriber[A] =
     new Subscriber[A] {
       implicit val scheduler: Scheduler = out.scheduler
-      private[this] val isActive = Atomic(true)
+      private val isActive = Atomic(true)
 
       def onNext(elem: A): Future[Ack] = {
         val result =
