@@ -32,21 +32,24 @@ object FutureLiftSuite extends TestSuite[Unit] {
   def setup() = ()
   def tearDown(env: Unit): Unit = ()
 
+  private def unsafeRun[A](io: IO[A]): A =
+    Await.result(io.unsafeToFuture(), 5.seconds)
+
   test("IO(future).futureLift") { _ =>
     var effect = 0
     val io = IO(Future { effect += 1; effect }).futureLift
 
-    val r1 = io.unsafeRunSync()
+    val r1 = unsafeRun(io)
     assertEquals(r1, 1)
-    val r2 = io.unsafeRunSync()
+    val r2 = unsafeRun(io)
     assertEquals(r2, 2)
   }
 
   test("IO(Future.successful).futureLift") { _ =>
     val io = IO(Future.successful(1)).futureLift
 
-    assertEquals(io.unsafeRunSync(), 1)
-    assertEquals(io.unsafeRunSync(), 1)
+    assertEquals(unsafeRun(io), 1)
+    assertEquals(unsafeRun(io), 1)
   }
 
   test("IO(Future.failed).futureLift") { _ =>
@@ -67,8 +70,8 @@ object FutureLiftSuite extends TestSuite[Unit] {
       Async[F].delay(Future { effect += 1; effect }).futureLift
 
     val io = mkInstance[IO]
-    assertEquals(io.unsafeRunSync(), 1)
-    assertEquals(io.unsafeRunSync(), 2)
+    assertEquals(unsafeRun(io), 1)
+    assertEquals(unsafeRun(io), 2)
   }
 
   test("F.delay(Future.successful).futureLift for Async[F] data types") { _ =>
@@ -78,8 +81,8 @@ object FutureLiftSuite extends TestSuite[Unit] {
       Async[F].delay(Future.successful(1)).futureLift
 
     val io = mkInstance[IO]
-    assertEquals(io.unsafeRunSync(), 1)
-    assertEquals(io.unsafeRunSync(), 1)
+    assertEquals(unsafeRun(io), 1)
+    assertEquals(unsafeRun(io), 1)
   }
 
   test("F.delay(Future.failed).futureLift for Async[F] data types") { _ =>

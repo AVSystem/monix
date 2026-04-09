@@ -31,28 +31,31 @@ object TestSchedulerEffectSuite extends TestSuite[TestScheduler] {
     assert(env.state.tasks.isEmpty)
   }
 
+  private def unsafeRun[A](io: IO[A]): A =
+    io.unsafeToFuture().value.get.get
+
   test("monotonic") { s =>
     val fetch = SchedulerEffect.monotonic[IO](s)
 
-    assertEquals(fetch.unsafeRunSync(), 0.seconds)
+    assertEquals(unsafeRun(fetch), 0.seconds)
     s.tick(5.seconds)
-    assertEquals(fetch.unsafeRunSync(), 5.seconds)
+    assertEquals(unsafeRun(fetch), 5.seconds)
     s.tick(5.seconds)
-    assertEquals(fetch.unsafeRunSync(), 10.seconds)
+    assertEquals(unsafeRun(fetch), 10.seconds)
     s.tick(300.millis)
-    assertEquals(fetch.unsafeRunSync(), 10300.millis)
+    assertEquals(unsafeRun(fetch), 10300.millis)
   }
 
   test("realTime") { s =>
     val fetch = SchedulerEffect.realTime[IO](s)
 
-    assertEquals(fetch.unsafeRunSync(), 0.seconds)
+    assertEquals(unsafeRun(fetch), 0.seconds)
     s.tick(5.seconds)
-    assertEquals(fetch.unsafeRunSync(), 5.seconds)
+    assertEquals(unsafeRun(fetch), 5.seconds)
     s.tick(5.seconds)
-    assertEquals(fetch.unsafeRunSync(), 10.seconds)
+    assertEquals(unsafeRun(fetch), 10.seconds)
     s.tick(300.millis)
-    assertEquals(fetch.unsafeRunSync(), 10300.millis)
+    assertEquals(unsafeRun(fetch), 10300.millis)
   }
 
   test("sleep") { s =>

@@ -22,38 +22,42 @@ import cats.effect.unsafe.implicits.global
 import minitest.SimpleTestSuite
 
 object CancelableFSuite extends SimpleTestSuite {
+
+  private def unsafeRun[A](io: IO[A]): A =
+    io.unsafeToFuture().value.get.get
+
   test("apply") {
     var effect = 0
     val task = IO { effect += 1 }
     val ref = CancelableF[IO](task)
 
-    val cf = ref.unsafeRunSync()
+    val cf = unsafeRun(ref)
     assertEquals(effect, 0)
-    cf.cancel.unsafeRunSync()
+    unsafeRun(cf.cancel)
     assertEquals(effect, 1)
-    cf.cancel.unsafeRunSync()
+    unsafeRun(cf.cancel)
     assertEquals(effect, 1)
 
-    val cf2 = ref.unsafeRunSync()
+    val cf2 = unsafeRun(ref)
     assertEquals(effect, 1)
-    cf2.cancel.unsafeRunSync()
+    unsafeRun(cf2.cancel)
     assertEquals(effect, 2)
-    cf2.cancel.unsafeRunSync()
+    unsafeRun(cf2.cancel)
     assertEquals(effect, 2)
   }
 
   test("empty") {
     val cf = CancelableF.empty[IO]
-    cf.cancel.unsafeRunSync()
-    cf.cancel.unsafeRunSync()
+    unsafeRun(cf.cancel)
+    unsafeRun(cf.cancel)
   }
 
   test("wrap is not idempotent") {
     var effect = 0
     val token = CancelableF.wrap(IO { effect += 1 })
-    token.cancel.unsafeRunSync()
-    token.cancel.unsafeRunSync()
-    token.cancel.unsafeRunSync()
+    unsafeRun(token.cancel)
+    unsafeRun(token.cancel)
+    unsafeRun(token.cancel)
     assertEquals(effect, 3)
   }
 
@@ -63,7 +67,7 @@ object CancelableFSuite extends SimpleTestSuite {
     val col = CancelableF.collection(seq: _*)
 
     assertEquals(effect, 0)
-    col.cancel.unsafeRunSync()
+    unsafeRun(col.cancel)
     assertEquals(effect, 100)
   }
 
@@ -73,9 +77,9 @@ object CancelableFSuite extends SimpleTestSuite {
     val cancel = CancelableF.cancelAllTokens(seq: _*)
 
     assertEquals(effect, 0)
-    cancel.unsafeRunSync()
+    unsafeRun(cancel)
     assertEquals(effect, 100)
-    cancel.unsafeRunSync()
+    unsafeRun(cancel)
     assertEquals(effect, 200)
   }
 

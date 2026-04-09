@@ -23,46 +23,50 @@ import cats.effect.unsafe.implicits.global
 import minitest.SimpleTestSuite
 
 object BooleanCancelableFSuite extends SimpleTestSuite {
+
+  private def unsafeRun[A](io: IO[A]): A =
+    io.unsafeToFuture().value.get.get
+
   test("apply") {
     var effect = 0
     val task = IO { effect += 1 }
     val ref = BooleanCancelableF[IO](task)
 
-    val cf = ref.unsafeRunSync()
-    assert(!cf.isCanceled.unsafeRunSync(), "!cf.isCanceled")
+    val cf = unsafeRun(ref)
+    assert(!unsafeRun(cf.isCanceled), "!cf.isCanceled")
     assertEquals(effect, 0)
-    cf.cancel.unsafeRunSync()
-    assert(cf.isCanceled.unsafeRunSync(), "cf.isCanceled")
+    unsafeRun(cf.cancel)
+    assert(unsafeRun(cf.isCanceled), "cf.isCanceled")
     assertEquals(effect, 1)
-    cf.cancel.unsafeRunSync()
-    assert(cf.isCanceled.unsafeRunSync(), "cf.isCanceled")
+    unsafeRun(cf.cancel)
+    assert(unsafeRun(cf.isCanceled), "cf.isCanceled")
     assertEquals(effect, 1)
 
     // Referential transparency test
-    val cf2 = ref.unsafeRunSync()
-    assert(!cf2.isCanceled.unsafeRunSync(), "!cf2.isCanceled")
+    val cf2 = unsafeRun(ref)
+    assert(!unsafeRun(cf2.isCanceled), "!cf2.isCanceled")
     assertEquals(effect, 1)
-    cf2.cancel.unsafeRunSync()
-    assert(cf2.isCanceled.unsafeRunSync(), "cf2.isCanceled")
+    unsafeRun(cf2.cancel)
+    assert(unsafeRun(cf2.isCanceled), "cf2.isCanceled")
     assertEquals(effect, 2)
-    cf2.cancel.unsafeRunSync()
-    assert(cf2.isCanceled.unsafeRunSync(), "cf2.isCanceled")
+    unsafeRun(cf2.cancel)
+    assert(unsafeRun(cf2.isCanceled), "cf2.isCanceled")
     assertEquals(effect, 2)
   }
 
   test("alreadyCanceled") {
     val cf = BooleanCancelableF.alreadyCanceled[IO]
-    assert(cf.isCanceled.unsafeRunSync(), "cf.isCanceled")
-    cf.cancel.unsafeRunSync()
-    cf.cancel.unsafeRunSync()
-    assert(cf.isCanceled.unsafeRunSync(), "cf.isCanceled")
+    assert(unsafeRun(cf.isCanceled), "cf.isCanceled")
+    unsafeRun(cf.cancel)
+    unsafeRun(cf.cancel)
+    assert(unsafeRun(cf.isCanceled), "cf.isCanceled")
   }
 
   test("dummy") {
     val cf = BooleanCancelableF.dummy[IO]
-    assert(!cf.isCanceled.unsafeRunSync(), "!cf.isCanceled")
-    cf.cancel.unsafeRunSync()
-    cf.cancel.unsafeRunSync()
-    assert(!cf.isCanceled.unsafeRunSync(), "!cf.isCanceled")
+    assert(!unsafeRun(cf.isCanceled), "!cf.isCanceled")
+    unsafeRun(cf.cancel)
+    unsafeRun(cf.cancel)
+    assert(!unsafeRun(cf.isCanceled), "!cf.isCanceled")
   }
 }

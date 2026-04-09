@@ -72,6 +72,9 @@ object ConcurrentQueueGlobalSuite extends BaseConcurrentQueueSuite[Scheduler] {
 
 abstract class BaseConcurrentQueueSuite[S <: Scheduler] extends TestSuite[S] {
 
+  private def unsafeRun[A](io: IO[A]): A =
+    io.unsafeToFuture().value.get.get
+
   val repeatForFastTests = {
     if (Platform.isJVM) 1000 else 100
   }
@@ -223,10 +226,10 @@ abstract class BaseConcurrentQueueSuite[S <: Scheduler] extends TestSuite[S] {
   testIO("clear") { implicit s =>
     val queue = ConcurrentQueue[IO].unsafe[Int](Bounded(10))
 
-    queue.offer(1).unsafeRunSync()
-    queue.clear.unsafeRunSync()
+    unsafeRun(queue.offer(1))
+    unsafeRun(queue.clear)
 
-    val value = queue.tryPoll.unsafeRunSync()
+    val value = unsafeRun(queue.tryPoll)
     assertEquals(value, None)
 
     for {
@@ -272,7 +275,7 @@ abstract class BaseConcurrentQueueSuite[S <: Scheduler] extends TestSuite[S] {
       value <- queue.tryPoll
     } yield {
       assertEquals(value, None)
-      assertEquals(queue.isEmpty.unsafeRunSync(), true)
+      assertEquals(unsafeRun(queue.isEmpty), true)
     }
   }
 
