@@ -6,7 +6,7 @@ on:
       ref_to_publish:
         description: 'Ref (branch or tag)'
         required: true
-        default: 'refs/heads/series/3.x'
+        default: 'refs/heads/main'
       stable_version:
         description: 'Stable version? (true=staging, false=snapshot)'
         required: true
@@ -16,7 +16,10 @@ jobs:
   publish:
     name: Publish to Sonatype (Request)
 
-    runs-on: ubuntu-latest
+    env:
+      CI: true
+
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -25,8 +28,8 @@ jobs:
 
       - uses: actions/setup-java@v4
         with:
+          java-version: 17
           distribution: temurin
-          java-version: 11
       - uses: sbt/setup-sbt@v1
 
       - name: Install GnuPG2

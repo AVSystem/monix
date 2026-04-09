@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,9 @@
 package monix.execution.internal.forkJoin
 
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory
-import java.util.concurrent.{ForkJoinPool, ForkJoinWorkerThread, ThreadFactory}
+import java.util.concurrent.{ ForkJoinPool, ForkJoinWorkerThread, ThreadFactory }
+
+import scala.annotation.nowarn
 
 import scala.annotation.nowarn
 
@@ -28,7 +30,7 @@ private[monix] final class StandardWorkerThreadFactory(
   daemonic: Boolean
 ) extends ThreadFactory with ForkJoinWorkerThreadFactory {
 
-  @nowarn("msg=deprecated")
+  @nowarn("cat=deprecation")
   def wire[T <: Thread](thread: T): T = {
     thread.setDaemon(daemonic)
     thread.setUncaughtExceptionHandler(uncaught)

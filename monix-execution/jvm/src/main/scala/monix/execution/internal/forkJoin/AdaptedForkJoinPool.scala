@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,32 +19,17 @@ package monix.execution.internal.forkJoin
 
 import java.lang.Thread.UncaughtExceptionHandler
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory
-import java.util.concurrent.{ForkJoinPool, ForkJoinTask, ForkJoinWorkerThread, TimeUnit}
+import java.util.concurrent.{ ForkJoinPool, ForkJoinWorkerThread }
 
 private[monix] final class AdaptedForkJoinPool(
   parallelism: Int,
-  maxThreads: Int,
   factory: ForkJoinWorkerThreadFactory,
   handler: UncaughtExceptionHandler,
-  asyncMode: Boolean)
-  extends ForkJoinPool(
-    parallelism,
-    factory,
-    handler,
-    asyncMode,
-    0,
-    maxThreads,
-    1,
-    (_: ForkJoinPool) => true,
-    AdaptedForkJoinPool.DefaultKeepAliveMillis,
-    TimeUnit.MILLISECONDS
-  ) {
+  asyncMode: Boolean
+) extends ForkJoinPool(parallelism, factory, handler, asyncMode) {
 
   override def execute(runnable: Runnable): Unit = {
-    val fjt: ForkJoinTask[_] = runnable match {
-      case t: ForkJoinTask[_] => t
-      case r => new AdaptedForkJoinTask(r)
-    }
+    val fjt = new AdaptedForkJoinTask(runnable)
     Thread.currentThread match {
       case fjw: ForkJoinWorkerThread if fjw.getPool eq this =>
         fjt.fork()
@@ -53,8 +38,4 @@ private[monix] final class AdaptedForkJoinPool(
         super.execute(fjt)
     }
   }
-}
-private[monix] object AdaptedForkJoinPool {
-  // the same as ForkJoinPool.DEFAULT_KEEPALIVE (which is private)
-  final val DefaultKeepAliveMillis = 60000L
 }

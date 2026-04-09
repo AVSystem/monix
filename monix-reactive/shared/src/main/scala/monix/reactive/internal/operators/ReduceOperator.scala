@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +17,9 @@
 
 package monix.reactive.internal.operators
 
-import monix.execution.{Ack, Scheduler}
-import monix.execution.Ack.{Continue, Stop}
-
+import monix.execution.Ack
+import monix.execution.Ack.{ Continue, Stop }
+import monix.execution.Scheduler
 import scala.util.control.NonFatal
 import monix.reactive.Observable.Operator
 import monix.reactive.observers.Subscriber
@@ -32,9 +32,9 @@ private[reactive] final class ReduceOperator[A](op: (A, A) => A) extends Operato
     new Subscriber[A] {
       implicit val scheduler: Scheduler = out.scheduler
 
-      private[this] var isDone = false
-      private[this] var state: A = _
-      private[this] var isFirst = true
+      private var isDone = false
+      private var state: A = null.asInstanceOf[A]
+      private var isFirst = true
 
       def onNext(elem: A): Future[Ack] = {
         try {
@@ -56,7 +56,7 @@ private[reactive] final class ReduceOperator[A](op: (A, A) => A) extends Operato
       def onComplete(): Unit =
         if (!isDone) {
           isDone = true
-          if (!isFirst) out.onNext(state)
+          if (!isFirst) { val _ = out.onNext(state) }
           out.onComplete()
         }
 

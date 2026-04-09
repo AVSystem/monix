@@ -18,17 +18,17 @@
 package monix.benchmarks
 
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Keep, RunnableGraph, Sink => AkkaSink, Source => AkkaSource}
-import fs2.{Stream => FS2Stream}
-import monix.eval.{Task => MonixTask}
-import monix.reactive.{Observable => MonixObservable}
+import akka.stream.scaladsl.{ Keep, RunnableGraph, Sink => AkkaSink, Source => AkkaSource }
+import fs2.{ Stream => FS2Stream }
+import monix.eval.{ Task => MonixTask }
+import monix.reactive.{ Observable => MonixObservable }
 import org.openjdk.jmh.annotations._
-import zio.stream.{Stream => ZStream}
-import zio.{Chunk, UIO}
+import zio.stream.{ Stream => ZStream }
+import zio.{ Chunk, UIO }
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 
 /**
   * Benchmark designed to execute these operations:
@@ -94,7 +94,7 @@ class ChunkedEvalFilterMapSumBenchmark {
 
   @Benchmark
   def fs2Stream = {
-    val stream = FS2Stream(allElements: _*)
+    val stream = FS2Stream(allElements*)
       .chunkN(chunkSize)
       .evalMap[MonixTask, Int](chunk => MonixTask(sumIntScala(chunk.iterator)))
       .filter(_ > 0)
@@ -107,7 +107,7 @@ class ChunkedEvalFilterMapSumBenchmark {
 
   @Benchmark
   def fs2StreamPreChunked = {
-    val stream = FS2Stream(fs2Chunks: _*)
+    val stream = FS2Stream(fs2Chunks*)
       .evalMap[MonixTask, Int](chunk => MonixTask(sumIntScala(chunk.iterator)))
       .filter(_ > 0)
       .map(_.toLong)
@@ -146,7 +146,7 @@ class ChunkedEvalFilterMapSumBenchmark {
   @Benchmark
   def zioStreamPreChunked = {
     val stream = ZStream
-      .fromChunks(zioChunks: _*)
+      .fromChunks(zioChunks*)
       .mapChunksM(chunk => UIO(Chunk.single(sumIntScala(chunk))))
       .filter(_ > 0)
       .map(_.toLong)

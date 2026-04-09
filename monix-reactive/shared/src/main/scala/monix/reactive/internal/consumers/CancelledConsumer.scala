@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@ package monix.reactive.internal.consumers
 
 import monix.execution.Callback
 import monix.execution.Ack.Stop
-import monix.execution.{Ack, Scheduler}
+import monix.execution.{ Ack, Scheduler }
 import monix.execution.cancelables.AssignableCancelable
 import monix.reactive.Consumer
 import monix.reactive.observers.Subscriber
@@ -35,7 +35,7 @@ private[reactive] object CancelledConsumer extends Consumer.Sync[Any, Unit] {
     }
 
     // Forcing async boundary to prevent problems
-    s.execute(new Runnable { def run() = cb.onSuccess(()) })
+    s.execute(() => cb.onSuccess(()))
     (out, AssignableCancelable.alreadyCanceled)
   }
 }

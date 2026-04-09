@@ -2,22 +2,22 @@ name: build
 
 on:
   pull_request:
-    branches: [ 'series/*' ]
+    branches: ['series/*', 'main']
   push:
-    branches: [ 'series/*' ]
-    tags: [ "v[0-9]+*" ]
+    branches: ['series/*', 'main']
+    tags: ["v[0-9]+*"]
 
 jobs:
   jvm-tests:
     name: JVM / scala ${{ matrix.scala }}, jdk ${{ matrix.java }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
-        java: [ 11, 17, 21, 25 ]
+        java: [ 17, 21, 25 ]
         # WARN: build.sbt depends on this key path, as scalaVersion and
         # crossScalaVersions is determined from it
-        scala: [ 2.13.18, 3.3.7 ]
+        scala: [ 2.13.18, 3.8.2 ]
 
     env:
       CI: true
@@ -26,8 +26,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
+          java-version: "${{ matrix.java }}"
           distribution: temurin
-          java-version: ${{ matrix.java }}
       - uses: sbt/setup-sbt@v1
 
       - name: Cache ivy2
@@ -56,17 +56,24 @@ jobs:
           PLATFORM: ${{ matrix.java }}
           SBT_COMMAND: ci-jvm
 
+      - name: sbt reactiveTests/test
+        run: ./.github/scripts/exec-sbt-command
+        env:
+          SCALA_VERSION: ${{ matrix.scala }}
+          PLATFORM: ${{ matrix.java }}
+          SBT_COMMAND: "reactiveTests/test"
+
   js-tests:
     name: JS / scala ${{ matrix.scala }}, jdk ${{ matrix.java }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
         # WARN: build.sbt depends on this key path, as scalaVersion and
         # crossScalaVersions is determined from it
         include:
-          - { java: 11, scala: 2.13.18 }
-          - { java: 11, scala: 3.3.7 }
+          - { java: 17, scala: 2.13.18 }
+          - { java: 17, scala: 3.8.2 }
 
     env:
       CI: true
@@ -75,8 +82,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
+          java-version: "${{ matrix.java }}"
           distribution: temurin
-          java-version: ${{ matrix.java }}
       - uses: sbt/setup-sbt@v1
 
       - name: Cache ivy2
@@ -101,7 +108,7 @@ jobs:
       - name: Setup NodeJS
         uses: actions/setup-node@v4
         with:
-          node-version: 14
+          node-version: 20
 
       - name: sbt ci-js
         run: |
@@ -113,20 +120,24 @@ jobs:
 
   mima:
     name: Mima / scala ${{ matrix.scala }}, jdk ${{ matrix.java }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+
+    env:
+      CI: true
+
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { java: 11, scala: 2.13.18 }
-          - { java: 11, scala: 3.3.7 }
+          - { java: 17, scala: 2.13.18 }
+          - { java: 17, scala: 3.8.2 }
 
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
+          java-version: "${{ matrix.java }}"
           distribution: temurin
-          java-version: ${{ matrix.java }}
       - uses: sbt/setup-sbt@v1
 
       - name: Cache ivy2
@@ -155,23 +166,74 @@ jobs:
           SCALA_VERSION: ${{ matrix.scala }}
           SBT_COMMAND: mimaReportBinaryIssues
 
-  unidoc:
-    name: Unidoc / scala ${{ matrix.scala }}, jdk ${{ matrix.java }}
-    runs-on: ubuntu-latest
+  scalafmt:
+    name: Scalafmt / scala ${{ matrix.scala }}, jdk ${{ matrix.java }}
+    runs-on: ubuntu-22.04
+
+    env:
+      CI: true
+
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { java: 11, scala: 2.13.18 }
-          # TODO: enable this after it works!
-          # - { java: 11, scala: 3.3.5 }
+          - { java: 17, scala: 2.13.18 }
+          - { java: 17, scala: 3.8.2 }
 
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
+          java-version: "${{ matrix.java }}"
           distribution: temurin
-          java-version: ${{ matrix.java }}
+      - uses: sbt/setup-sbt@v1
+
+      - name: Cache ivy2
+        uses: actions/cache@v4
+        with:
+          path: ~/.ivy2/cache
+          key: ${{ runner.os }}-sbt-ivy-cache-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
+
+      - name: Cache coursier (linux)
+        if: contains(runner.os, 'linux')
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/coursier/v1
+          key: ${{ runner.os }}-sbt-coursier-cache-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
+
+      - name: Cache sbt
+        uses: actions/cache@v4
+        with:
+          path: ~/.sbt
+          key: ${{ runner.os }}-sbt-cache-${{ hashFiles('**/*.sbt') }}-${{ hashFiles('project/build.properties') }}
+
+      - name: sbt scalafmtCheckAll
+        run: |
+          ./.github/scripts/exec-sbt-command
+        env:
+          SCALA_VERSION: ${{ matrix.scala }}
+          SBT_COMMAND: "scalafmtCheckAll scalafmtSbtCheck"
+
+  unidoc:
+    name: Unidoc / scala ${{ matrix.scala }}, jdk ${{ matrix.java }}
+    runs-on: ubuntu-22.04
+
+    env:
+      CI: true
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { java: 17, scala: 2.13.18 }
+          - { java: 17, scala: 3.8.2 }
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "${{ matrix.java }}"
+          distribution: temurin
       - uses: sbt/setup-sbt@v1
 
       - name: Cache ivy2
@@ -202,19 +264,24 @@ jobs:
 
   all_tests:
     name: All Tests
-    needs: [ jvm-tests, js-tests, mima, unidoc ]
-    runs-on: ubuntu-latest
+    if: always()
+    needs: [ jvm-tests, js-tests, mima, scalafmt, unidoc ]
+    runs-on: ubuntu-22.04
     steps:
-      - name: Ack
-        run: |
-          echo "All done."
+    - name: Validate required tests
+      uses: re-actors/alls-green@release/v1
+      with:
+        jobs: ${{ toJSON(needs) }}
 
   publish:
     name: Publish to Sonatype
-    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/series/3.x')
+    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/series/3.x-avs')
     needs: [ all_tests ]
 
-    runs-on: ubuntu-latest
+    env:
+      CI: true
+
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -222,8 +289,8 @@ jobs:
 
       - uses: actions/setup-java@v4
         with:
+          java-version: 17
           distribution: temurin
-          java-version: 11
       - uses: sbt/setup-sbt@v1
 
       - name: Install GnuPG2
