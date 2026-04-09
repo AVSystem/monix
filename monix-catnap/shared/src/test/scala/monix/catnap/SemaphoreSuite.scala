@@ -35,9 +35,9 @@ object SemaphoreSuite extends TestSuite[Unit] {
 
   test("simple greenLight") { _ =>
     val semaphore = Semaphore.unsafe[IO](provisioned = 4)
-    val result = semaphore.withPermit(IO.cede *> IO(100)).unsafeRunSync()
+    val result = Await.result(semaphore.withPermit(IO.cede *> IO(100)).unsafeToFuture(), 5.seconds)
     assertEquals(result, 100)
-    assertEquals(semaphore.available.unsafeRunSync(), 4)
+    assertEquals(Await.result(semaphore.available.unsafeToFuture(), 5.seconds), 4L)
   }
 
   test("should back-pressure when full") { _ =>
@@ -49,12 +49,12 @@ object SemaphoreSuite extends TestSuite[Unit] {
     val f2 = semaphore.withPermit(IO.fromFuture(IO.pure(p2.future))).unsafeToFuture()
 
     yieldRuntime()
-    assertEquals(semaphore.available.unsafeRunSync(), 0)
+    assertEquals(Await.result(semaphore.available.unsafeToFuture(), 5.seconds), 0L)
 
     val f3 = semaphore.withPermit(IO(3)).unsafeToFuture()
     yieldRuntime()
     assertEquals(f3.value, None)
-    assertEquals(semaphore.available.unsafeRunSync(), 0)
+    assertEquals(Await.result(semaphore.available.unsafeToFuture(), 5.seconds), 0L)
 
     p1.success(1); yieldRuntime()
     assertEquals(Await.result(f1, 5.seconds), 1)
@@ -62,7 +62,7 @@ object SemaphoreSuite extends TestSuite[Unit] {
 
     p2.success(2); yieldRuntime()
     assertEquals(Await.result(f2, 5.seconds), 2)
-    assertEquals(semaphore.available.unsafeRunSync(), 2)
+    assertEquals(Await.result(semaphore.available.unsafeToFuture(), 5.seconds), 2L)
   }
 
   testAsync("real async test of many futures") { _ =>
@@ -84,8 +84,8 @@ object SemaphoreSuite extends TestSuite[Unit] {
 
   test("await for release of all active and pending permits") { _ =>
     val semaphore = Semaphore.unsafe[IO](provisioned = 2)
-    semaphore.acquire.unsafeRunSync()
-    semaphore.acquire.unsafeRunSync()
+    Await.result(semaphore.acquire.unsafeToFuture(), 5.seconds)
+    Await.result(semaphore.acquire.unsafeToFuture(), 5.seconds)
 
     val p3 = semaphore.acquire.unsafeToFuture()
     yieldRuntime()
@@ -98,20 +98,20 @@ object SemaphoreSuite extends TestSuite[Unit] {
     yieldRuntime()
     assert(!all1.isCompleted, "!all1.isCompleted")
 
-    semaphore.release.unsafeRunSync(); yieldRuntime()
+    Await.result(semaphore.release.unsafeToFuture(), 5.seconds); yieldRuntime()
     assert(!all1.isCompleted, "!all1.isCompleted")
-    semaphore.release.unsafeRunSync(); yieldRuntime()
+    Await.result(semaphore.release.unsafeToFuture(), 5.seconds); yieldRuntime()
     assert(!all1.isCompleted, "!all1.isCompleted")
-    semaphore.release.unsafeRunSync(); yieldRuntime()
+    Await.result(semaphore.release.unsafeToFuture(), 5.seconds); yieldRuntime()
     assert(!all1.isCompleted, "!all1.isCompleted")
-    semaphore.release.unsafeRunSync(); yieldRuntime()
+    Await.result(semaphore.release.unsafeToFuture(), 5.seconds); yieldRuntime()
     assert(all1.isCompleted, "all1.isCompleted")
 
     // REDO
-    semaphore.acquire.unsafeRunSync()
+    Await.result(semaphore.acquire.unsafeToFuture(), 5.seconds)
     val all2 = semaphore.awaitAvailable(2).unsafeToFuture()
     yieldRuntime(); assert(!all2.isCompleted, "!all2.isCompleted")
-    semaphore.release.unsafeRunSync(); yieldRuntime()
+    Await.result(semaphore.release.unsafeToFuture(), 5.seconds); yieldRuntime()
     assert(all2.isCompleted, "all2.isCompleted")
 
     // Already completed
@@ -122,18 +122,18 @@ object SemaphoreSuite extends TestSuite[Unit] {
   test("acquire is cancelable") { _ =>
     val semaphore = Semaphore.unsafe[IO](provisioned = 2)
 
-    semaphore.acquire.unsafeRunSync()
-    semaphore.acquire.unsafeRunSync()
+    Await.result(semaphore.acquire.unsafeToFuture(), 5.seconds)
+    Await.result(semaphore.acquire.unsafeToFuture(), 5.seconds)
 
     val (_, cancel) = semaphore.acquire.unsafeToFutureCancelable()
     yieldRuntime()
-    assertEquals(semaphore.available.unsafeRunSync(), 0)
+    assertEquals(Await.result(semaphore.available.unsafeToFuture(), 5.seconds), 0L)
 
     cancel(); yieldRuntime()
-    semaphore.release.unsafeRunSync()
-    assertEquals(semaphore.available.unsafeRunSync(), 1)
-    semaphore.release.unsafeRunSync()
-    assertEquals(semaphore.available.unsafeRunSync(), 2)
+    Await.result(semaphore.release.unsafeToFuture(), 5.seconds)
+    assertEquals(Await.result(semaphore.available.unsafeToFuture(), 5.seconds), 1L)
+    Await.result(semaphore.release.unsafeToFuture(), 5.seconds)
+    assertEquals(Await.result(semaphore.available.unsafeToFuture(), 5.seconds), 2L)
   }
 
   testAsync("withPermitN / awaitAvailable concurrent test") { _ =>
@@ -164,7 +164,7 @@ object SemaphoreSuite extends TestSuite[Unit] {
 
       for (r <- task; _ <- IO.fromFuture(IO.pure(allReleased.future))) yield {
         assertEquals(r, count)
-        assertEquals(semaphore.available.unsafeRunSync(), available)
+        assertEquals(Await.result(semaphore.available.unsafeToFuture(), 5.seconds), available)
       }
     }
     task.unsafeToFuture()
@@ -180,15 +180,15 @@ object SemaphoreSuite extends TestSuite[Unit] {
     yieldRuntime()
     assertEquals(f2.value, None)
 
-    sem.releaseN(2).unsafeRunSync(); yieldRuntime()
+    Await.result(sem.releaseN(2).unsafeToFuture(), 5.seconds); yieldRuntime()
     assertEquals(f1.value, None)
     assertEquals(f2.value, None)
 
-    sem.releaseN(1).unsafeRunSync(); yieldRuntime()
+    Await.result(sem.releaseN(1).unsafeToFuture(), 5.seconds); yieldRuntime()
     assertEquals(Await.result(f1, 5.seconds), 2)
     assertEquals(f2.value, None)
 
-    sem.releaseN(1).unsafeRunSync(); yieldRuntime()
+    Await.result(sem.releaseN(1).unsafeToFuture(), 5.seconds); yieldRuntime()
     assertEquals(Await.result(f2, 5.seconds), 2)
   }
 
@@ -198,9 +198,11 @@ object SemaphoreSuite extends TestSuite[Unit] {
     val task = for {
       fib1 <- sem.withPermitN(3)(IO(1 + 1)).start
       _    <- IO.sleep(200.millis)
-      _    <- IO(assertEquals(sem.count.unsafeRunSync(), -3L))
+      c1   <- sem.count
+      _    <- IO(assertEquals(c1, -3L))
       _    <- fib1.cancel
-      _    <- IO(assertEquals(sem.count.unsafeRunSync(), 0L))
+      c2   <- sem.count
+      _    <- IO(assertEquals(c2, 0L))
     } yield ()
 
     assertEquals(task.unsafeRunTimed(5.seconds), Some(()))
@@ -213,12 +215,15 @@ object SemaphoreSuite extends TestSuite[Unit] {
       fib1 <- sem.withPermitN(3)(IO(1 + 1)).start
       fib2 <- sem.withPermitN(3)(IO(1 + 1)).start
       _    <- IO.sleep(100.millis)
-      _    <- IO(assertEquals(sem.count.unsafeRunSync(), -5L))
+      c1   <- sem.count
+      _    <- IO(assertEquals(c1, -5L))
       _    <- sem.releaseN(1)
-      _    <- IO(assertEquals(sem.count.unsafeRunSync(), -4L))
+      c2   <- sem.count
+      _    <- IO(assertEquals(c2, -4L))
       _    <- fib1.cancel
       _    <- IO.sleep(100.millis)
-      _    <- IO(assertEquals(sem.count.unsafeRunSync(), -1L))
+      c3   <- sem.count
+      _    <- IO(assertEquals(c3, -1L))
       _    <- sem.releaseN(1)
       r2   <- fib2.joinWithNever
     } yield r2

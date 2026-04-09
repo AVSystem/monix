@@ -21,19 +21,20 @@ import cats.effect.unsafe.implicits.global
 import minitest.SimpleTestSuite
 import monix.execution.schedulers.ReferenceSchedulerSuite.DummyScheduler
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Success
 
 class ReferenceSchedulerEffectSuite extends SimpleTestSuite {
   test("monotonic") {
     val s = new DummyScheduler
-    val clockMonotonic = SchedulerEffect.monotonic[IO](s).unsafeRunSync()
+    val clockMonotonic = Await.result(SchedulerEffect.monotonic[IO](s).unsafeToFuture(), 5.seconds)
     assert(clockMonotonic > 0.seconds)
   }
 
   test("realTime") {
     val s = new DummyScheduler
-    val clockRealTime = SchedulerEffect.realTime[IO](s).unsafeRunSync()
+    val clockRealTime = Await.result(SchedulerEffect.realTime[IO](s).unsafeToFuture(), 5.seconds)
     assert(clockRealTime > 0.seconds)
   }
 

@@ -23,21 +23,24 @@ import cats.effect.unsafe.implicits.global
 import minitest.SimpleTestSuite
 import monix.execution.exceptions.{CompositeException, DummyException}
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 object SingleAssignCancelableFSuite extends SimpleTestSuite {
   test("cancel") {
     var effect = 0
-    val s = SingleAssignCancelableF[IO].unsafeRunSync()
+    val s = Await.result(SingleAssignCancelableF[IO].unsafeToFuture(), 5.seconds)
     val b = BooleanCancelableF.unsafeApply(IO { effect += 1 })
 
-    s.set(b).unsafeRunSync()
-    assert(!s.isCanceled.unsafeRunSync(), "!s.isCanceled")
+    Await.result(s.set(b).unsafeToFuture(), 5.seconds)
+    assert(!Await.result(s.isCanceled.unsafeToFuture(), 5.seconds), "!s.isCanceled")
 
-    s.cancel.unsafeRunSync()
-    assert(s.isCanceled.unsafeRunSync(), "s.isCanceled")
-    assert(b.isCanceled.unsafeRunSync())
+    Await.result(s.cancel.unsafeToFuture(), 5.seconds)
+    assert(Await.result(s.isCanceled.unsafeToFuture(), 5.seconds), "s.isCanceled")
+    assert(Await.result(b.isCanceled.unsafeToFuture(), 5.seconds))
     assert(effect == 1)
 
-    s.cancel.unsafeRunSync()
+    Await.result(s.cancel.unsafeToFuture(), 5.seconds)
     assert(effect == 1)
   }
 
@@ -46,76 +49,76 @@ object SingleAssignCancelableFSuite extends SimpleTestSuite {
     val extra = BooleanCancelableF.unsafeApply(IO { effect += 1 })
     val b = BooleanCancelableF.unsafeApply(IO { effect += 2 })
 
-    val s = SingleAssignCancelableF.plusOne(extra).unsafeRunSync()
-    s.set(b).unsafeRunSync()
+    val s = Await.result(SingleAssignCancelableF.plusOne(extra).unsafeToFuture(), 5.seconds)
+    Await.result(s.set(b).unsafeToFuture(), 5.seconds)
 
-    s.cancel.unsafeRunSync()
-    assert(s.isCanceled.unsafeRunSync())
-    assert(b.isCanceled.unsafeRunSync())
-    assert(extra.isCanceled.unsafeRunSync())
+    Await.result(s.cancel.unsafeToFuture(), 5.seconds)
+    assert(Await.result(s.isCanceled.unsafeToFuture(), 5.seconds))
+    assert(Await.result(b.isCanceled.unsafeToFuture(), 5.seconds))
+    assert(Await.result(extra.isCanceled.unsafeToFuture(), 5.seconds))
     assert(effect == 3)
 
-    s.cancel.unsafeRunSync()
+    Await.result(s.cancel.unsafeToFuture(), 5.seconds)
     assert(effect == 3)
   }
 
   test("cancel on single assignment") {
-    val s = SingleAssignCancelableF[IO].unsafeRunSync()
-    s.cancel.unsafeRunSync()
-    assert(s.isCanceled.unsafeRunSync())
+    val s = Await.result(SingleAssignCancelableF[IO].unsafeToFuture(), 5.seconds)
+    Await.result(s.cancel.unsafeToFuture(), 5.seconds)
+    assert(Await.result(s.isCanceled.unsafeToFuture(), 5.seconds))
 
     var effect = 0
     val b = BooleanCancelableF.unsafeApply(IO { effect += 1 })
-    s.set(b).unsafeRunSync()
+    Await.result(s.set(b).unsafeToFuture(), 5.seconds)
 
-    assert(b.isCanceled.unsafeRunSync())
+    assert(Await.result(b.isCanceled.unsafeToFuture(), 5.seconds))
     assert(effect == 1)
 
-    s.cancel.unsafeRunSync()
+    Await.result(s.cancel.unsafeToFuture(), 5.seconds)
     assert(effect == 1)
   }
 
   test("cancel on single assignment (plus one)") {
     var effect = 0
     val extra = BooleanCancelableF.unsafeApply(IO { effect += 1 })
-    val s = SingleAssignCancelableF.plusOne(extra).unsafeRunSync()
+    val s = Await.result(SingleAssignCancelableF.plusOne(extra).unsafeToFuture(), 5.seconds)
 
-    s.cancel.unsafeRunSync()
-    assert(s.isCanceled.unsafeRunSync(), "s.isCanceled")
-    assert(extra.isCanceled.unsafeRunSync(), "extra.isCanceled")
+    Await.result(s.cancel.unsafeToFuture(), 5.seconds)
+    assert(Await.result(s.isCanceled.unsafeToFuture(), 5.seconds), "s.isCanceled")
+    assert(Await.result(extra.isCanceled.unsafeToFuture(), 5.seconds), "extra.isCanceled")
     assert(effect == 1)
 
     val b = BooleanCancelableF.unsafeApply(IO { effect += 1 })
-    s.set(b).unsafeRunSync()
+    Await.result(s.set(b).unsafeToFuture(), 5.seconds)
 
-    assert(b.isCanceled.unsafeRunSync())
+    assert(Await.result(b.isCanceled.unsafeToFuture(), 5.seconds))
     assert(effect == 2)
 
-    s.cancel.unsafeRunSync()
+    Await.result(s.cancel.unsafeToFuture(), 5.seconds)
     assert(effect == 2)
   }
 
   test("throw exception on multi assignment") {
-    val s = SingleAssignCancelableF[IO].unsafeRunSync()
+    val s = Await.result(SingleAssignCancelableF[IO].unsafeToFuture(), 5.seconds)
     val b1 = CancelableF.empty[IO]
-    s.set(b1).unsafeRunSync()
+    Await.result(s.set(b1).unsafeToFuture(), 5.seconds)
 
-    intercept[IllegalStateException] {
-      s.set(CancelableF.empty[IO]).unsafeRunSync()
-    }
+    val f = s.set(CancelableF.empty[IO]).unsafeToFuture()
+    Await.ready(f, 5.seconds)
+    assert(f.value.get.isFailure && f.value.get.failed.get.isInstanceOf[IllegalStateException])
     ()
   }
 
   test("throw exception on multi assignment when canceled") {
-    val s = SingleAssignCancelableF[IO].unsafeRunSync()
-    s.cancel.unsafeRunSync()
+    val s = Await.result(SingleAssignCancelableF[IO].unsafeToFuture(), 5.seconds)
+    Await.result(s.cancel.unsafeToFuture(), 5.seconds)
 
     val b1 = CancelableF.empty[IO]
-    s.set(b1).unsafeRunSync()
+    Await.result(s.set(b1).unsafeToFuture(), 5.seconds)
 
-    intercept[IllegalStateException] {
-      s.set(CancelableF.empty[IO]).unsafeRunSync()
-    }
+    val f = s.set(CancelableF.empty[IO]).unsafeToFuture()
+    Await.ready(f, 5.seconds)
+    assert(f.value.get.isFailure && f.value.get.failed.get.isInstanceOf[IllegalStateException])
     ()
   }
 
@@ -124,14 +127,14 @@ object SingleAssignCancelableFSuite extends SimpleTestSuite {
     val dummy1 = DummyException("dummy1")
 
     val extra = CancelableF.unsafeApply[IO](IO { effect += 1; throw dummy1 })
-    val s = SingleAssignCancelableF.plusOne(extra).unsafeRunSync()
+    val s = Await.result(SingleAssignCancelableF.plusOne(extra).unsafeToFuture(), 5.seconds)
 
     val dummy2 = DummyException("dummy2")
     val b = CancelableF.unsafeApply[IO](IO { effect += 1; throw dummy2 })
-    s.set(b).unsafeRunSync()
+    Await.result(s.set(b).unsafeToFuture(), 5.seconds)
 
     try {
-      s.cancel.unsafeRunSync()
+      Await.result(s.cancel.unsafeToFuture(), 5.seconds)
       fail("should have thrown")
     } catch {
       case CompositeException((_: DummyException) :: (_: DummyException) :: Nil) =>

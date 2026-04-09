@@ -4749,13 +4749,10 @@ private[eval] abstract class TaskInstancesLevel1 extends TaskInstancesLevel0 {
     * Implied are also `cats.CoflatMap`, `cats.Applicative`, `cats.Monad`,
     * `cats.MonadError` and `cats.effect.Sync`.
     *
-    * As trivia, it's named "catsAsync" and not "catsConcurrent" because
-    * it represents the `cats.effect.Async` lineage, up until
-    * `cats.effect.Effect`, which imposes extra restrictions, in our case
-    * the need for a `Scheduler` to be in scope (see [[Task.catsEffect]]).
-    * So by naming the lineage, not the concrete sub-type implemented, we avoid
-    * breaking compatibility whenever a new type class (that we can implement)
-    * gets added into Cats.
+    * As trivia, it's named "catsAsync" because it represents the
+    * `cats.effect.Async` lineage. By naming the lineage, not the concrete
+    * sub-type implemented, we avoid breaking compatibility whenever a new
+    * type class (that we can implement) gets added into Cats.
     *
     * Seek more info about Cats, the standard library for FP, at:
     *

@@ -25,31 +25,31 @@ import scala.concurrent.duration._
 import scala.util.Success
 
 object TaskConversionsKSuite extends BaseTestSuite {
-  test("Task.liftTo[IO]") { implicit s =>
+  test("Task.liftTo[IO]") { _ =>
     var effect = 0
     val task = Task { effect += 1; effect }
     val io = Task.liftTo[IO].apply(task)
 
-    assertEquals(io.unsafeRunSync(), 1)
-    assertEquals(io.unsafeRunSync(), 2)
+    assertEquals(Await.result(io.unsafeToFuture(), 5.seconds), 1)
+    assertEquals(Await.result(io.unsafeToFuture(), 5.seconds), 2)
   }
 
-  test("Task.liftToAsync[IO]") { implicit s =>
+  test("Task.liftToAsync[IO]") { _ =>
     var effect = 0
     val task = Task { effect += 1; effect }
     val io = Task.liftToAsync[IO].apply(task)
 
-    assertEquals(io.unsafeRunSync(), 1)
-    assertEquals(io.unsafeRunSync(), 2)
+    assertEquals(Await.result(io.unsafeToFuture(), 5.seconds), 1)
+    assertEquals(Await.result(io.unsafeToFuture(), 5.seconds), 2)
   }
 
-  test("Task.liftToConcurrent[IO]") { implicit s =>
+  test("Task.liftToConcurrent[IO]") { _ =>
     var effect = 0
     val task = Task { effect += 1; effect }
     val io = Task.liftToConcurrent[IO].apply(task)
 
-    assertEquals(io.unsafeRunSync(), 1)
-    assertEquals(io.unsafeRunSync(), 2)
+    assertEquals(Await.result(io.unsafeToFuture(), 5.seconds), 1)
+    assertEquals(Await.result(io.unsafeToFuture(), 5.seconds), 2)
   }
 
   test("Task.liftFrom[IO]") { _ =>

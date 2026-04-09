@@ -161,10 +161,8 @@ object FutureLiftSuite extends TestSuite[Unit] {
     val source2 = Promise[Int]()
     val io2: IO[Int] = {
       implicit val F: Async[IO] = Overrides.asyncIO
-      FutureLift[IO, CancelableFuture].apply(
-        IO.delay(
-          CancelableFuture[Int](source2.future, Cancelable.empty)
-        ))
+      implicit val fl: FutureLift[IO, CancelableFuture] = FutureLift.scalaFutureLiftForAsync[IO, CancelableFuture]
+      fl(IO.delay(CancelableFuture[Int](source2.future, Cancelable.empty)))
     }
     val f2 = io2.unsafeToFuture()
     source2.success(1)

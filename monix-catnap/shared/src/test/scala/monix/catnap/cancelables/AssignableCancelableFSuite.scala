@@ -22,18 +22,21 @@ import cats.effect.unsafe.implicits.global
 import minitest.SimpleTestSuite
 import monix.catnap.CancelableF
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 object AssignableCancelableFSuite extends SimpleTestSuite {
   test("alreadyCanceled") {
     val ac = AssignableCancelableF.alreadyCanceled[IO]
     var effect = 0
 
-    assertEquals(ac.isCanceled.unsafeRunSync(), true)
-    ac.set(CancelableF.wrap(IO { effect += 1 })).unsafeRunSync()
+    assertEquals(Await.result(ac.isCanceled.unsafeToFuture(), 5.seconds), true)
+    Await.result(ac.set(CancelableF.wrap(IO { effect += 1 })).unsafeToFuture(), 5.seconds)
     assertEquals(effect, 1)
 
-    ac.cancel.unsafeRunSync()
+    Await.result(ac.cancel.unsafeToFuture(), 5.seconds)
     assertEquals(effect, 1)
-    ac.set(CancelableF.wrap(IO { effect += 1 })).unsafeRunSync()
+    Await.result(ac.set(CancelableF.wrap(IO { effect += 1 })).unsafeToFuture(), 5.seconds)
     assertEquals(effect, 2)
   }
 
@@ -41,15 +44,15 @@ object AssignableCancelableFSuite extends SimpleTestSuite {
     val ac = AssignableCancelableF.dummy[IO]
     var effect = 0
 
-    assertEquals(ac.isCanceled.unsafeRunSync(), false)
-    ac.set(CancelableF.wrap(IO { effect += 1 })).unsafeRunSync()
+    assertEquals(Await.result(ac.isCanceled.unsafeToFuture(), 5.seconds), false)
+    Await.result(ac.set(CancelableF.wrap(IO { effect += 1 })).unsafeToFuture(), 5.seconds)
     assertEquals(effect, 0)
 
-    ac.cancel.unsafeRunSync()
+    Await.result(ac.cancel.unsafeToFuture(), 5.seconds)
     assertEquals(effect, 0)
-    ac.set(CancelableF.wrap(IO { effect += 1 })).unsafeRunSync()
+    Await.result(ac.set(CancelableF.wrap(IO { effect += 1 })).unsafeToFuture(), 5.seconds)
     assertEquals(effect, 0)
 
-    assertEquals(ac.isCanceled.unsafeRunSync(), false)
+    assertEquals(Await.result(ac.isCanceled.unsafeToFuture(), 5.seconds), false)
   }
 }

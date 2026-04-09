@@ -214,7 +214,7 @@ private[tail] object IterantToReactivePublisher {
               } else if (cb ne null) {
                 continue = !parent.state.compareAndSet(current, Await(cb))
               } else {
-                result = F.async_[Unit](poll)
+                result = F.async_[Unit](cb => { poll(cb); () })
               }
 
             case Interrupt(signal) =>

@@ -28,6 +28,9 @@ import monix.execution.exceptions.{CompositeException, DummyException}
 import monix.execution.internal.Platform
 import monix.tail.batches.{Batch, BatchCursor}
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 object IterantOnErrorSuite extends BaseTestSuite {
   test("fa.attempt <-> fa.map(Right) for successful streams") { implicit s =>
     val i = Iterant[Coeval].of(1, 2, 3)
@@ -175,52 +178,70 @@ object IterantOnErrorSuite extends BaseTestSuite {
 
   test("onErrorIgnore should capture exceptions from eval, mapEval & liftF") { _ =>
     val dummy = DummyException("dummy")
-    Iterant[IO].eval { throw dummy }.onErrorIgnore.completedL.unsafeRunSync()
+    Await.result(Iterant[IO].eval { throw dummy }.onErrorIgnore.completedL.unsafeToFuture(), 5.seconds)
 
-    Iterant[IO]
-      .of(1)
-      .mapEval(_ => IO { throw dummy })
-      .onErrorIgnore
-      .completedL
-      .unsafeRunSync()
+    Await.result(
+      Iterant[IO]
+        .of(1)
+        .mapEval(_ => IO { throw dummy })
+        .onErrorIgnore
+        .completedL
+        .unsafeToFuture(),
+      5.seconds
+    )
 
-    Iterant[IO]
-      .of(1)
-      .mapEval(_ => throw dummy)
-      .onErrorIgnore
-      .completedL
-      .unsafeRunSync()
+    Await.result(
+      Iterant[IO]
+        .of(1)
+        .mapEval(_ => throw dummy)
+        .onErrorIgnore
+        .completedL
+        .unsafeToFuture(),
+      5.seconds
+    )
 
-    Iterant[IO].liftF(IO { throw dummy }).onErrorIgnore.completedL.unsafeRunSync()
+    Await.result(Iterant[IO].liftF(IO { throw dummy }).onErrorIgnore.completedL.unsafeToFuture(), 5.seconds)
   }
 
   test("attempt should capture exceptions from mapEval") { _ =>
     val dummy = DummyException("dummy")
-    val result = Iterant[IO]
-      .of(1)
-      .mapEval(_ => IO(throw dummy))
-      .attempt
-      .headOptionL
-      .unsafeRunSync()
+    val result = Await.result(
+      Iterant[IO]
+        .of(1)
+        .mapEval(_ => IO(throw dummy))
+        .attempt
+        .headOptionL
+        .unsafeToFuture(),
+      5.seconds
+    )
 
     assertEquals(result, Some(Left(dummy)))
   }
 
   test("attempt should protect against broken batches") { _ =>
     val dummy = DummyException("dummy")
-    val result =
-      Iterant[IO].nextBatchS[Int](ThrowExceptionBatch(dummy), IO(Iterant[IO].empty)).attempt.headOptionL.unsafeRunSync()
+    val result = Await.result(
+      Iterant[IO]
+        .nextBatchS[Int](ThrowExceptionBatch(dummy), IO(Iterant[IO].empty))
+        .attempt
+        .headOptionL
+        .unsafeToFuture(),
+      5.seconds
+    )
 
     assertEquals(result, Some(Left(dummy)))
   }
 
   test("attempt should protect against broken cursor") { _ =>
     val dummy = DummyException("dummy")
-    val result = Iterant[IO]
-      .nextCursorS[Int](ThrowExceptionCursor(dummy), IO(Iterant[IO].empty))
-      .attempt
-      .headOptionL
-      .unsafeRunSync()
+    val result = Await.result(
+      Iterant[IO]
+        .nextCursorS[Int](ThrowExceptionCursor(dummy), IO(Iterant[IO].empty))
+        .attempt
+        .headOptionL
+        .unsafeToFuture(),
+      5.seconds
+    )
 
     assertEquals(result, Some(Left(dummy)))
   }
@@ -238,7 +259,10 @@ object IterantOnErrorSuite extends BaseTestSuite {
     val dummy = DummyException("dummy")
     val cursor = BatchCursor.fromIterator(semiBrokenIterator(dummy))
 
-    val result = Iterant[IO].nextCursorS(cursor, IO(Iterant[IO].empty[Int])).attempt.toListL.unsafeRunSync()
+    val result = Await.result(
+      Iterant[IO].nextCursorS(cursor, IO(Iterant[IO].empty[Int])).attempt.toListL.unsafeToFuture(),
+      5.seconds
+    )
 
     assertEquals(
       result,

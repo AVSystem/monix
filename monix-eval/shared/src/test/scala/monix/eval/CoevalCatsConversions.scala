@@ -22,6 +22,9 @@ import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import monix.execution.atomic.Atomic
 import monix.execution.exceptions.DummyException
+
+import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 object CoevalCatsConversions extends BaseTestSuite {
@@ -53,13 +56,15 @@ object CoevalCatsConversions extends BaseTestSuite {
   }
 
   test("Coeval.now(value).to[IO]") { _ =>
-    assertEquals(Coeval.now(10).to[IO].unsafeRunSync(), 10)
+    assertEquals(Await.result(Coeval.now(10).to[IO].unsafeToFuture(), 5.seconds), 10)
   }
 
   test("Coeval.raiseError(e).to[IO]") { _ =>
     val dummy = DummyException("dummy")
     val ioRef = Coeval.raiseError[Unit](dummy).to[IO]
-    intercept[DummyException] { ioRef.unsafeRunSync(); () }
+    val f = ioRef.unsafeToFuture()
+    Await.ready(f, 5.seconds)
+    assert(f.value.get.isFailure && f.value.get.failed.get.isInstanceOf[DummyException])
     ()
   }
 
@@ -67,16 +72,16 @@ object CoevalCatsConversions extends BaseTestSuite {
     val effect = Atomic(0)
     val ioRef = Coeval.eval(effect.incrementAndGet()).to[IO]
 
-    assertEquals(ioRef.unsafeRunSync(), 1)
-    assertEquals(ioRef.unsafeRunSync(), 2)
+    assertEquals(Await.result(ioRef.unsafeToFuture(), 5.seconds), 1)
+    assertEquals(Await.result(ioRef.unsafeToFuture(), 5.seconds), 2)
   }
 
   test("Coeval.evalOnce(thunk).to[IO]") { _ =>
     val effect = Atomic(0)
     val eval = Coeval.evalOnce(effect.incrementAndGet()).to[IO]
 
-    assertEquals(eval.unsafeRunSync(), 1)
-    assertEquals(eval.unsafeRunSync(), 1)
+    assertEquals(Await.result(eval.unsafeToFuture(), 5.seconds), 1)
+    assertEquals(Await.result(eval.unsafeToFuture(), 5.seconds), 1)
   }
 
   test("Coeval.from(Eval.now(v))") { _ =>
@@ -112,8 +117,8 @@ object CoevalCatsConversions extends BaseTestSuite {
     val io = test.toSync[IO]
 
     assertEquals(effect, 0)
-    assertEquals(io.unsafeRunSync(), 1)
-    assertEquals(io.unsafeRunSync(), 2)
+    assertEquals(Await.result(io.unsafeToFuture(), 5.seconds), 1)
+    assertEquals(Await.result(io.unsafeToFuture(), 5.seconds), 2)
   }
 
   test("Coeval().toSync[IO]") { _ =>
@@ -122,8 +127,8 @@ object CoevalCatsConversions extends BaseTestSuite {
     val io = test.toSync[IO]
 
     assertEquals(effect, 0)
-    assertEquals(io.unsafeRunSync(), 1)
-    assertEquals(io.unsafeRunSync(), 2)
+    assertEquals(Await.result(io.unsafeToFuture(), 5.seconds), 1)
+    assertEquals(Await.result(io.unsafeToFuture(), 5.seconds), 2)
   }
 
   test("Coeval().toSync[Task]") { implicit s =>
@@ -152,8 +157,8 @@ object CoevalCatsConversions extends BaseTestSuite {
     val io = Coeval.liftToSync[IO].apply(test)
 
     assertEquals(effect, 0)
-    assertEquals(io.unsafeRunSync(), 1)
-    assertEquals(io.unsafeRunSync(), 2)
+    assertEquals(Await.result(io.unsafeToFuture(), 5.seconds), 1)
+    assertEquals(Await.result(io.unsafeToFuture(), 5.seconds), 2)
   }
 
   test("Coeval().to[Coeval]") { _ =>

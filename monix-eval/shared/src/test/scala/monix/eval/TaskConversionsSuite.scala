@@ -61,20 +61,20 @@ object TaskConversionsSuite extends BaseTestSuite {
     assertEquals(f.value, Some(Failure(dummy)))
   }
 
-  test("Task.now(v).to[IO]") { implicit s =>
-    assertEquals(Task.now(10).to[IO].unsafeRunSync(), 10)
+  test("Task.now(v).to[IO]") { _ =>
+    val f = Task.now(10).to[IO].unsafeToFuture()
+    assertEquals(Await.result(f, 5.seconds), 10)
   }
 
-  test("Task.raiseError(dummy).to[IO]") { implicit s =>
+  test("Task.raiseError(dummy).to[IO]") { _ =>
     val dummy = DummyException("dummy")
-    intercept[DummyException] {
-      Task.raiseError[Unit](dummy).to[IO].unsafeRunSync()
-    }
-    ()
+    val f = Await.ready(Task.raiseError[Unit](dummy).to[IO].unsafeToFuture(), 5.seconds)
+    assert(f.value.get.isFailure)
   }
 
-  test("Task.eval(thunk).to[IO]") { implicit s =>
-    assertEquals(Task.eval(10).to[IO].unsafeRunSync(), 10)
+  test("Task.eval(thunk).to[IO]") { _ =>
+    val f = Task.eval(10).to[IO].unsafeToFuture()
+    assertEquals(Await.result(f, 5.seconds), 10)
   }
 
   test("Task.eval(fa).asyncBoundary.to[IO]") { _ =>
