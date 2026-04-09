@@ -26,6 +26,9 @@ object CancelableFSuite extends SimpleTestSuite {
   private def unsafeRun[A](io: IO[A]): A =
     io.unsafeToFuture().value.get.get
 
+  private def unsafeRunUnit(io: IO[Unit]): Unit =
+    unsafeRun(io)
+
   test("apply") {
     var effect = 0
     val task = IO { effect += 1 }
@@ -33,9 +36,9 @@ object CancelableFSuite extends SimpleTestSuite {
 
     val cf = unsafeRun(ref)
     assertEquals(effect, 0)
-    unsafeRun(cf.cancel)
+    unsafeRunUnit(cf.cancel)
     assertEquals(effect, 1)
-    unsafeRun(cf.cancel)
+    unsafeRunUnit(cf.cancel)
     assertEquals(effect, 1)
 
     val cf2 = unsafeRun(ref)
@@ -48,8 +51,8 @@ object CancelableFSuite extends SimpleTestSuite {
 
   test("empty") {
     val cf = CancelableF.empty[IO]
-    unsafeRun(cf.cancel)
-    unsafeRun(cf.cancel)
+    unsafeRunUnit(cf.cancel)
+    unsafeRunUnit(cf.cancel)
   }
 
   test("wrap is not idempotent") {

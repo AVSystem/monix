@@ -67,7 +67,7 @@ object SemaphoreSuite extends TestSuite[Unit] {
 
   testAsync("real async test of many futures") { _ =>
     // Executing Futures on the global scheduler!
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import scala.concurrent.ExecutionContext.Implicits.{global => ec}
 
     val semaphore = Semaphore.unsafe[IO](provisioned = 20)
     val count = if (Platform.isJVM) 10000 else 1000
