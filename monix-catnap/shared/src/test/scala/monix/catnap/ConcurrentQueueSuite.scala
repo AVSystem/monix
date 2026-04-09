@@ -30,7 +30,7 @@ import monix.execution.internal.Platform
 import monix.execution.schedulers.TestScheduler
 
 import scala.collection.immutable.Queue
-import scala.concurrent.TimeoutException
+import scala.concurrent.{Await, TimeoutException}
 import scala.concurrent.duration._
 
 object ConcurrentQueueFakeSuite extends BaseConcurrentQueueSuite[TestScheduler] {
@@ -73,7 +73,7 @@ object ConcurrentQueueGlobalSuite extends BaseConcurrentQueueSuite[Scheduler] {
 abstract class BaseConcurrentQueueSuite[S <: Scheduler] extends TestSuite[S] {
 
   private def unsafeRun[A](io: IO[A]): A =
-    io.unsafeToFuture().value.get.get
+    Await.result(io.unsafeToFuture(), 5.seconds)
 
   val repeatForFastTests = {
     if (Platform.isJVM) 1000 else 100

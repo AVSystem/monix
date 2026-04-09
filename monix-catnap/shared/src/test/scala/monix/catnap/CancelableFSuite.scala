@@ -24,7 +24,7 @@ import minitest.SimpleTestSuite
 object CancelableFSuite extends SimpleTestSuite {
 
   private def unsafeRun[A](io: IO[A]): A =
-    io.unsafeToFuture().value.get.get
+    scala.concurrent.Await.result(io.unsafeToFuture(), scala.concurrent.duration.Duration(5, "s"))
 
   private def unsafeRunUnit(io: IO[Unit]): Unit =
     unsafeRun(io)

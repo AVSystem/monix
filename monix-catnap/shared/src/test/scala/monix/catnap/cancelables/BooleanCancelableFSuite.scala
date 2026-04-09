@@ -22,10 +22,13 @@ import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import minitest.SimpleTestSuite
 
+import scala.concurrent.Await
+import scala.concurrent.duration._
+
 object BooleanCancelableFSuite extends SimpleTestSuite {
 
   private def unsafeRun[A](io: IO[A]): A =
-    io.unsafeToFuture().value.get.get
+    Await.result(io.unsafeToFuture(), 5.seconds)
 
   test("apply") {
     var effect = 0

@@ -25,6 +25,7 @@ import monix.catnap.CircuitBreaker.{Closed, Open}
 import monix.execution.exceptions.{DummyException, ExecutionRejectedException}
 import monix.execution.schedulers.TestScheduler
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
@@ -34,7 +35,7 @@ object CircuitBreakerSuite extends TestSuite[TestScheduler] {
     assert(env.state.tasks.isEmpty, "There should be no tasks left!")
 
   private def unsafeRun[A](io: IO[A]): A =
-    io.unsafeToFuture().value.get.get
+    Await.result(io.unsafeToFuture(), 5.seconds)
 
   test("should work for successful async tasks") { implicit s =>
     val circuitBreaker = CircuitBreaker.unsafe[IO](
@@ -202,14 +203,14 @@ object CircuitBreakerSuite extends TestSuite[TestScheduler] {
       }
 
       intercept[ExecutionRejectedException] {
-        taskInError.unsafeToFuture().value.get.get
+        Await.result(taskInError.unsafeToFuture(), 5.seconds)
         ()
       }
 
       s.tick(resetTimeout - 1.second)
 
       intercept[ExecutionRejectedException] {
-        taskInError.unsafeToFuture().value.get.get
+        Await.result(taskInError.unsafeToFuture(), 5.seconds)
         ()
       }
 
@@ -236,11 +237,11 @@ object CircuitBreakerSuite extends TestSuite[TestScheduler] {
 
       // Rejecting all other tasks
       intercept[ExecutionRejectedException] {
-        taskInError.unsafeToFuture().value.get.get
+        Await.result(taskInError.unsafeToFuture(), 5.seconds)
         ()
       }
       intercept[ExecutionRejectedException] {
-        taskInError.unsafeToFuture().value.get.get
+        Await.result(taskInError.unsafeToFuture(), 5.seconds)
         ()
       }
 
@@ -256,7 +257,7 @@ object CircuitBreakerSuite extends TestSuite[TestScheduler] {
       }
 
       intercept[ExecutionRejectedException] {
-        taskInError.unsafeToFuture().value.get.get
+        Await.result(taskInError.unsafeToFuture(), 5.seconds)
         ()
       }
 
@@ -278,7 +279,7 @@ object CircuitBreakerSuite extends TestSuite[TestScheduler] {
     }
 
     intercept[ExecutionRejectedException] {
-      taskInError.unsafeToFuture().value.get.get
+      Await.result(taskInError.unsafeToFuture(), 5.seconds)
       ()
     }
 

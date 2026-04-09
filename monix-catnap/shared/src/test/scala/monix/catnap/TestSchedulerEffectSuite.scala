@@ -22,6 +22,7 @@ import cats.effect.unsafe.implicits.global
 import minitest.TestSuite
 import monix.execution.schedulers.TestScheduler
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.util.Success
 
@@ -32,7 +33,7 @@ object TestSchedulerEffectSuite extends TestSuite[TestScheduler] {
   }
 
   private def unsafeRun[A](io: IO[A]): A =
-    io.unsafeToFuture().value.get.get
+    Await.result(io.unsafeToFuture(), 5.seconds)
 
   test("monotonic") { s =>
     val fetch = SchedulerEffect.monotonic[IO](s)
