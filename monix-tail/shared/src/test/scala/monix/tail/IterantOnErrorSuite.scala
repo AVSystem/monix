@@ -178,7 +178,7 @@ object IterantOnErrorSuite extends BaseTestSuite {
 
   test("onErrorIgnore should capture exceptions from eval, mapEval & liftF") { _ =>
     val dummy = DummyException("dummy")
-    Await.result(Iterant[IO].eval { throw dummy }.onErrorIgnore.completedL.unsafeToFuture(), 5.seconds)
+    Await.result(Iterant[IO].eval { throw dummy }.onErrorIgnore.completedL.unsafeToFuture(), 5.seconds): Unit
 
     Await.result(
       Iterant[IO]
@@ -188,7 +188,7 @@ object IterantOnErrorSuite extends BaseTestSuite {
         .completedL
         .unsafeToFuture(),
       5.seconds
-    )
+    ): Unit
 
     Await.result(
       Iterant[IO]
@@ -198,9 +198,9 @@ object IterantOnErrorSuite extends BaseTestSuite {
         .completedL
         .unsafeToFuture(),
       5.seconds
-    )
+    ): Unit
 
-    Await.result(Iterant[IO].liftF(IO { throw dummy }).onErrorIgnore.completedL.unsafeToFuture(), 5.seconds)
+    Await.result(Iterant[IO].liftF(IO { throw dummy }).onErrorIgnore.completedL.unsafeToFuture(), 5.seconds): Unit
   }
 
   test("attempt should capture exceptions from mapEval") { _ =>

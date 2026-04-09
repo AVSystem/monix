@@ -138,7 +138,7 @@ object SemaphoreSuite extends TestSuite[Unit] {
 
   testAsync("withPermitN / awaitAvailable concurrent test") { _ =>
     // Executing Futures on the global scheduler!
-    import scala.concurrent.ExecutionContext.Implicits.global
+    import scala.concurrent.ExecutionContext.Implicits.{global => ec}
 
     val task = repeatTest(10) {
       val available = 6L
