@@ -205,7 +205,7 @@ object SemaphoreSuite extends TestSuite[Unit] {
       _    <- IO(assertEquals(c2, 0L))
     } yield ()
 
-    assertEquals(task.unsafeRunTimed(5.seconds), Some(()))
+    Await.result(task.unsafeToFuture(), 5.seconds): Unit
   }
 
   test("withPermitN is cancelable (2)") { _ =>
@@ -228,7 +228,7 @@ object SemaphoreSuite extends TestSuite[Unit] {
       r2   <- fib2.joinWithNever
     } yield r2
 
-    assertEquals(task.unsafeRunTimed(10.seconds), Some(2))
+    assertEquals(Await.result(task.unsafeToFuture(), 10.seconds), 2)
   }
 
   def repeatTest(n: Int)(f: => IO[Unit]): IO[Unit] =

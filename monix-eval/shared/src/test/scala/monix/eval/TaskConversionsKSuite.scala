@@ -37,7 +37,7 @@ object TaskConversionsKSuite extends BaseTestSuite {
   test("Task.liftToAsync[IO]") { _ =>
     var effect = 0
     val task = Task { effect += 1; effect }
-    val io = Task.liftToAsync[IO].apply(task)
+    val io = (Task.liftToAsync[IO]: @scala.annotation.nowarn("cat=deprecation")).apply(task)
 
     assertEquals(Await.result(io.unsafeToFuture(), 5.seconds), 1)
     assertEquals(Await.result(io.unsafeToFuture(), 5.seconds), 2)
@@ -46,7 +46,7 @@ object TaskConversionsKSuite extends BaseTestSuite {
   test("Task.liftToConcurrent[IO]") { _ =>
     var effect = 0
     val task = Task { effect += 1; effect }
-    val io = Task.liftToConcurrent[IO].apply(task)
+    val io = (Task.liftToConcurrent[IO]: @scala.annotation.nowarn("cat=deprecation")).apply(task)
 
     assertEquals(Await.result(io.unsafeToFuture(), 5.seconds), 1)
     assertEquals(Await.result(io.unsafeToFuture(), 5.seconds), 2)
@@ -66,7 +66,7 @@ object TaskConversionsKSuite extends BaseTestSuite {
     import monix.execution.Scheduler.Implicits.global
     var effect = 0
     val io0 = IO { effect += 1; effect }
-    val task = Task.liftFromEffect[IO].apply(io0)
+    val task = (Task.liftFromEffect[IO]: @scala.annotation.nowarn("cat=deprecation")).apply(io0)
 
     assertEquals(Await.result(task.runToFuture, 5.seconds), 1)
     assertEquals(Await.result(task.runToFuture, 5.seconds), 2)
@@ -76,7 +76,7 @@ object TaskConversionsKSuite extends BaseTestSuite {
     import monix.execution.Scheduler.Implicits.global
     var effect = 0
     val io0 = IO { effect += 1; effect }
-    val task = Task.liftFromConcurrentEffect[IO].apply(io0)
+    val task = (Task.liftFromConcurrentEffect[IO]: @scala.annotation.nowarn("cat=deprecation")).apply(io0)
 
     assertEquals(Await.result(task.runToFuture, 5.seconds), 1)
     assertEquals(Await.result(task.runToFuture, 5.seconds), 2)
