@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,12 +16,10 @@
  */
 
 package monix.eval
-import scala.annotation.nowarn
 
 import monix.execution.exceptions.DummyException
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
-@nowarn
 object CoevalRunSuite extends BaseTestSuite {
   def testRun(build: (() => Int) => Coeval[Int]): Unit = {
     val fa1 = build(() => 10 + 20)

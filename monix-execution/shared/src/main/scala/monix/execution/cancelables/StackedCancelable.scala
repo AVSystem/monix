@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@
 package monix.execution.cancelables
 
 import monix.execution.Cancelable
-import monix.execution.atomic.{ AtomicAny, PaddingStrategy }
+import monix.execution.atomic.{AtomicAny, PaddingStrategy}
 import scala.annotation.tailrec
 
 /** Represents a composite of cancelables that are stacked,
@@ -123,9 +123,10 @@ object StackedCancelable {
       * in order to safe a `state.get` instruction before the
       * `compareAndSet` happens.
       */
-    private var cache = initial
+    private[this] var cache = initial
 
-    private val state = AtomicAny.withPadding(initial, PaddingStrategy.LeftRight128)
+    private[this] val state =
+      AtomicAny.withPadding(initial, PaddingStrategy.LeftRight128)
 
     override def isCanceled: Boolean =
       state.get() == null

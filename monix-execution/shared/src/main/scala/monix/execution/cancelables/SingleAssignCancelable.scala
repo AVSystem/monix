@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -110,11 +110,10 @@ final class SingleAssignCancelable private (extra: Cancelable) extends Assignabl
   private def raiseError(): Nothing = {
     throw new IllegalStateException(
       "Cannot assign to SingleAssignmentCancelable, " +
-        "as it was already assigned once"
-    )
+        "as it was already assigned once")
   }
 
-  private val state = AtomicAny(Empty: State)
+  private[this] val state = AtomicAny(Empty: State)
 }
 
 object SingleAssignCancelable {
@@ -129,7 +128,7 @@ object SingleAssignCancelable {
     * {{{
     *   val c = {
     *     val extra = Cancelable(() => println("extra canceled")
-    *     SingleAssignmentCancelable.plusOne(extra)
+    *     SingleAssignmentCancelable.withExtra(extra)
     *   }
     *
     *   c := Cancelable(() => println("main canceled"))

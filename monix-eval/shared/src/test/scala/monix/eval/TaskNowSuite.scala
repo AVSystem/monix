@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,16 +16,14 @@
  */
 
 package monix.eval
-import scala.annotation.nowarn
 
 import cats.laws._
 import cats.laws.discipline._
 import monix.execution.Callback
 import monix.execution.ExecutionModel.AlwaysAsyncExecution
 import monix.execution.exceptions.DummyException
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
-@nowarn
 object TaskNowSuite extends BaseTestSuite {
   test("Task.now should work synchronously") { implicit s =>
     var wasTriggered = false
@@ -170,7 +168,7 @@ object TaskNowSuite extends BaseTestSuite {
 
   test("Task.now.flatMap should be tail recursive") { implicit s =>
     def loop(n: Int, idx: Int): Task[Int] =
-      Task.now(idx).flatMap { _ =>
+      Task.now(idx).flatMap { a =>
         if (idx < n) loop(n, idx + 1).map(_ + 1)
         else
           Task.now(idx)

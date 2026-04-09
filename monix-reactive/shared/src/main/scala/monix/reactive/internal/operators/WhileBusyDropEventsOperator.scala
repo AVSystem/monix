@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +17,8 @@
 
 package monix.reactive.internal.operators
 
-import monix.execution.Ack
-import monix.execution.Ack.{ Continue, Stop }
-import monix.execution.Scheduler
+import monix.execution.{Ack, Scheduler}
+import monix.execution.Ack.{Continue, Stop}
 import monix.reactive.Observable.Operator
 import monix.reactive.observers.Subscriber
 
@@ -31,8 +30,8 @@ private[reactive] final class WhileBusyDropEventsOperator[A] extends Operator[A,
     new Subscriber.Sync[A] {
       implicit val scheduler: Scheduler = out.scheduler
 
-      private var ack = Continue: Future[Ack]
-      private var isDone = false
+      private[this] var ack = Continue: Future[Ack]
+      private[this] var isDone = false
 
       def onNext(elem: A) =
         if (isDone) Stop

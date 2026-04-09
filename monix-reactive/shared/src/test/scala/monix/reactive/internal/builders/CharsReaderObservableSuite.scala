@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,25 +17,23 @@
 
 package monix.reactive.internal.builders
 
-import java.io.{ Reader, StringReader }
-
+import java.io.{Reader, StringReader}
 import cats.effect.ExitCase
 import minitest.SimpleTestSuite
 import minitest.laws.Checkers
 import monix.eval.Task
 import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Continue
-import monix.execution.ExecutionModel.{ AlwaysAsyncExecution, BatchedExecution, SynchronousExecution }
-import monix.execution.Scheduler
+import monix.execution.ExecutionModel.{AlwaysAsyncExecution, BatchedExecution, SynchronousExecution}
 import monix.execution.exceptions.APIContractViolationException
 import monix.execution.schedulers.TestScheduler
 import monix.reactive.Observable
 import monix.execution.exceptions.DummyException
 import monix.reactive.observers.Subscriber
-import org.scalacheck.{ Gen, Prop }
+import org.scalacheck.{Gen, Prop}
 
 import scala.collection.mutable.ArrayBuffer
-import scala.util.{ Failure, Random, Success }
+import scala.util.{Failure, Random, Success}
 
 object CharsReaderObservableSuite extends SimpleTestSuite with Checkers {
   test("fromCharsReaderUnsafe yields a single subscriber observable") {
@@ -331,7 +329,7 @@ object CharsReaderObservableSuite extends SimpleTestSuite with Checkers {
 
   def inputWithError(ex: Throwable, whenToThrow: Int, onFinish: () => Unit): Reader =
     new Reader {
-      private var callIdx = 0
+      private[this] var callIdx = 0
 
       def read(cbuf: Array[Char], off: Int, len: Int): Int = {
         callIdx += 1
@@ -362,8 +360,7 @@ object CharsReaderObservableSuite extends SimpleTestSuite with Checkers {
     nLines: Int = 100,
     nMinLines: Int = 0,
     nCharsPerLine: Int = 100,
-    nMinCharsPerLine: Int = 0
-  ): String = {
+    nMinCharsPerLine: Int = 0): String = {
 
     val chars = (('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')).toVector
     val builder = new StringBuilder

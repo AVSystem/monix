@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@
 package monix.catnap
 package internal
 
-import cats.effect.{ Concurrent, ContextShift }
+import cats.effect.{Concurrent, ContextShift}
 import monix.execution.CancelablePromise
 import monix.execution.atomic.AtomicAny
 import monix.execution.internal.Constants
@@ -26,7 +26,7 @@ import scala.annotation.tailrec
 
 private[catnap] class QueueHelpers[F[_]](implicit F: Concurrent[F], cs: ContextShift[F]) {
 
-  private val asyncBoundary: F[Unit] = cs.shift
+  private[this] val asyncBoundary: F[Unit] = cs.shift
 
   @tailrec
   final def sleepThenRepeat[T, U](
@@ -34,8 +34,7 @@ private[catnap] class QueueHelpers[F[_]](implicit F: Concurrent[F], cs: ContextS
     f: () => T,
     filter: T => Boolean,
     map: T => U,
-    cb: Either[Throwable, U] => Unit
-  )(implicit F: Concurrent[F]): F[Unit] = {
+    cb: Either[Throwable, U] => Unit)(implicit F: Concurrent[F]): F[Unit] = {
 
     // Registering intention to sleep via promise
     state.get() match {
@@ -56,8 +55,7 @@ private[catnap] class QueueHelpers[F[_]](implicit F: Concurrent[F], cs: ContextS
     f: () => T,
     filter: T => Boolean,
     map: T => U,
-    cb: Either[Throwable, U] => Unit
-  )(p: CancelablePromise[Unit])(implicit F: Concurrent[F]): F[Unit] = {
+    cb: Either[Throwable, U] => Unit)(p: CancelablePromise[Unit])(implicit F: Concurrent[F]): F[Unit] = {
 
     // Async boundary, for fairness reasons; also creates a full
     // memory barrier between the promise registration and what follows
@@ -79,8 +77,7 @@ private[catnap] class QueueHelpers[F[_]](implicit F: Concurrent[F], cs: ContextS
     f: () => T,
     filter: T => Boolean,
     map: T => U,
-    cb: Either[Throwable, U] => Unit
-  )(implicit F: Concurrent[F]): F[Unit] = {
+    cb: Either[Throwable, U] => Unit)(implicit F: Concurrent[F]): F[Unit] = {
 
     // Trying to read
     val value = f()

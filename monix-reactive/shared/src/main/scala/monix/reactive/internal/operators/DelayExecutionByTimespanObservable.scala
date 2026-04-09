@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,14 +28,12 @@ private[reactive] final class DelayExecutionByTimespanObservable[A](source: Obse
 
   def unsafeSubscribeFn(out: Subscriber[A]): Cancelable = {
     val conn = OrderedCancelable()
-    val main = out.scheduler.scheduleOnce(
-      timespan.length,
-      timespan.unit,
-      () => {
+    val main = out.scheduler.scheduleOnce(timespan.length, timespan.unit, new Runnable {
+      def run(): Unit = {
         conn.orderedUpdate(source.unsafeSubscribeFn(out), order = 2)
         ()
       }
-    )
+    })
 
     conn.orderedUpdate(main, order = 1)
   }

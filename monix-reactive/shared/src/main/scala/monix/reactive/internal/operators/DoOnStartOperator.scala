@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@ package monix.reactive.internal.operators
 import monix.eval.Task
 import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Stop
-import monix.execution.Scheduler
 import monix.reactive.Observable.Operator
 import monix.reactive.observers.Subscriber
 
@@ -33,8 +32,8 @@ private[reactive] final class DoOnStartOperator[A](cb: A => Task[Unit]) extends 
     new Subscriber[A] {
       implicit val scheduler: Scheduler = out.scheduler
 
-      private var isDone = false
-      private var isStart = true
+      private[this] var isDone = false
+      private[this] var isStart = true
 
       def onNext(elem: A): Future[Ack] = {
         if (isStart) {

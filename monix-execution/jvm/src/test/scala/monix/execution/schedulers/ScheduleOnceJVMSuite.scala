@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@ package schedulers
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import minitest.SimpleTestSuite
 import scala.concurrent.duration._
-import scala.concurrent.{ Await, ExecutionContext, Future, Promise }
+import scala.concurrent.{Await, ExecutionContext, Future, Promise}
 
 object ScheduleOnceJVMSuite extends SimpleTestSuite {
   test("Scheduler.global") {
@@ -89,14 +89,12 @@ object ScheduleOnceJVMSuite extends SimpleTestSuite {
   def runTest(sc: Scheduler, threadPrefix: Option[String] = None): Unit = {
     def runAndGetThread(sc: Scheduler, delayMs: Int): Future[String] = {
       val p = Promise[String]()
-      val _ = sc.scheduleOnce(
-        delayMs.toLong,
-        MILLISECONDS,
-        () => {
+      sc.scheduleOnce(delayMs.toLong, MILLISECONDS, new Runnable {
+        def run(): Unit = {
           p.success(Thread.currentThread().getName)
           ()
         }
-      )
+      })
       p.future
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,15 +18,13 @@
 package monix.execution
 
 import minitest.SimpleTestSuite
-import monix.execution.exceptions.{ CompositeException, DummyException }
+import monix.execution.exceptions.{CompositeException, DummyException}
 import monix.execution.schedulers.TestScheduler
 import monix.execution.internal.Platform
-import scala.annotation.nowarn
 import scala.concurrent.Promise
 import scala.util.Failure
 import scala.util.control.NonFatal
 
-@nowarn("msg=The syntax `x: _\\*` is no longer supported for vararg splices; use `x\\*` instead")
 object CancelableSuite extends SimpleTestSuite {
   test("Cancelable.empty") {
     val c = Cancelable()
@@ -56,7 +54,7 @@ object CancelableSuite extends SimpleTestSuite {
 
   test("Cancelable.collection(refs)") {
     var effect = 0
-    val c = Cancelable.collection((0 until 100).map(_ => Cancelable(() => effect += 1))*)
+    val c = Cancelable.collection((0 until 100).map(_ => Cancelable(() => effect += 1)): _*)
 
     assertEquals(effect, 0)
     c.cancel()
@@ -81,10 +79,8 @@ object CancelableSuite extends SimpleTestSuite {
           assertEquals(e, dummy1)
           assertEquals(e.getSuppressed.toList, List(dummy2))
         } else {
-          e match {
-            case CompositeException(errors) => assertEquals(errors.toList, List(dummy1, dummy2))
-            case other => assertEquals(other, dummy1)
-          }
+          val CompositeException(errors) = e
+          assertEquals(errors.toList, List(dummy1, dummy2))
         }
     }
   }
@@ -102,7 +98,7 @@ object CancelableSuite extends SimpleTestSuite {
   test("Cancelable.trampolined(refs)") {
     implicit val sc = TestScheduler()
     var effect = 0
-    val c = Cancelable.trampolined((0 until 100).map(_ => Cancelable(() => effect += 1))*)
+    val c = Cancelable.trampolined((0 until 100).map(_ => Cancelable(() => effect += 1)): _*)
 
     assertEquals(effect, 0)
     c.cancel()
@@ -125,10 +121,8 @@ object CancelableSuite extends SimpleTestSuite {
       assertEquals(e, dummy1)
       assertEquals(e.getSuppressed.toList, List(dummy2))
     } else {
-      sc.state.lastReportedError match {
-        case CompositeException(errors) => assertEquals(errors.toList, List(dummy1, dummy2))
-        case other => assertEquals(other, dummy1)
-      }
+      val CompositeException(errors) = sc.state.lastReportedError
+      assertEquals(errors.toList, List(dummy1, dummy2))
     }
   }
 

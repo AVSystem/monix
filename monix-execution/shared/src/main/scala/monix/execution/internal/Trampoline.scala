@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,12 +21,14 @@ import monix.execution.internal.Trampoline.{ForkingTrampolineEC, ImmediateTrampo
 import monix.execution.internal.collection.ChunkedArrayQueue
 
 import scala.annotation.tailrec
-import scala.concurrent.{ BlockContext, CanAwait, ExecutionContext }
+import scala.concurrent.{BlockContext, CanAwait, ExecutionContext}
+import scala.util.control.NonFatal
 
-private[execution] class Trampoline {
-  private def makeQueue(): ChunkedArrayQueue[Runnable] = ChunkedArrayQueue[Runnable](chunkSize = 16)
-  private var immediateQueue = makeQueue()
-  private var withinLoop = false
+private[execution] class Trampoline(
+  private[this] val fallbackTrampoline: Option[() => Trampoline] = None,
+) {
+  private[this] var immediateQueue: ChunkedArrayQueue[Runnable] = Trampoline.makeQueue()
+  private[this] var withinLoop: Boolean = false
 
   def startLoop(runnable: Runnable, ec: TrampolineEC): Unit = {
     withinLoop = true
@@ -91,12 +93,12 @@ private[execution] class Trampoline {
     if (next ne null) immediateLoop(next, ec)
   }
 
-  protected final def trampolineContext(parentContext: BlockContext, ec: ExecutionContext): BlockContext =
+  protected final def trampolineContext(parentContext: BlockContext, ec: TrampolineEC): BlockContext =
     new BlockContext {
       def blockOn[T](thunk: => T)(implicit permission: CanAwait): T = {
         // In case of blocking, execute all scheduled local tasks on
         // a separate thread, otherwise we could end up with a dead-lock
-        forkTheRest(ec)
+        continueExecution(ec)
         if (parentContext ne null) {
           parentContext.blockOn(thunk)
         } else {

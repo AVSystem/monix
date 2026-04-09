@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +23,7 @@ import monix.eval.Task
 import monix.execution.cancelables.SingleAssignCancelable
 import scala.util.control.NonFatal
 import monix.execution.schedulers.TrampolinedRunnable
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 private[eval] object TaskFromFuture {
@@ -77,7 +77,7 @@ private[eval] object TaskFromFuture {
     val start: Start[A] = (ctx, cb) => {
       implicit val ec = ctx.scheduler
       if (p.isCompleted) {
-        val _ = p.subscribe(trampolinedCB(cb, null))
+        p.subscribe(trampolinedCB(cb, null))
         ()
       } else {
         val conn = ctx.connection
@@ -127,18 +127,17 @@ private[eval] object TaskFromFuture {
         conn.push(c)(ctx.scheduler)
         // Async boundary
         f.onComplete { result =>
-          val _ = conn.pop()
+          conn.pop()
           cb(result)
         }(ctx.scheduler)
     }
   }
 
   private def trampolinedCB[A](cb: Callback[Throwable, A], conn: TaskConnection)(
-    implicit ec: ExecutionContext
-  ): Try[A] => Unit = {
+    implicit ec: ExecutionContext): Try[A] => Unit = {
 
     new (Try[A] => Unit) with TrampolinedRunnable {
-      private var value: Try[A] = null.asInstanceOf[Try[A]]
+      private[this] var value: Try[A] = _
 
       def apply(value: Try[A]): Unit = {
         this.value = value
@@ -146,9 +145,7 @@ private[eval] object TaskFromFuture {
       }
 
       def run(): Unit = {
-        if (conn ne null) {
-          val _ = conn.pop()
-        }
+        if (conn ne null) conn.pop()
         val v = value
         value = null
         cb(v)

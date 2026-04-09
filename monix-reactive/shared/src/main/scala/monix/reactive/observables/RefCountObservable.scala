@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +17,7 @@
 
 package monix.reactive.observables
 
-import monix.execution.{ Ack, Cancelable }
-import monix.execution.Scheduler
+import monix.execution.{Ack, Cancelable, Scheduler}
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
 import monix.execution.atomic.Atomic
@@ -35,8 +34,8 @@ import scala.concurrent.Future
   */
 final class RefCountObservable[+A] private (source: ConnectableObservable[A]) extends Observable[A] {
 
-  private val refs = Atomic(-1)
-  private lazy val connection: Cancelable =
+  private[this] val refs = Atomic(-1)
+  private[this] lazy val connection: Cancelable =
     source.connect()
 
   @tailrec
@@ -59,7 +58,7 @@ final class RefCountObservable[+A] private (source: ConnectableObservable[A]) ex
       val countdown = Cancelable(() => countDownToConnectionCancel())
       // Subscribing and triggering connect() if this is the first subscription
       val ret = source.unsafeSubscribeFn(wrap(subscriber, countdown))
-      if (current == -1) { val _ = connection } // triggers connect()
+      if (current == -1) connection // triggers connect()
       // A composite that both cancels this subscription and does the countdown
       Cancelable { () =>
         try ret.cancel()
@@ -90,7 +89,7 @@ final class RefCountObservable[+A] private (source: ConnectableObservable[A]) ex
     }
 
   @tailrec
-  private def countDownToConnectionCancel(): Unit = refs.get() match {
+  private[this] def countDownToConnectionCancel(): Unit = refs.get() match {
     case x if x > 0 =>
       val update = x - 1
       if (!refs.compareAndSet(x, update))

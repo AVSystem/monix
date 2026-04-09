@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@
 package monix.execution
 
 import monix.execution.ChannelType.MPMC
-import monix.execution.annotations.{ UnsafeBecauseImpure, UnsafeProtocol }
+import monix.execution.annotations.{UnsafeBecauseImpure, UnsafeProtocol}
 import monix.execution.atomic.AtomicAny
 import monix.execution.atomic.PaddingStrategy.LeftRight128
 import monix.execution.cancelables.MultiAssignCancelable
@@ -28,6 +28,7 @@ import monix.execution.internal.collection.LowLevelConcurrentQueue
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Promise
+import scala.concurrent.duration._
 
 /**
   * A high-performance, back-pressured, asynchronous queue implementation.
@@ -111,7 +112,8 @@ import scala.concurrent.Promise
 final class AsyncQueue[A] private[monix] (
   capacity: BufferCapacity,
   channelType: ChannelType,
-)(implicit scheduler: Scheduler) {
+  retryDelay: FiniteDuration = 10.millis)(implicit scheduler: Scheduler) {
+
   /** Try pushing a value to the queue.
     *
     * The protocol is unsafe because usage of the "try*" methods imply an
@@ -238,8 +240,7 @@ final class AsyncQueue[A] private[monix] (
         _ => buffer.length >= minLength,
         _ => toSeq(buffer),
         promise,
-        conn
-      )
+        conn)
 
       CancelableFuture(promise.future, conn)
     }
@@ -270,15 +271,17 @@ final class AsyncQueue[A] private[monix] (
   def isEmpty: Boolean =
     queue.isEmpty
 
-  private val queue: LowLevelConcurrentQueue[A] =
+  private[this] val queue: LowLevelConcurrentQueue[A] =
     LowLevelConcurrentQueue(capacity, channelType, fenced = true)
 
-  private val consumersAwaiting = AtomicAny.withPadding[CancelablePromise[Unit]](null, LeftRight128)
-
-  private val producersAwaiting = if (capacity.isBounded)
+  private[this] val consumersAwaiting =
     AtomicAny.withPadding[CancelablePromise[Unit]](null, LeftRight128)
-  else
-    null
+
+  private[this] val producersAwaiting =
+    if (capacity.isBounded)
+      AtomicAny.withPadding[CancelablePromise[Unit]](null, LeftRight128)
+    else
+      null
 
   private def tryOfferUnsafe(a: A): Boolean = {
     if (queue.offer(a) == 0) {
@@ -346,11 +349,11 @@ final class AsyncQueue[A] private[monix] (
   private def toSeq(buffer: ArrayBuffer[A]): Seq[A] =
     buffer.toArray[Any].toSeq.asInstanceOf[Seq[A]]
 
-  private val pollQueue: () => A = () => tryPollUnsafe()
-  private val pollTest: A => Boolean = _ != null
-  private val pollMap: A => A = a => a
-  private val offerTest: Boolean => Boolean = x => x
-  private val offerMap: Boolean => Unit = _ => ()
+  private[this] val pollQueue: () => A = () => tryPollUnsafe()
+  private[this] val pollTest: A => Boolean = _ != null
+  private[this] val pollMap: A => A = a => a
+  private[this] val offerTest: Boolean => Boolean = x => x
+  private[this] val offerMap: Boolean => Unit = _ => ()
 
   @tailrec
   private def sleepThenRepeat[T, U](
@@ -359,8 +362,7 @@ final class AsyncQueue[A] private[monix] (
     filter: T => Boolean,
     map: T => U,
     cb: Promise[U],
-    token: MultiAssignCancelable
-  ): Unit = {
+    token: MultiAssignCancelable): Unit = {
 
     // Registering intention to sleep via promise
     state.get() match {
@@ -382,8 +384,7 @@ final class AsyncQueue[A] private[monix] (
     filter: T => Boolean,
     map: T => U,
     cb: Promise[U],
-    token: MultiAssignCancelable
-  )(p: CancelablePromise[Unit]): Unit = {
+    token: MultiAssignCancelable)(p: CancelablePromise[Unit]): Unit = {
 
     // Async boundary, for fairness reasons; also creates a full
     // memory barrier between the promise registration and what follows
@@ -409,8 +410,7 @@ final class AsyncQueue[A] private[monix] (
     filter: T => Boolean,
     map: T => U,
     cb: Promise[U],
-    token: MultiAssignCancelable
-  ): Unit = {
+    token: MultiAssignCancelable): Unit = {
 
     // Trying to read
     val value = f()
@@ -479,8 +479,7 @@ object AsyncQueue {
   @UnsafeProtocol
   @UnsafeBecauseImpure
   def withConfig[A](capacity: BufferCapacity, channelType: ChannelType)(implicit
-    scheduler: Scheduler
-  ): AsyncQueue[A] = {
+    scheduler: Scheduler): AsyncQueue[A] = {
 
     new AsyncQueue[A](capacity, channelType)
   }

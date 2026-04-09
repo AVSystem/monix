@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,8 +20,9 @@ package monix.execution.internal
 import minitest.TestSuite
 import monix.execution.cancelables.SingleAssignCancelable
 import monix.execution.schedulers.AsyncScheduler
-import monix.execution.{ ExecutionModel, Scheduler, TestUtils }
+import monix.execution.{ExecutionModel, Scheduler, TestUtils}
 import org.scalajs.macrotaskexecutor.MacrotaskExecutor
+
 import scala.concurrent.Promise
 import scala.concurrent.duration._
 
@@ -74,7 +75,7 @@ object AsyncSchedulerJSSuite extends TestSuite[Scheduler] with TestUtils {
     import concurrent.duration._
     val p = Promise[Unit]()
     val startAt = s.clockMonotonic(MILLISECONDS)
-    val _ = s.scheduleOnce(100.millis) { p.success(()); () }
+    s.scheduleOnce(100.millis) { p.success(()); () }
 
     for (_ <- p.future) yield {
       val duration = s.clockMonotonic(MILLISECONDS) - startAt

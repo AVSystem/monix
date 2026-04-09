@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,16 +17,16 @@
 
 package monix.execution
 
-import java.util.concurrent.{ CountDownLatch, TimeUnit }
+import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 import minitest.TestSuite
-import minitest.api.{ AssertionException, MiniTestException }
-import monix.execution.exceptions.{ CallbackCalledMultipleTimesException, DummyException }
+import minitest.api.{AssertionException, MiniTestException}
+import monix.execution.exceptions.{CallbackCalledMultipleTimesException, DummyException}
 import monix.execution.schedulers.SchedulerService
 
 import scala.concurrent.Promise
 import scala.concurrent.duration._
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 object CallbackSafetyJVMSuite extends TestSuite[SchedulerService] with TestUtils {
   val WORKERS = 10
@@ -38,39 +38,39 @@ object CallbackSafetyJVMSuite extends TestSuite[SchedulerService] with TestUtils
 
   override def tearDown(env: SchedulerService): Unit = {
     env.shutdown()
-    val _ = env.awaitTermination(10.seconds)
+    env.awaitTermination(10.seconds)
     ()
   }
 
   test("Callback.safe is thread-safe onSuccess") { implicit sc =>
-    executeOnSuccessTest(Callback.safe)
+    executeOnSuccessTest(Callback[Throwable].safe)
   }
 
   test("Callback.safe is thread-safe onError") { implicit sc =>
-    executeOnErrorTest(Callback.safe)
+    executeOnErrorTest(Callback[Throwable].safe)
   }
 
   test("Callback.trampolined is thread-safe onSuccess") { implicit sc =>
-    executeOnSuccessTest(Callback.trampolined)
+    executeOnSuccessTest(Callback[Throwable].trampolined)
   }
 
   test("Callback.trampolined is thread-safe onError") { implicit sc =>
-    executeOnErrorTest(Callback.trampolined)
+    executeOnErrorTest(Callback[Throwable].trampolined)
   }
 
   test("Callback.forked is thread-safe onSuccess") { implicit sc =>
-    executeOnSuccessTest(Callback.forked, isForked = true)
+    executeOnSuccessTest(Callback[Throwable].forked, isForked = true)
   }
 
   test("Callback.forked is thread-safe onError") { implicit sc =>
-    executeOnErrorTest(Callback.forked, isForked = true)
+    executeOnErrorTest(Callback[Throwable].forked, isForked = true)
   }
 
   test("Callback.fromPromise is thread-safe onSuccess") { implicit sc =>
     val wrap = { (cb: Callback[Throwable, Int]) =>
       val p = Promise[Int]()
       p.future.onComplete(cb.apply)
-      Callback.fromPromise(p)
+      Callback[Throwable].fromPromise(p)
     }
     executeOnSuccessTest(wrap, isForked = true)
   }
@@ -79,18 +79,18 @@ object CallbackSafetyJVMSuite extends TestSuite[SchedulerService] with TestUtils
     val wrap = { (cb: Callback[Throwable, String]) =>
       val p = Promise[String]()
       p.future.onComplete(cb.apply)
-      Callback.fromPromise(p)
+      Callback[Throwable].fromPromise(p)
     }
     executeOnErrorTest(wrap, isForked = true)
   }
 
   test("Normal callback is not thread-safe via onSuccess") { implicit sc =>
-    val _ = intercept[AssertionException] { executeOnSuccessTest(x => x) }
+    intercept[AssertionException] { executeOnSuccessTest(x => x) }
     ()
   }
 
   test("Normal callback is not thread-safe via onError") { implicit sc =>
-    val _ = intercept[AssertionException] { executeOnErrorTest(x => x) }
+    intercept[AssertionException] { executeOnErrorTest(x => x) }
     ()
   }
 
@@ -101,7 +101,7 @@ object CallbackSafetyJVMSuite extends TestSuite[SchedulerService] with TestUtils
       val f = (r: Either[Throwable, Int]) => cb(r)
       Callback.fromAttempt(f)
     }
-    val _ = intercept[AssertionException] { executeOnSuccessTest(wrap, retries = RETRIES * 100) }
+    intercept[AssertionException] { executeOnSuccessTest(wrap, retries = RETRIES * 100) }
     ()
   }
 
@@ -112,7 +112,7 @@ object CallbackSafetyJVMSuite extends TestSuite[SchedulerService] with TestUtils
       val f = (r: Either[Throwable, String]) => cb(r)
       Callback.fromAttempt(f)
     }
-    val _ = intercept[AssertionException] { executeOnErrorTest(wrap, retries = RETRIES * 100) }
+    intercept[AssertionException] { executeOnErrorTest(wrap, retries = RETRIES * 100) }
     ()
   }
 
@@ -121,9 +121,9 @@ object CallbackSafetyJVMSuite extends TestSuite[SchedulerService] with TestUtils
 
     val wrap = { (cb: Callback[Throwable, Int]) =>
       val f = (r: Try[Int]) => cb(r)
-      Callback.fromTry(f)
+      Callback[Throwable].fromTry(f)
     }
-    val _ = intercept[AssertionException] { executeOnSuccessTest(wrap, retries = RETRIES * 100) }
+    intercept[AssertionException] { executeOnSuccessTest(wrap, retries = RETRIES * 100) }
     ()
   }
 
@@ -132,49 +132,49 @@ object CallbackSafetyJVMSuite extends TestSuite[SchedulerService] with TestUtils
 
     val wrap = { (cb: Callback[Throwable, String]) =>
       val f = (r: Try[String]) => cb(r)
-      Callback.fromTry(f)
+      Callback[Throwable].fromTry(f)
     }
-    val _ = intercept[AssertionException] { executeOnErrorTest(wrap, retries = RETRIES * 100) }
+    intercept[AssertionException] { executeOnErrorTest(wrap, retries = RETRIES * 100) }
     ()
   }
 
-  test("Callback.fromAttempt is quasi-safe via onSuccess") { _ =>
+  test("Callback.fromAttempt is quasi-safe via onSuccess") { implicit sc =>
     executeQuasiSafeOnSuccessTest { cb =>
       val f = (r: Either[Throwable, Int]) => cb(r)
       Callback.fromAttempt(f)
     }
   }
 
-  test("Callback.fromAttempt is quasi-safe via onError") { _ =>
+  test("Callback.fromAttempt is quasi-safe via onError") { implicit sc =>
     executeQuasiSafeOnFailureTest { cb =>
       val f = (r: Either[Throwable, Int]) => cb(r)
       Callback.fromAttempt(f)
     }
   }
 
-  test("Callback.fromTry is quasi-safe via onSuccess") { _ =>
+  test("Callback.fromTry is quasi-safe via onSuccess") { implicit sc =>
     executeQuasiSafeOnSuccessTest { cb =>
       val f = (r: Try[Int]) => cb(r)
       Callback.fromTry(f)
     }
   }
 
-  test("Callback.fromTry is quasi-safe via onError") { _ =>
+  test("Callback.fromTry is quasi-safe via onError") { implicit sc =>
     executeQuasiSafeOnFailureTest { cb =>
       val f = (r: Try[Int]) => cb(r)
       Callback.fromTry(f)
     }
   }
 
-  test("Normal callback is not quasi-safe via onSuccess") { _ =>
-    val _ = intercept[MiniTestException] {
+  test("Normal callback is not quasi-safe via onSuccess") { implicit sc =>
+    intercept[MiniTestException] {
       executeQuasiSafeOnSuccessTest(x => x)
     }
     ()
   }
 
-  test("Normal callback is not quasi-safe via onError") { _ =>
-    val _ = intercept[MiniTestException] {
+  test("Normal callback is not quasi-safe via onError") { implicit sc =>
+    intercept[MiniTestException] {
       executeQuasiSafeOnFailureTest(x => x)
     }
     ()
@@ -194,7 +194,7 @@ object CallbackSafetyJVMSuite extends TestSuite[SchedulerService] with TestUtils
       assert(tryTrigger(cb), "cb.tryOnSuccess(1)")
       assert(!tryTrigger(cb), "!cb.tryOnSuccess(1)")
 
-      val _ = intercept[CallbackCalledMultipleTimesException] { trigger(cb) }
+      intercept[CallbackCalledMultipleTimesException] { trigger(cb) }
       assertEquals(effect, 1)
     }
 
@@ -216,7 +216,7 @@ object CallbackSafetyJVMSuite extends TestSuite[SchedulerService] with TestUtils
 
       assert(tryTrigger(cb), "cb.tryOnError(1)")
       assert(!tryTrigger(cb), "!cb.tryOnError(1)")
-      val _ = intercept[CallbackCalledMultipleTimesException] { trigger(cb) }
+      intercept[CallbackCalledMultipleTimesException] { trigger(cb) }
       assertEquals(effect, 1)
     }
 
@@ -228,8 +228,7 @@ object CallbackSafetyJVMSuite extends TestSuite[SchedulerService] with TestUtils
   def executeOnSuccessTest(
     wrap: Callback[Throwable, Int] => Callback[Throwable, Int],
     isForked: Boolean = false,
-    retries: Int = RETRIES
-  )(implicit sc: Scheduler): Unit = {
+    retries: Int = RETRIES)(implicit sc: Scheduler): Unit = {
 
     def run(trigger: Callback[Throwable, Int] => Any): Unit = {
       for (_ <- 0 until retries) {
@@ -259,23 +258,19 @@ object CallbackSafetyJVMSuite extends TestSuite[SchedulerService] with TestUtils
 
     run(cb =>
       try cb.onSuccess(1)
-      catch { case _: CallbackCalledMultipleTimesException => () }
-    )
+      catch { case _: CallbackCalledMultipleTimesException => () })
     run(cb =>
       try cb(Right(1))
-      catch { case _: CallbackCalledMultipleTimesException => () }
-    )
+      catch { case _: CallbackCalledMultipleTimesException => () })
     run(cb =>
       try cb(Success(1))
-      catch { case _: CallbackCalledMultipleTimesException => () }
-    )
+      catch { case _: CallbackCalledMultipleTimesException => () })
   }
 
   def executeOnErrorTest(
     wrap: Callback[Throwable, String] => Callback[Throwable, String],
     isForked: Boolean = false,
-    retries: Int = RETRIES
-  )(implicit sc: Scheduler): Unit = {
+    retries: Int = RETRIES)(implicit sc: Scheduler): Unit = {
 
     def run(trigger: Callback[Throwable, String] => Any): Unit = {
       for (_ <- 0 until retries) {
@@ -302,16 +297,13 @@ object CallbackSafetyJVMSuite extends TestSuite[SchedulerService] with TestUtils
 
     run(cb =>
       try cb.onError(DUMMY)
-      catch { case _: CallbackCalledMultipleTimesException => () }
-    )
+      catch { case _: CallbackCalledMultipleTimesException => () })
     run(cb =>
       try cb.tryApply(Left(DUMMY))
-      catch { case _: CallbackCalledMultipleTimesException => () }
-    )
+      catch { case _: CallbackCalledMultipleTimesException => () })
     run(cb =>
       try cb.tryApply(Failure(DUMMY))
-      catch { case _: CallbackCalledMultipleTimesException => () }
-    )
+      catch { case _: CallbackCalledMultipleTimesException => () })
   }
 
   def runConcurrently(sc: Scheduler)(f: => Any): Unit = {
@@ -321,7 +313,7 @@ object CallbackSafetyJVMSuite extends TestSuite[SchedulerService] with TestUtils
     for (_ <- 0 until WORKERS) {
       sc.execute { () =>
         latchWorkersStart.countDown()
-        try { val _ = f; () }
+        try { f; () }
         finally latchWorkersFinished.countDown()
       }
     }

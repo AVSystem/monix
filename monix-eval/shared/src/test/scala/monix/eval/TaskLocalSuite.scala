@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,19 +16,17 @@
  */
 
 package monix.eval
-import scala.annotation.nowarn
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
 import minitest.SimpleTestSuite
-import monix.execution.{ BufferCapacity, Scheduler }
+import monix.execution.{BufferCapacity, Scheduler}
 import monix.execution.exceptions.DummyException
 import monix.execution.misc.Local
 import cats.implicits._
-import monix.catnap.{ ConcurrentChannel, ConsumerF }
+import monix.catnap.{ConcurrentChannel, ConsumerF}
 
-@nowarn
 object TaskLocalSuite extends SimpleTestSuite {
   implicit val ec: Scheduler = monix.execution.Scheduler.Implicits.global
   implicit val opts: Task.Options = Task.defaultOptions.enableLocalContextPropagation
@@ -178,7 +176,9 @@ object TaskLocalSuite extends SimpleTestSuite {
   testAsync("TaskLocals get restored in Task.create on error") {
     val dummy = DummyException("dummy")
     val task = Task.create[Int] { (_, cb) =>
-      ec.execute(() => cb.onError(dummy))
+      ec.execute(new Runnable {
+        def run() = cb.onError(dummy)
+      })
     }
 
     val t = for {
@@ -277,11 +277,12 @@ object TaskLocalSuite extends SimpleTestSuite {
       l: TaskLocal[String],
       ch: ConcurrentChannel[Task, Unit, Int]
     ) {
-      private def produceLoop(n: Int): Task[Unit] = if (n == 0) Task.unit
-      else
-        ch.push(n) >> l.read.flatMap { s =>
-          Task(assertEquals(s, "producer"))
-        } >> produceLoop(n - 1)
+      private[this] def produceLoop(n: Int): Task[Unit] =
+        if (n == 0) Task.unit
+        else
+          ch.push(n) >> l.read.flatMap { s =>
+            Task(assertEquals(s, "producer"))
+          } >> produceLoop(n - 1)
 
       def produce: Task[Unit] =
         for {
@@ -307,8 +308,7 @@ object TaskLocalSuite extends SimpleTestSuite {
       ch <- ConcurrentChannel[Task].withConfig[Unit, Int](
         ConsumerF.Config(
           capacity = BufferCapacity.Bounded(bufferSize).some
-        )
-      )
+        ))
       test = new Test(tl, ch)
       _ <- TaskLocal.isolate(test.produce) &> TaskLocal.isolate(test.consume)
     } yield ()

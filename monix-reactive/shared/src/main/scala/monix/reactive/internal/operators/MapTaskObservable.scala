@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +23,7 @@ import monix.execution.atomic.Atomic
 import monix.execution.atomic.PaddingStrategy.LeftRight128
 
 import scala.util.control.NonFatal
-import monix.execution.{ Ack, Cancelable, Scheduler }
+import monix.execution.{Ack, Cancelable, Scheduler}
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
 
@@ -84,13 +84,13 @@ private[reactive] final class MapTaskObservable[A, B](source: Observable[A], f: 
 
     // For synchronizing our internal state machine, padded
     // in order to avoid the false sharing problem
-    private val stateRef =
+    private[this] val stateRef =
       Atomic.withPadding(WaitOnNext: MapTaskState, LeftRight128)
 
     // Boolean for keeping the `isActive` state, needed because we could miss
     // out on seeing a `Cancelled` state due to the `lazySet` instructions,
     // making the visibility of the `Cancelled` state thread-unsafe!
-    private val isActive = Atomic(true)
+    private[this] val isActive = Atomic(true)
 
     /** For canceling the current active task, in case there is any. Here
       * we can afford a `compareAndSet`, not being a big deal since
@@ -224,7 +224,7 @@ private[reactive] final class MapTaskObservable[A, B](source: Observable[A], f: 
 
     // Reusable function reference, to prevent creating a new instance
     // on each `onNext` / `transformWith` call below
-    private val childOnSuccess = (value: B) => {
+    private[this] val childOnSuccess = (value: B) => {
       // Shoot first, ask questions later :-)
       val next = out.onNext(value)
 
@@ -257,7 +257,7 @@ private[reactive] final class MapTaskObservable[A, B](source: Observable[A], f: 
 
     // Reusable function reference, to prevent creating a new instance
     // on each `onNext` / `transformWith` call below
-    private val childOnError = (error: Throwable) => {
+    private[this] val childOnError = (error: Throwable) => {
       // The cancelable passed in WaitComplete here can be `null`
       // because it would only replace the child's own cancelable
       stateRef.getAndSet(WaitComplete(Some(error), null)) match {
@@ -351,9 +351,8 @@ private[reactive] final class MapTaskObservable[A, B](source: Observable[A], f: 
         new IllegalStateException(
           s"State $state in the Monix MapTask.$method implementation is invalid, " +
             "due to either a broken Subscriber implementation, or a bug, " +
-            "please open an issue, see: https://monix.io"
-        )
-      )
+            s"please open an issue, see: https://monix.io. Executed function: $f"
+        ))
       // $COVERAGE-ON$
     }
   }

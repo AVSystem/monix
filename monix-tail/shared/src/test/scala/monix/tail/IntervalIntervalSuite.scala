@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,7 @@
 
 package monix.tail
 
-import cats.effect.{ IO, Timer }
+import cats.effect.{IO, Timer}
 import monix.eval.Task
 
 import scala.util.Success
@@ -177,8 +177,7 @@ object IntervalIntervalSuite extends BaseTestSuite {
       .mapEval(e =>
         timer.sleep(100.millis).map { _ =>
           effect += 1; e
-        }
-      )
+        })
       .take(3)
       .toListL
       .unsafeToFuture()
@@ -231,8 +230,7 @@ object IntervalIntervalSuite extends BaseTestSuite {
       .mapEval(e =>
         timer.sleep(100.millis).map { _ =>
           effect += 1; e
-        }
-      )
+        })
       .take(3)
       .toListL
       .unsafeToFuture()
@@ -286,8 +284,7 @@ object IntervalIntervalSuite extends BaseTestSuite {
       .mapEval(e =>
         timer.sleep(2.seconds).map { _ =>
           effect += 1; e
-        }
-      )
+        })
       .take(3)
       .toListL
       .unsafeToFuture()

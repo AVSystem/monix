@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +29,8 @@ private[monix] abstract class GenericSemaphore[CancelToken] protected (provision
   import GenericSemaphore.State
   require(provisioned >= 0, "provisioned >= 0")
 
-  private val stateRef = AtomicAny.withPadding(GenericSemaphore.initialState(provisioned), ps)
+  private[this] val stateRef =
+    AtomicAny.withPadding(GenericSemaphore.initialState(provisioned), ps)
 
   protected def emptyCancelable: CancelToken
   protected def makeCancelable(f: Listener[Unit] => Unit, p: Listener[Unit]): CancelToken
@@ -186,7 +187,7 @@ private[monix] abstract class GenericSemaphore[CancelToken] protected (provision
     while (cursor.hasNext) cursor.next().apply(Constants.eitherOfUnit)
   }
 
-  private val cancelAwaitRelease: (Listener[Unit] => Unit) = {
+  private[this] val cancelAwaitRelease: (Listener[Unit] => Unit) = {
     @tailrec def loop(p: Listener[Unit]): Unit = {
       val current: State = stateRef.get()
       val update = current.removeAwaitReleaseRef(p)
@@ -196,7 +197,7 @@ private[monix] abstract class GenericSemaphore[CancelToken] protected (provision
     loop
   }
 
-  private def cancelAcquisition(n: Long, isAsync: Boolean): (Listener[Unit] => Unit) = {
+  private[this] def cancelAcquisition(n: Long, isAsync: Boolean): (Listener[Unit] => Unit) = {
     @tailrec def loop(permit: Listener[Unit]): Unit = {
       val current: State = stateRef.get()
 
@@ -229,8 +230,7 @@ private[monix] object GenericSemaphore {
   private final case class State(
     available: Long,
     awaitPermits: Queue[(Long, Listener[Unit])],
-    awaitReleases: List[(Long, Listener[Unit])]
-  ) {
+    awaitReleases: List[(Long, Listener[Unit])]) {
 
     def count: Long = {
       if (available > 0) available

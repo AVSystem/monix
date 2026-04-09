@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,18 +18,18 @@
 package monix.catnap
 
 import cats.implicits._
-import cats.effect.{ Concurrent, ContextShift, Resource }
+import cats.effect.{Concurrent, ContextShift, Resource}
 import monix.catnap.internal.QueueHelpers
-import monix.execution.BufferCapacity.{ Bounded, Unbounded }
-import monix.execution.ChannelType.{ MultiConsumer, MultiProducer }
-import monix.execution.annotations.{ UnsafeBecauseImpure, UnsafeProtocol }
+import monix.execution.BufferCapacity.{Bounded, Unbounded}
+import monix.execution.ChannelType.{MultiConsumer, MultiProducer}
+import monix.execution.annotations.{UnsafeBecauseImpure, UnsafeProtocol}
 import monix.execution.atomic.AtomicAny
 import monix.execution.atomic.PaddingStrategy.LeftRight128
-import monix.execution.internal.collection.{ LowLevelConcurrentQueue => LowLevelQueue }
-import monix.execution.internal.{ Constants, Platform }
-import monix.execution.{ CancelablePromise, ChannelType }
+import monix.execution.internal.collection.{LowLevelConcurrentQueue => LowLevelQueue}
+import monix.execution.internal.{Constants, Platform}
+import monix.execution.{CancelablePromise, ChannelType}
 
-import scala.annotation.{ switch, tailrec }
+import scala.annotation.{switch, tailrec}
 import scala.collection.mutable.ArrayBuffer
 
 /**
@@ -401,7 +401,7 @@ final class ConcurrentChannel[F[_], E, A] private (
     *      created consumer
     */
   def consume: Resource[F, ConsumerF[F, E, A]] = consumeRef
-  private val consumeRef = consumeWithConfig(defaultConsumerConfig)
+  private[this] val consumeRef = consumeWithConfig(defaultConsumerConfig)
 
   /** Version of [[consume]] that allows for fine tuning the underlying
     * buffer used.
@@ -497,8 +497,8 @@ final class ConcurrentChannel[F[_], E, A] private (
         helpers.stopF
     }
 
-  private val helpers = new Helpers[F]
-  private val isFinished = () =>
+  private[this] val helpers = new Helpers[F]
+  private[this] val isFinished = () =>
     state.get() match {
       case Halt(e) => Some(e)
       case _ => None
@@ -640,7 +640,8 @@ object ConcurrentChannel {
   private object State {
     def empty[F[_], E, A]: State[F, E, A] =
       emptyRef.asInstanceOf[State[F, E, A]]
-    private val emptyRef = Connected[cats.Id, Any, Any](Set.empty, null)
+    private[this] val emptyRef =
+      Connected[cats.Id, Any, Any](Set.empty, null)
   }
 
   private type Ack = Int
@@ -676,7 +677,7 @@ object ConcurrentChannel {
     triggerBroadcastR(refs, f, helpers.unitTest, F.unit, F.unit)
   }
 
-  private def triggerBroadcastR[F[_], E, A, R](
+  private[this] def triggerBroadcastR[F[_], E, A, R](
     refs: Array[ChanProducer[F, E, A]],
     f: ChanProducer[F, E, A] => F[R],
     canContinue: R => Boolean,
@@ -716,10 +717,10 @@ object ConcurrentChannel {
     consumersAwait: AtomicAny[CancelablePromise[Unit]],
     isFinished: () => Option[E],
     helpers: Helpers[F]
-  )(implicit F: Concurrent[F]) {
+  )(implicit F: Concurrent[F], cs: ContextShift[F]) {
 
     @tailrec
-    private def notifyConsumers(): Unit = {
+    private[this] def notifyConsumers(): Unit = {
       // N.B. in case the queue is single-producer, this is a full memory fence
       // meant to prevent the re-ordering of `queue.offer` with `consumersAwait.get`
       queue.fenceOffer()
@@ -776,8 +777,7 @@ object ConcurrentChannel {
         if (!hasCapacity) {
           assert(producersAwait ne null, "producersAwait ne null (Bug!)")
           val offerWait = F.asyncF[Ack](cb =>
-            helpers.sleepThenRepeat(producersAwait, () => tryPushToOurQueue(elem), pushFilter, pushManyMap, cb)
-          )
+            helpers.sleepThenRepeat(producersAwait, () => tryPushToOurQueue(elem), pushFilter, pushManyMap, cb))
           offerWait.flatMap {
             case Continue => loop(cursor)
             case Stop => helpers.stopF
@@ -796,12 +796,11 @@ object ConcurrentChannel {
     producersAwait: AtomicAny[CancelablePromise[Unit]],
     consumersAwait: AtomicAny[CancelablePromise[Unit]],
     isFinished: () => Option[E],
-    helpers: Helpers[F]
-  )(implicit F: Concurrent[F])
+    helpers: Helpers[F])(implicit F: Concurrent[F], cs: ContextShift[F])
     extends ConsumerF[F, E, A] {
 
     @tailrec
-    private def notifyProducers(): Unit =
+    private[this] def notifyProducers(): Unit =
       if (producersAwait ne null) {
         // N.B. in case this isn't a multi-consumer queue, this generates a
         // full memory fence in order to prevent the re-ordering of queue.poll()
@@ -820,7 +819,7 @@ object ConcurrentChannel {
       }
 
     def pull: F[Either[E, A]] = pullRef
-    private val pullRef: F[Either[E, A]] = {
+    private[this] val pullRef: F[Either[E, A]] = {
       def end(e: E): Either[E, A] = {
         // Ensures a memory barrier (if needed for the queue's type) that prevents
         // the reordering of queue.poll with the previous state.get, from the
@@ -858,8 +857,7 @@ object ConcurrentChannel {
                 pullFilter,
                 pullMap.asInstanceOf[Either[E, A] => Either[E, A]],
                 cb
-              )
-            )
+              ))
           case value =>
             F.pure(value)
         }
@@ -923,8 +921,7 @@ object ConcurrentChannel {
                   pullFilter,
                   pullMap.asInstanceOf[Either[E, Seq[A]] => Either[E, Seq[A]]],
                   cb
-                )
-              )
+                ))
           }
       }
     }

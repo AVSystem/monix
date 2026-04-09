@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,17 +18,16 @@
 package monix.reactive.observers.buffers
 
 import monix.eval.Coeval
-import monix.execution.Ack
-import monix.execution.Ack.{ Continue, Stop }
-import monix.execution.Scheduler
-import monix.execution.internal.collection.{ JSArrayQueue, _ }
+import monix.execution.{Ack, Scheduler}
+import monix.execution.Ack.{Continue, Stop}
+import monix.execution.internal.collection.{JSArrayQueue, _}
 
 import scala.util.control.NonFatal
 import monix.execution.exceptions.BufferOverflowException
-import monix.reactive.observers.{ BufferedSubscriber, Subscriber }
+import monix.reactive.observers.{BufferedSubscriber, Subscriber}
 
 import scala.concurrent.Future
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 /** A [[BufferedSubscriber]] implementation for the
   * [[monix.reactive.OverflowStrategy.DropNew DropNew]] overflow strategy.
@@ -36,24 +35,24 @@ import scala.util.{ Failure, Success }
 private[observers] final class SyncBufferedSubscriber[-A] private (
   out: Subscriber[A],
   queue: EvictingQueue[A],
-  onOverflow: Long => Coeval[Option[A]] /*| Null*/,
-) extends BufferedSubscriber[A] with Subscriber.Sync[A] {
+  onOverflow: Long => Coeval[Option[A]] = null)
+  extends BufferedSubscriber[A] with Subscriber.Sync[A] {
 
   implicit val scheduler: Scheduler = out.scheduler
   // to be modified only in onError, before upstreamIsComplete
-  private var errorThrown: Throwable = null.asInstanceOf[Throwable]
+  private[this] var errorThrown: Throwable = _
   // to be modified only in onError / onComplete
-  private var upstreamIsComplete = false
+  private[this] var upstreamIsComplete = false
   // to be modified only by consumer
-  private var downstreamIsComplete = false
+  private[this] var downstreamIsComplete = false
   // represents an indicator that there's a loop in progress
-  private var isLoopActive = false
+  private[this] var isLoopActive = false
   // events being dropped
-  private var droppedCount = 0L
+  private[this] var droppedCount = 0L
   // last acknowledgement received by consumer loop
-  private var lastIterationAck: Future[Ack] = Continue
+  private[this] var lastIterationAck: Future[Ack] = Continue
   // Used on the consumer side to split big synchronous workloads in batches
-  private val em = scheduler.executionModel
+  private[this] val em = scheduler.executionModel
 
   def onNext(elem: A): Ack = {
     if (!upstreamIsComplete && !downstreamIsComplete) {
@@ -95,7 +94,7 @@ private[observers] final class SyncBufferedSubscriber[-A] private (
       scheduler.execute(consumerRunLoop)
     }
 
-  private val consumerRunLoop = new Runnable {
+  private[this] val consumerRunLoop = new Runnable {
     def run(): Unit = {
       fastLoop(lastIterationAck, 0)
     }
@@ -123,7 +122,7 @@ private[observers] final class SyncBufferedSubscriber[-A] private (
           Stop
       }
 
-    private def downstreamSignalComplete(ex: Throwable /* | Null*/ ): Unit = {
+    private def downstreamSignalComplete(ex: Throwable = null): Unit = {
       downstreamIsComplete = true
       try {
         if (ex != null) out.onError(ex)
@@ -258,15 +257,11 @@ private[monix] object SyncBufferedSubscriber {
     */
   def bounded[A](underlying: Subscriber[A], bufferSize: Int): Subscriber.Sync[A] = {
     require(bufferSize > 1, "bufferSize must be strictly higher than 1")
-    val buffer = JSArrayQueue.bounded[A](
-      bufferSize,
-      _ => {
-        BufferOverflowException(
-          s"Downstream observer is too slow, buffer over capacity with a " +
-            s"specified buffer size of $bufferSize"
-        )
-      }
-    )
+    val buffer = JSArrayQueue.bounded[A](bufferSize, _ => {
+      BufferOverflowException(
+        s"Downstream observer is too slow, buffer over capacity with a " +
+          s"specified buffer size of $bufferSize")
+    })
 
     new SyncBufferedSubscriber[A](underlying, buffer, null)
   }
@@ -290,8 +285,7 @@ private[monix] object SyncBufferedSubscriber {
   def dropNewAndSignal[A](
     underlying: Subscriber[A],
     bufferSize: Int,
-    onOverflow: Long => Coeval[Option[A]]
-  ): Subscriber.Sync[A] = {
+    onOverflow: Long => Coeval[Option[A]]): Subscriber.Sync[A] = {
     require(bufferSize > 1, "bufferSize must be strictly higher than 1")
     val buffer = JSArrayQueue.bounded[A](bufferSize)
     new SyncBufferedSubscriber[A](underlying, buffer, onOverflow)
@@ -317,8 +311,7 @@ private[monix] object SyncBufferedSubscriber {
   def dropOldAndSignal[A](
     underlying: Subscriber[A],
     bufferSize: Int,
-    onOverflow: Long => Coeval[Option[A]]
-  ): Subscriber.Sync[A] = {
+    onOverflow: Long => Coeval[Option[A]]): Subscriber.Sync[A] = {
     require(bufferSize > 1, "bufferSize must be strictly higher than 1")
     val buffer = DropHeadOnOverflowQueue[AnyRef](bufferSize).asInstanceOf[EvictingQueue[A]]
     new SyncBufferedSubscriber[A](underlying, buffer, onOverflow)
@@ -344,8 +337,7 @@ private[monix] object SyncBufferedSubscriber {
   def clearBufferAndSignal[A](
     underlying: Subscriber[A],
     bufferSize: Int,
-    onOverflow: Long => Coeval[Option[A]]
-  ): Subscriber.Sync[A] = {
+    onOverflow: Long => Coeval[Option[A]]): Subscriber.Sync[A] = {
     require(bufferSize > 1, "bufferSize must be strictly higher than 1")
     val buffer = DropAllOnOverflowQueue[AnyRef](bufferSize).asInstanceOf[EvictingQueue[A]]
     new SyncBufferedSubscriber[A](underlying, buffer, onOverflow)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,24 +18,25 @@
 package monix.reactive.internal.operators
 
 import monix.execution.Ack.Continue
-import monix.execution.{ Ack, Cancelable, Scheduler }
+import monix.execution.{Ack, Cancelable, Scheduler}
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
+
 import scala.concurrent.Future
 
 private[reactive] final class IntersperseObservable[+A](
   source: Observable[A],
   start: Option[A],
   separator: A,
-  end: Option[A]
-) extends Observable[A] { self =>
+  end: Option[A])
+  extends Observable[A] { self =>
 
   override def unsafeSubscribeFn(out: Subscriber[A]): Cancelable = {
     val upstream = source.unsafeSubscribeFn(new Subscriber[A] {
       implicit val scheduler: Scheduler = out.scheduler
 
-      private var atLeastOne = false
-      private var downstreamAck = Continue: Future[Ack]
+      private[this] var atLeastOne = false
+      private[this] var downstreamAck = Continue: Future[Ack]
 
       override def onNext(elem: A): Future[Ack] = {
         downstreamAck = if (!atLeastOne) {
@@ -54,16 +55,16 @@ private[reactive] final class IntersperseObservable[+A](
       }
 
       def onError(ex: Throwable) = {
-        val _ = downstreamAck.syncOnContinue(out.onError(ex))
+        downstreamAck.syncOnContinue(out.onError(ex))
+        ()
       }
 
       def onComplete() = {
-        val _ = downstreamAck.syncOnContinue {
-          if (atLeastOne && end.nonEmpty) {
-            val _ = out.onNext(end.get)
-          }
+        downstreamAck.syncOnContinue {
+          if (atLeastOne && end.nonEmpty) out.onNext(end.get)
           out.onComplete()
         }
+        ()
       }
     })
 

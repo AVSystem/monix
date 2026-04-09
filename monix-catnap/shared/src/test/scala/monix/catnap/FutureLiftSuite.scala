@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,18 +16,16 @@
  */
 
 package monix.catnap
-import scala.annotation.nowarn
 
-import cats.effect.{ Async, ContextShift, IO }
+import cats.effect.{Async, ContextShift, IO}
 import minitest.TestSuite
 import monix.catnap.syntax._
 import monix.execution.exceptions.DummyException
 import monix.execution.schedulers.TestScheduler
-import monix.execution.{ Cancelable, CancelableFuture }
-import scala.concurrent.{ Future, Promise }
-import scala.util.{ Failure, Success }
+import monix.execution.{Cancelable, CancelableFuture}
+import scala.concurrent.{Future, Promise}
+import scala.util.{Failure, Success}
 
-@nowarn
 object FutureLiftSuite extends TestSuite[TestScheduler] {
   def setup() = TestScheduler()
   def tearDown(env: TestScheduler): Unit =
@@ -108,12 +106,9 @@ object FutureLiftSuite extends TestSuite[TestScheduler] {
 
   test("F.delay(future).futureLift for Concurrent[F] data types") { implicit s =>
     var wasCanceled = 0
-    val io = IO(CancelableFuture[Int](
-      CancelableFuture.never,
-      Cancelable { () =>
-        wasCanceled += 1
-      }
-    )).futureLift
+    val io = IO(CancelableFuture[Int](CancelableFuture.never, Cancelable { () =>
+      wasCanceled += 1
+    })).futureLift
 
     val p = Promise[Int]()
     val token = io.unsafeRunCancelable {
@@ -131,14 +126,10 @@ object FutureLiftSuite extends TestSuite[TestScheduler] {
     val source = Promise[Int]()
     val io = FutureLift[IO, CancelableFuture].apply(
       IO(
-        CancelableFuture[Int](
-          source.future,
-          Cancelable { () =>
-            wasCanceled += 1
-          }
-        )
-      )
-    )
+        CancelableFuture[Int](source.future, Cancelable { () =>
+          wasCanceled += 1
+        })
+      ))
 
     val p = Promise[Int]()
     val token = io.unsafeRunCancelable {
@@ -167,14 +158,10 @@ object FutureLiftSuite extends TestSuite[TestScheduler] {
     def mkInstance[F[_]](implicit F: Async[F]): F[Int] =
       FutureLift[F, CancelableFuture].apply(
         F.delay(
-          CancelableFuture[Int](
-            source.future,
-            Cancelable { () =>
-              wasCanceled += 1
-            }
-          )
-        )
-      )
+          CancelableFuture[Int](source.future, Cancelable { () =>
+            wasCanceled += 1
+          })
+        ))
 
     val io = mkInstance[IO]
     val p = Promise[Int]()

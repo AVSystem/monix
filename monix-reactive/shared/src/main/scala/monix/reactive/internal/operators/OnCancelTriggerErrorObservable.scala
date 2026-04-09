@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +17,8 @@
 
 package monix.reactive.internal.operators
 
-import monix.execution.Ack.{ Continue, Stop }
-import monix.execution.{ Ack, Cancelable }
-import monix.execution.Scheduler
+import monix.execution.Ack.{Continue, Stop}
+import monix.execution.{Ack, Cancelable, Scheduler}
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
 
@@ -31,7 +30,7 @@ private[reactive] final class OnCancelTriggerErrorObservable[A](source: Observab
   def unsafeSubscribeFn(downstream: Subscriber[A]): Cancelable = {
     val out: Subscriber[A] = new Subscriber[A] { self =>
       implicit val scheduler: Scheduler = downstream.scheduler
-      private var isDone = false
+      private[this] var isDone = false
 
       def onNext(elem: A): Future[Ack] =
         self.synchronized {
@@ -71,7 +70,7 @@ private[reactive] final class OnCancelTriggerErrorObservable[A](source: Observab
             Stop
           }
         } else {
-          ack.onComplete(_ => self.synchronized(stopStreamOnCancel(ack)))
+          ack.onComplete(result => self.synchronized(stopStreamOnCancel(ack)))
           ack
         }
       }

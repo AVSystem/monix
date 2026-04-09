@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,6 @@
  */
 
 package monix.eval
-import scala.annotation.nowarn
 
 import minitest.SimpleTestSuite
 import monix.eval.Task.Options
@@ -24,17 +23,16 @@ import monix.execution.Callback
 import monix.execution.Scheduler.Implicits.global
 import scala.concurrent.Promise
 
-@nowarn
 object TaskOptionsSuite extends SimpleTestSuite {
   implicit val opts: Options = Task.defaultOptions.enableLocalContextPropagation
 
-  def extractOptions: Task[Options] =
+  def extractOptions[A](fa: Task[A]): Task[Options] =
     Task.Async { (ctx, cb) =>
       cb.onSuccess(ctx.options)
     }
 
   testAsync("change options with future") {
-    val task = extractOptions.map { r =>
+    val task = extractOptions(Task.now(1)).map { r =>
       assertEquals(r, opts)
     }
     task.runToFutureOpt
@@ -42,7 +40,7 @@ object TaskOptionsSuite extends SimpleTestSuite {
 
   testAsync("change options with callback") {
     val p = Promise[Options]()
-    extractOptions.runAsyncOpt(Callback.fromPromise(p))
+    extractOptions(Task.now(1)).runAsyncOpt(Callback.fromPromise(p))
 
     for (r <- p.future) yield {
       assertEquals(r, opts)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,14 +18,15 @@
 package monix.execution
 
 import monix.execution.atomic.PaddingStrategy.NoPadding
+import monix.execution.internal.Platform
 import monix.execution.internal.exceptions.matchError
-import monix.execution.atomic.{ AtomicAny, PaddingStrategy }
+import monix.execution.atomic.{AtomicAny, PaddingStrategy}
 
 import scala.annotation.tailrec
 import scala.collection.immutable.LongMap
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.Promise
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 /**
@@ -187,13 +188,13 @@ object CancelablePromise {
     // States:
     //  - Try[A]: completed with a result
     //  - MapQueue: listeners queue
-    private val state = AtomicAny.withPadding[AnyRef](emptyMapQueue, ps)
+    private[this] val state = AtomicAny.withPadding[AnyRef](emptyMapQueue, ps)
 
     override def subscribe(cb: Try[A] => Unit): Cancelable =
       unsafeSubscribe(cb)
 
     override def isCompleted: Boolean =
-      state.get().isInstanceOf[Try[Any]]
+      state.get().isInstanceOf[Try[_]]
 
     override def future: CancelableFuture[A] =
       state.get() match {
@@ -211,7 +212,7 @@ object CancelablePromise {
         case other =>
           // $COVERAGE-OFF$
           matchError(other)
-        // $COVERAGE-ON$
+          // $COVERAGE-ON$
       }
 
     @tailrec
@@ -241,11 +242,8 @@ object CancelablePromise {
             }
             if (errors ne null) {
               // Throws all errors as a composite
-              val errorList = errors.toList
-              val x = errorList.head
-              val xs = errorList.tail
-              xs.foreach(e => if (e ne x) x.addSuppressed(e))
-              throw x
+              val x :: xs = errors.toList
+              throw Platform.composeErrors(x, xs: _*)
             }
             true
           }
@@ -264,7 +262,7 @@ object CancelablePromise {
         case other =>
           // $COVERAGE-OFF$
           matchError(other)
-        // $COVERAGE-ON$
+          // $COVERAGE-ON$
       }
 
     @tailrec def unsafeSubscribe(cb: AnyRef): Cancelable =
@@ -281,13 +279,13 @@ object CancelablePromise {
         case other =>
           // $COVERAGE-OFF$
           matchError(other)
-        // $COVERAGE-ON$
+          // $COVERAGE-ON$
       }
 
     private final class IdCancelable(id: Long) extends Cancelable {
       @tailrec def cancel(): Unit =
         state.get() match {
-          case queue: MapQueue[Any] =>
+          case queue: MapQueue[_] =>
             if (!state.compareAndSet(queue, queue.dequeue(id)))
               cancel()
           case _ =>
@@ -308,6 +306,6 @@ object CancelablePromise {
       map.valuesIterator
   }
 
-  private val emptyMapQueue: MapQueue[Nothing] =
+  private[this] val emptyMapQueue: MapQueue[Nothing] =
     MapQueue(LongMap.empty, 0)
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,12 +17,11 @@
 
 package monix.reactive.subjects
 
-import monix.execution.Ack.{ Continue, Stop }
-import monix.execution.{ Ack, Cancelable }
-import monix.execution.Scheduler
+import monix.execution.Ack.{Continue, Stop}
+import monix.execution.{Ack, Cancelable, Scheduler}
 import monix.reactive.Observable
 import monix.reactive.internal.util.PromiseCounter
-import monix.reactive.observers.{ ConnectableSubscriber, Subscriber }
+import monix.reactive.observers.{ConnectableSubscriber, Subscriber}
 import monix.execution.atomic.Atomic
 
 import scala.util.control.NonFatal
@@ -35,7 +34,7 @@ import scala.concurrent.Future
   */
 final class ReplaySubject[A] private (initialState: ReplaySubject.State[A]) extends Subject[A, A] { self =>
 
-  private val stateRef = Atomic(initialState)
+  private[this] val stateRef = Atomic(initialState)
 
   def size: Int =
     stateRef.get().subscribers.size
@@ -75,7 +74,7 @@ final class ReplaySubject[A] private (initialState: ReplaySubject.State[A]) exte
 
           import subscriber.scheduler
           val connecting = c.connect()
-          val _ = connecting.syncOnStopOrFailure(_ => removeSubscriber(c))
+          connecting.syncOnStopOrFailure(_ => removeSubscriber(c))
 
           Cancelable { () =>
             try removeSubscriber(c)
@@ -216,7 +215,7 @@ object ReplaySubject {
   def createLimited[A](capacity: Int, initial: Seq[A]): ReplaySubject[A] = {
     require(capacity > 0, "capacity must be strictly positive")
     val elems = initial.takeRight(capacity)
-    new ReplaySubject[A](State[A](Queue(elems*), capacity))
+    new ReplaySubject[A](State[A](Queue(elems: _*), capacity))
   }
 
   /** Internal state for [[monix.reactive.subjects.ReplaySubject]] */
@@ -226,8 +225,7 @@ object ReplaySubject {
     subscribers: Set[ConnectableSubscriber[A]] = Set.empty[ConnectableSubscriber[A]],
     length: Int = 0,
     isDone: Boolean = false,
-    errorThrown: Throwable = null
-  ) {
+    errorThrown: Throwable = null) {
 
     def appendElem(elem: A): State[A] = {
       if (capacity == 0)

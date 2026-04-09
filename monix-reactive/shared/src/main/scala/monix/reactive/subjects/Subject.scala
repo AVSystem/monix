@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,8 +23,8 @@ import monix.execution.cancelables.SingleAssignCancelable
 import monix.execution.internal.Platform
 import monix.reactive.instances.CatsProfunctorForSubject
 import monix.reactive.observers.Subscriber
-import monix.reactive.{ Observable, Observer }
-import org.reactivestreams.{ Processor => RProcessor, Subscriber => RSubscriber, Subscription }
+import monix.reactive.{Observable, Observer}
+import org.reactivestreams.{Subscription, Processor => RProcessor, Subscriber => RSubscriber}
 
 /** A `Subject` is a sort of bridge or proxy that acts both as an
   * [[Observer]] and as an [[Observable]] and that must respect
@@ -66,10 +66,10 @@ object Subject {
     */
   def toReactiveProcessor[I, O](source: Subject[I, O], bufferSize: Int)(implicit s: Scheduler): RProcessor[I, O] = {
     new RProcessor[I, O] {
-      private val subscriber: RSubscriber[I] =
+      private[this] val subscriber: RSubscriber[I] =
         Subscriber(source, s).toReactive(bufferSize)
 
-      def subscribe(subscriber: RSubscriber[? >: O]): Unit = {
+      def subscribe(subscriber: RSubscriber[_ >: O]): Unit = {
         val sub = SingleAssignCancelable()
         sub := source.unsafeSubscribeFn(Subscriber.fromReactiveSubscriber(subscriber, sub))
         ()

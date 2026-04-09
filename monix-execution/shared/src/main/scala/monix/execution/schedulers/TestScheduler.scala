@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,12 +19,13 @@ package monix.execution
 package schedulers
 
 import monix.execution.atomic.AtomicAny
+import monix.execution.cancelables.SingleAssignCancelable
 import scala.util.control.NonFatal
 import monix.execution.schedulers.TestScheduler._
 
 import scala.annotation.tailrec
 import scala.collection.immutable.SortedSet
-import scala.concurrent.duration.{ Duration, FiniteDuration, TimeUnit }
+import scala.concurrent.duration.{Duration, FiniteDuration, TimeUnit}
 import scala.util.Random
 
 /** [[Scheduler]] and a provider of `cats.effect.Timer` instances,
@@ -125,9 +126,9 @@ import scala.util.Random
   * }}}
   */
 final class TestScheduler private (
-  private val stateRef: AtomicAny[State],
-  override val executionModel: ExecutionModel
-) extends ReferenceScheduler with BatchingScheduler {
+  private[this] val stateRef: AtomicAny[State],
+  override val executionModel: ExecutionModel)
+  extends ReferenceScheduler with BatchingScheduler {
 
   /**
     * Returns the internal state of the `TestScheduler`, useful for testing
@@ -337,8 +338,7 @@ object TestScheduler {
         clock = Duration.Zero,
         tasks = SortedSet.empty[Task],
         lastReportedError = null
-      )
-    )
+      ))
 
     new TestScheduler(state, executionModel)
   }
@@ -387,13 +387,13 @@ object TestScheduler {
     state: State,
     delay: FiniteDuration,
     r: Runnable,
-    cancelTask: Task => Unit
-  ): (Cancelable, State) = {
+    cancelTask: Task => Unit): (Cancelable, State) = {
     // $COVERAGE-OFF$
     require(delay >= Duration.Zero, "The given delay must be positive")
     // $COVERAGE-ON$
 
     val newID = state.lastID + 1
+    SingleAssignCancelable()
     val task = Task(newID, r, state.clock + delay)
     val cancelable = new Cancelable {
       def cancel(): Unit = cancelTask(task)
@@ -409,7 +409,6 @@ object TestScheduler {
       state.copy(
         lastID = newID,
         tasks = state.tasks + task
-      )
-    )
+      ))
   }
 }

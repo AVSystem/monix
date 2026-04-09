@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,21 +18,20 @@
 package monix.reactive.internal.operators
 
 import java.util.concurrent.TimeUnit
-
-import monix.execution.Ack.{ Continue, Stop }
-import monix.execution.cancelables.{ CompositeCancelable, MultiAssignCancelable, SingleAssignCancelable }
-import monix.execution.{ Ack, Cancelable, Scheduler }
+import monix.execution.Ack.{Continue, Stop}
+import monix.execution.cancelables.{CompositeCancelable, MultiAssignCancelable, SingleAssignCancelable}
+import monix.execution.{Ack, Cancelable, Scheduler}
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
 
 import scala.concurrent.Future
-import scala.concurrent.duration.{ FiniteDuration, MILLISECONDS }
+import scala.concurrent.duration.{FiniteDuration, MILLISECONDS}
 import scala.util.Success
 
 private[reactive] final class EchoObservable[+A](source: Observable[A], timeout: FiniteDuration, onlyOnce: Boolean)
   extends Observable[A] {
 
-  private val timeoutMillis = timeout.toMillis
+  private[this] val timeoutMillis = timeout.toMillis
 
   def unsafeSubscribeFn(out: Subscriber[A]): Cancelable = {
     val task = MultiAssignCancelable()
@@ -42,11 +41,11 @@ private[reactive] final class EchoObservable[+A](source: Observable[A], timeout:
     mainTask := source.unsafeSubscribeFn(new Subscriber[A] with Runnable { self =>
       implicit val scheduler: Scheduler = out.scheduler
 
-      private var ack: Future[Ack] = Continue
-      private var lastEvent: A = null.asInstanceOf[A]
-      private var lastTSInMillis: Long = 0L
-      private var isDone = false
-      private var hasValue = false
+      private[this] var ack: Future[Ack] = Continue
+      private[this] var lastEvent: A = _
+      private[this] var lastTSInMillis: Long = 0L
+      private[this] var isDone = false
+      private[this] var hasValue = false
 
       locally {
         scheduleNext(timeoutMillis)

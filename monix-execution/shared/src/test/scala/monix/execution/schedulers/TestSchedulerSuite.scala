@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,7 @@
 
 package monix.execution.schedulers
 
-import java.util.concurrent.{ TimeUnit, TimeoutException }
+import java.util.concurrent.{TimeUnit, TimeoutException}
 
 import minitest.TestSuite
 import monix.execution.Scheduler
@@ -25,8 +25,8 @@ import monix.execution.exceptions.DummyException
 import monix.execution.internal.Platform
 
 import scala.concurrent.duration._
-import scala.concurrent.{ Future, Promise }
-import scala.util.{ Success, Try }
+import scala.concurrent.{Future, Promise}
+import scala.util.{Success, Try}
 
 object TestSchedulerSuite extends TestSuite[TestScheduler] {
   def setup() = TestScheduler()
@@ -76,39 +76,35 @@ object TestSchedulerSuite extends TestSuite[TestScheduler] {
     var firstBatch = 0
     var secondBatch = 0
 
-    val _ = s.scheduleOnce(
+    s.scheduleOnce(
       10,
       TimeUnit.SECONDS,
       action {
         firstBatch += 1
         s.execute(action { firstBatch += 1 })
-        val _ = s.scheduleOnce(
+        s.scheduleOnce(
           10,
           TimeUnit.SECONDS,
           action {
             firstBatch += 1
-          }
-        )
+          })
         ()
-      }
-    )
+      })
 
-    val _ = s.scheduleOnce(
+    s.scheduleOnce(
       20,
       TimeUnit.SECONDS,
       action {
         secondBatch += 1
         s.execute(action { secondBatch += 1 })
-        val _ = s.scheduleOnce(
+        s.scheduleOnce(
           10,
           TimeUnit.SECONDS,
           action {
             secondBatch += 1
-          }
-        )
+          })
         ()
-      }
-    )
+      })
 
     s.tick()
     assert(firstBatch == 0 && secondBatch == 0)
@@ -139,7 +135,7 @@ object TestSchedulerSuite extends TestSuite[TestScheduler] {
     assertEquals(f.value, None)
 
     s.tick(10.seconds)
-    val _ = intercept[TimeoutException] { val _ = f.value.get.get; () }
+    intercept[TimeoutException] { f.value.get.get; () }
     ()
   }
 
@@ -167,7 +163,7 @@ object TestSchedulerSuite extends TestSuite[TestScheduler] {
   test("complicated scheduling, test 1") { implicit s =>
     var counter = 0
 
-    val _ = delayedResult(50.millis, 300.millis) {
+    delayedResult(50.millis, 300.millis) {
       counter += 1
 
       delayedResult(50.millis, 300.millis) {
@@ -196,7 +192,7 @@ object TestSchedulerSuite extends TestSuite[TestScheduler] {
   test("complicated scheduling, test 2") { implicit s =>
     var counter = 0
 
-    val _ = delayedResult(50.millis, 300.millis) {
+    delayedResult(50.millis, 300.millis) {
       counter += 1
 
       delayedResult(50.millis, 300.millis) {
@@ -279,7 +275,7 @@ object TestSchedulerSuite extends TestSuite[TestScheduler] {
     assertEquals(s.state.lastReportedError, ex)
 
     // Other runnables have been rescheduled async
-    val _ = s.tickOne()
+    s.tickOne()
     assertEquals(effect, 1 + 2 + 3)
   }
 
@@ -310,7 +306,7 @@ object TestSchedulerSuite extends TestSuite[TestScheduler] {
     }
 
     assertEquals(effect, 0)
-    val _ = s.tickOne()
+    s.tickOne()
     assertEquals(effect, 3)
   }
 
@@ -333,19 +329,19 @@ object TestSchedulerSuite extends TestSuite[TestScheduler] {
   }
 
   def action(f: => Unit): Runnable =
-    () => f
+    new Runnable { def run() = f }
 
   def delayedResult[A](delay: FiniteDuration, timeout: FiniteDuration)(r: => A)(implicit s: Scheduler) = {
     val f1 = {
       val p = Promise[A]()
-      val _ = s.scheduleOnce(delay.length, delay.unit, action { p.success(r); () })
+      s.scheduleOnce(delay.length, delay.unit, action { p.success(r); () })
       p.future
     }
 
     // catching the exception here, for non-useless stack traces
     val err = Try(throw new TimeoutException)
     val promise = Promise[A]()
-    val task = s.scheduleOnce(timeout.length, timeout.unit, action { val _ = promise.tryComplete(err); () })
+    val task = s.scheduleOnce(timeout.length, timeout.unit, action { promise.tryComplete(err); () })
 
     f1.onComplete { result =>
       // canceling task to prevent waisted CPU resources and memory leaks

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,25 +18,25 @@
 package monix.reactive.internal.builders
 
 import monix.execution.cancelables.MultiAssignCancelable
-import monix.execution.{ Ack, Cancelable }
-import monix.execution.Ack.{ Continue, Stop }
+import monix.execution.{Ack, Cancelable}
+import monix.execution.Ack.{Continue, Stop}
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 private[reactive] final class IntervalFixedDelayObservable(initialDelay: FiniteDuration, delay: FiniteDuration)
   extends Observable[Long] {
 
   def unsafeSubscribeFn(subscriber: Subscriber[Long]): Cancelable = {
-    import subscriber.{ scheduler => s }
+    import subscriber.{scheduler => s}
 
     val o = subscriber
     val task = MultiAssignCancelable()
 
     val runnable = new Runnable { self =>
-      private var counter = 0L
+      private[this] var counter = 0L
 
       def scheduleNext(): Cancelable = {
         counter += 1
@@ -48,7 +48,7 @@ private[reactive] final class IntervalFixedDelayObservable(initialDelay: FiniteD
       def asyncScheduleNext(r: Future[Ack]): Unit =
         r.onComplete {
           case Success(ack) =>
-            if (ack == Continue) { val _ = scheduleNext() }
+            if (ack == Continue) scheduleNext()
           case Failure(ex) =>
             s.reportFailure(ex)
         }
@@ -56,7 +56,8 @@ private[reactive] final class IntervalFixedDelayObservable(initialDelay: FiniteD
       def run(): Unit = {
         val ack = o.onNext(counter)
         if (ack == Continue) {
-          val _ = scheduleNext()
+          scheduleNext()
+          ()
         } else if (ack != Stop) {
           asyncScheduleNext(ack)
         }

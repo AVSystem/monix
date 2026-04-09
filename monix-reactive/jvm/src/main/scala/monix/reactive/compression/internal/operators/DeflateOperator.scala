@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,20 +17,17 @@
 
 package monix.reactive.compression.internal.operators
 
-import scala.annotation.nowarn
 import java.util.zip.Deflater
 import monix.execution.{Ack, Scheduler}
 import monix.execution.Ack.Continue
-import monix.execution.Scheduler
 import monix.reactive.Observable.Operator
-import monix.reactive.compression.{ CompressionLevel, CompressionParameters, CompressionStrategy, FlushMode }
+import monix.reactive.compression.{CompressionLevel, CompressionParameters, CompressionStrategy, FlushMode}
 import monix.reactive.observers.Subscriber
 
 import scala.concurrent.Future
 import scala.util.Success
 import scala.util.control.NonFatal
 
-@nowarn("msg=unused value of type")
 private[compression] final class DeflateOperator(
   bufferSize: Int,
   params: CompressionParameters,
@@ -40,8 +37,8 @@ private[compression] final class DeflateOperator(
     new Subscriber[Array[Byte]] {
       implicit val scheduler: Scheduler = out.scheduler
 
-      private var ack: Future[Ack] = Continue
-      private val deflate =
+      private[this] var ack: Future[Ack] = Continue
+      private[this] val deflate =
         new DeflateAdapter(
           bufferSize,
           params.level,

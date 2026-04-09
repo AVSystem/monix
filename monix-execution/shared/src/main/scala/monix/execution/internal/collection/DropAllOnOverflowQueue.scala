@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,19 +31,19 @@ private[monix] final class DropAllOnOverflowQueue[A: ClassTag] private (_recomme
   extends EvictingQueue[A] { self =>
 
   require(_recommendedCapacity > 0, "recommendedCapacity must be positive")
-  private val maxSize = {
+  private[this] val maxSize = {
     val v = nextPowerOf2(_recommendedCapacity + 1)
     if (v <= 1) 2 else v
   }
 
-  private val modulus = maxSize - 1
+  private[this] val modulus = maxSize - 1
   def capacity: Int = modulus
 
-  private val array = new Array[A](maxSize)
+  private[this] val array = new Array[A](maxSize)
   // head is incremented by `poll()`, or by `offer()` on overflow
-  private var headIdx = 0
+  private[this] var headIdx = 0
   // tail is incremented by `offer()`
-  private var tailIdx = 0
+  private[this] var tailIdx = 0
 
   override def isAtCapacity: Boolean =
     size >= modulus
@@ -138,12 +138,12 @@ private[monix] final class DropAllOnOverflowQueue[A: ClassTag] private (_recomme
     */
   def iterator(exactSize: Boolean): Iterator[A] = {
     new Iterator[A] {
-      private var isStarted = false
-      private val initialTailIdx = self.tailIdx
-      private var tailIdx = 0
-      private var headIdx = 0
+      private[this] var isStarted = false
+      private[this] val initialTailIdx = self.tailIdx
+      private[this] var tailIdx = 0
+      private[this] var headIdx = 0
 
-      private val initialHeadIdx = {
+      private[this] val initialHeadIdx = {
         if (!exactSize) self.headIdx
         else {
           // Dropping extra elements
@@ -170,7 +170,7 @@ private[monix] final class DropAllOnOverflowQueue[A: ClassTag] private (_recomme
         }
       }
 
-      private def init(): Unit = {
+      private[this] def init(): Unit = {
         isStarted = true
         if (self.headIdx != self.tailIdx) {
           headIdx = initialHeadIdx

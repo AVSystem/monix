@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,14 +16,12 @@
  */
 
 package monix.eval
-import scala.annotation.nowarn
 
 import monix.execution.Callback
 import monix.execution.exceptions.CallbackCalledMultipleTimesException
 import monix.execution.schedulers.TestScheduler
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
-@nowarn
 object TaskCallbackSafetySuite extends BaseTestSuite {
   test("Task.async's callback can be called multiple times") { implicit sc =>
     runTestCanCallMultipleTimes(Task.async)
@@ -41,16 +39,14 @@ object TaskCallbackSafetySuite extends BaseTestSuite {
     runTestCanCallMultipleTimes(r =>
       Task.cancelable { cb =>
         r(cb); Task.unit
-      }
-    )
+      })
   }
 
   test("Task.cancelable0's callback can be called multiple times") { implicit sc =>
     runTestCanCallMultipleTimes(r =>
       Task.cancelable0 { (_, cb) =>
         r(cb); Task.unit
-      }
-    )
+      })
   }
 
   test("Task.async's register throwing is signaled as error") { implicit sc =>
@@ -73,16 +69,14 @@ object TaskCallbackSafetySuite extends BaseTestSuite {
     runTestRegisterCanThrow(r =>
       Task.cancelable { cb =>
         r(cb); Task.unit
-      }
-    )
+      })
   }
 
   test("Task.cancelable0's register throwing is signaled as error") { implicit sc =>
     runTestRegisterCanThrow(r =>
       Task.cancelable0 { (_, cb) =>
         r(cb); Task.unit
-      }
-    )
+      })
   }
 
   test("Task.async's register throwing, after result, is reported") { implicit sc =>
@@ -105,21 +99,18 @@ object TaskCallbackSafetySuite extends BaseTestSuite {
     runTestRegisterThrowingCanBeReported(r =>
       Task.cancelable { cb =>
         r(cb); Task.unit
-      }
-    )
+      })
   }
 
   test("Task.cancelable0's register throwing, after result, is reported") { implicit sc =>
     runTestRegisterThrowingCanBeReported(r =>
       Task.cancelable0 { (_, cb) =>
         r(cb); Task.unit
-      }
-    )
+      })
   }
 
   def runTestRegisterCanThrow(create: (Callback[Throwable, Int] => Unit) => Task[Int])(
-    implicit sc: TestScheduler
-  ): Unit = {
+    implicit sc: TestScheduler): Unit = {
 
     var effect = 0
     val task = create { _ =>
@@ -138,8 +129,7 @@ object TaskCallbackSafetySuite extends BaseTestSuite {
   }
 
   def runTestRegisterThrowingCanBeReported(create: (Callback[Throwable, Int] => Unit) => Task[Int])(
-    implicit sc: TestScheduler
-  ): Unit = {
+    implicit sc: TestScheduler): Unit = {
 
     var effect = 0
     val task = create { cb =>
@@ -159,8 +149,7 @@ object TaskCallbackSafetySuite extends BaseTestSuite {
   }
 
   def runTestCanCallMultipleTimes(create: (Callback[Throwable, Int] => Unit) => Task[Int])(
-    implicit sc: TestScheduler
-  ): Unit = {
+    implicit sc: TestScheduler): Unit = {
 
     def run(expected: Int)(trySignal: Callback[Throwable, Int] => Boolean) = {
       var effect = 0
@@ -188,18 +177,15 @@ object TaskCallbackSafetySuite extends BaseTestSuite {
     run(1)(cb =>
       try {
         cb.onSuccess(1); true
-      } catch { case _: CallbackCalledMultipleTimesException => false }
-    )
+      } catch { case _: CallbackCalledMultipleTimesException => false })
     run(1)(cb =>
       try {
         cb(Right(1)); true
-      } catch { case _: CallbackCalledMultipleTimesException => false }
-    )
+      } catch { case _: CallbackCalledMultipleTimesException => false })
     run(1)(cb =>
       try {
         cb(Success(1)); true
-      } catch { case _: CallbackCalledMultipleTimesException => false }
-    )
+      } catch { case _: CallbackCalledMultipleTimesException => false })
 
     run(10)(_.tryOnError(WrappedEx(10)))
     run(10)(_.tryApply(Failure(WrappedEx(10))))
@@ -208,18 +194,15 @@ object TaskCallbackSafetySuite extends BaseTestSuite {
     run(10)(cb =>
       try {
         cb.onError(WrappedEx(10)); true
-      } catch { case _: CallbackCalledMultipleTimesException => false }
-    )
+      } catch { case _: CallbackCalledMultipleTimesException => false })
     run(10)(cb =>
       try {
         cb(Left(WrappedEx(10))); true
-      } catch { case _: CallbackCalledMultipleTimesException => false }
-    )
+      } catch { case _: CallbackCalledMultipleTimesException => false })
     run(10)(cb =>
       try {
         cb(Failure(WrappedEx(10))); true
-      } catch { case _: CallbackCalledMultipleTimesException => false }
-    )
+      } catch { case _: CallbackCalledMultipleTimesException => false })
   }
 
   case class WrappedEx(nr: Int) extends RuntimeException

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,6 @@ import scala.concurrent.Awaitable
 import scala.concurrent.duration.Duration
 import scala.scalajs.js
 import scala.util.control.NonFatal
-import scala.annotation.unused
 
 private[monix] object Platform {
   /**
@@ -100,7 +99,7 @@ private[monix] object Platform {
     * This operation is only supported on top of the JVM, whereas for
     * JavaScript a dummy is provided.
     */
-  def await[A](@unused fa: Awaitable[A], @unused timeout: Duration)(implicit @unused permit: CanBlock): A =
+  def await[A](fa: Awaitable[A], timeout: Duration)(implicit permit: CanBlock): A =
     throw new UnsupportedOperationException(
       "Blocking operations are not supported on top of JavaScript"
     )
@@ -129,7 +128,7 @@ private[monix] object Platform {
     * Useful utility that combines an `Either` result, which is what
     * `MonadError#attempt` returns.
     */
-  def composeErrors(first: Throwable, second: Either[Throwable, Any]): Throwable =
+  def composeErrors(first: Throwable, second: Either[Throwable, _]): Throwable =
     second match {
       case Left(e2) => composeErrors(first, e2)
       case _ => first

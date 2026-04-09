@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,40 +21,40 @@ import cats.laws._
 import cats.laws.discipline._
 import monix.execution.exceptions.DummyException
 
-import scala.util.{ Random, Success }
+import scala.util.{Random, Success}
 
 object CoevalFlatMapSuite extends BaseTestSuite {
-  test("transformWith equivalence with flatMap") { _ =>
+  test("transformWith equivalence with flatMap") { implicit s =>
     check2 { (fa: Coeval[Int], f: Int => Coeval[Int]) =>
       fa.redeemWith(Coeval.raiseError, f) <-> fa.flatMap(f)
     }
   }
 
-  test("transform equivalence with map") { _ =>
+  test("transform equivalence with map") { implicit s =>
     check2 { (fa: Coeval[Int], f: Int => Int) =>
       fa.redeem(ex => throw ex, f) <-> fa.map(f)
     }
   }
 
-  test("transformWith can recover") { _ =>
+  test("transformWith can recover") { implicit s =>
     val dummy = new DummyException("dummy")
     val coeval = Coeval.raiseError[Int](dummy).redeemWith(_ => Coeval.now(1), Coeval.now)
     assertEquals(coeval.runTry(), Success(1))
   }
 
-  test("transform can recover") { _ =>
+  test("transform can recover") { implicit s =>
     val dummy = new DummyException("dummy")
     val coeval = Coeval.raiseError[Int](dummy).redeem(_ => 1, identity)
     assertEquals(coeval.runTry(), Success(1))
   }
 
-  test(">> is stack safe for infinite loops") { _ =>
+  test(">> is stack safe for infinite loops") { implicit s =>
     def looped: Coeval[Unit] = Coeval.unit >> looped
     val _ = looped
     assert(true)
   }
 
-  test("flatMapLoop enables loops") { _ =>
+  test("flatMapLoop enables loops") { implicit s =>
     val random = Coeval(Random.nextInt())
     val loop = random.flatMapLoop(Vector.empty[Int]) { (a, list, continue) =>
       val newList = list :+ a
@@ -66,13 +66,13 @@ object CoevalFlatMapSuite extends BaseTestSuite {
     assertEquals(loop.apply().size, 5)
   }
 
-  test("fa *> fb <-> fa.flatMap(_ => fb)") { _ =>
+  test("fa *> fb <-> fa.flatMap(_ => fb)") { implicit s =>
     check2 { (fa: Coeval[Int], fb: Coeval[Int]) =>
       fa *> fb <-> fa.flatMap(_ => fb)
     }
   }
 
-  test("fa <* fb <-> fa.flatMap(a => fb.map(_ => a))") { _ =>
+  test("fa <* fb <-> fa.flatMap(a => fb.map(_ => a))") { implicit s =>
     check2 { (fa: Coeval[Int], fb: Coeval[Int]) =>
       fa <* fb <-> fa.flatMap(a => fb.map(_ => a))
     }

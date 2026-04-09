@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,7 @@
 
 package monix.catnap.cancelables
 
-import cats.effect.{ CancelToken, Sync }
+import cats.effect.{CancelToken, Sync}
 import monix.catnap.CancelableF
 import monix.execution.annotations.UnsafeBecauseImpure
 import monix.execution.atomic.Atomic
@@ -36,7 +36,7 @@ final class SingleAssignCancelableF[F[_]] private (extra: CancelableF[F])(implic
   extends AssignableCancelableF.Bool[F] {
 
   import SingleAssignCancelableF._
-  private val state = Atomic(Empty: State[F])
+  private[this] val state = Atomic(Empty: State[F])
 
   val isCanceled: F[Boolean] =
     F.delay(state.get() match {
@@ -87,8 +87,7 @@ final class SingleAssignCancelableF[F[_]] private (extra: CancelableF[F])(implic
   private def raiseError: F[Unit] = F.raiseError {
     new IllegalStateException(
       "Cannot assign to SingleAssignmentCancelableF " +
-        "as it was already assigned once"
-    )
+        "as it was already assigned once")
   }
 }
 

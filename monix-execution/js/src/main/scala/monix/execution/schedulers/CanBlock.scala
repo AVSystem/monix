@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,6 @@
 package monix.execution.schedulers
 
 import scala.annotation.implicitNotFound
-import scala.annotation.nowarn
 
 /** Marker for blocking operations that need to be disallowed on top of
   * JavaScript engines, or other platforms that don't support the blocking
@@ -75,7 +74,5 @@ import scala.annotation.nowarn
 @implicitNotFound(
   "Blocking operations aren't supported \n" +
     "on top of JavaScript, because it cannot block threads! \n" +
-    "Please use asynchronous API calls."
-)
-@nowarn
+    "Please use asynchronous API calls.")
 final class CanBlock private ()

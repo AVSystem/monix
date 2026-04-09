@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,10 +17,14 @@
 
 package monix.execution.internal.collection.queues
 
-import java.lang.invoke.VarHandle
 import monix.execution.ChannelType
+import monix.execution.ChannelType.{SingleConsumer, SingleProducer}
+import monix.execution.internal.atomic.UnsafeAccess
 import monix.execution.internal.collection.LowLevelConcurrentQueue
 import monix.execution.internal.jctools.queues.MessagePassingQueue
+import sun.misc.Unsafe
+
+import scala.annotation.nowarn
 import scala.collection.mutable
 
 private[internal] abstract class FromMessagePassingQueue[A](queue: MessagePassingQueue[A])
@@ -55,11 +59,14 @@ private[internal] object FromMessagePassingQueue {
       case ChannelType.MPMC =>
         new MPMC[A](queue)
       case ChannelType.MPSC =>
-        new Java8MPSC[A](queue)
+        if (UnsafeAccess.HAS_JAVA8_INTRINSICS) new Java8MPSC[A](queue)
+        else new Java7[A](queue, ct)
       case ChannelType.SPMC =>
-        new Java8SPMC[A](queue)
+        if (UnsafeAccess.HAS_JAVA8_INTRINSICS) new Java8SPMC[A](queue)
+        else new Java7[A](queue, ct)
       case ChannelType.SPSC =>
-        new Java8SPSC[A](queue)
+        if (UnsafeAccess.HAS_JAVA8_INTRINSICS) new Java8SPSC[A](queue)
+        else new Java7[A](queue, ct)
     }
 
   private final class MPMC[A](queue: MessagePassingQueue[A]) extends FromMessagePassingQueue[A](queue) {
@@ -70,19 +77,46 @@ private[internal] object FromMessagePassingQueue {
 
   private final class Java8SPMC[A](queue: MessagePassingQueue[A]) extends FromMessagePassingQueue[A](queue) {
 
-    def fenceOffer(): Unit = VarHandle.fullFence()
+    private[this] val UNSAFE =
+      UnsafeAccess.getInstance().asInstanceOf[Unsafe]
+
+    def fenceOffer(): Unit = UNSAFE.fullFence()
     def fencePoll(): Unit = ()
   }
 
   private final class Java8MPSC[A](queue: MessagePassingQueue[A]) extends FromMessagePassingQueue[A](queue) {
 
+    private[this] val UNSAFE =
+      UnsafeAccess.getInstance().asInstanceOf[Unsafe]
+
     def fenceOffer(): Unit = ()
-    def fencePoll(): Unit = VarHandle.fullFence()
+    def fencePoll(): Unit = UNSAFE.fullFence()
   }
 
   private final class Java8SPSC[A](queue: MessagePassingQueue[A]) extends FromMessagePassingQueue[A](queue) {
 
-    def fenceOffer(): Unit = VarHandle.fullFence()
-    def fencePoll(): Unit = VarHandle.fullFence()
+    private[this] val UNSAFE =
+      UnsafeAccess.getInstance().asInstanceOf[Unsafe]
+
+    def fenceOffer(): Unit = UNSAFE.fullFence()
+    def fencePoll(): Unit = UNSAFE.fullFence()
+  }
+
+  private final class Java7[A](queue: MessagePassingQueue[A], ct: ChannelType)
+    extends FromMessagePassingQueue[A](queue) {
+
+    def fenceOffer(): Unit =
+      if (ct.producerType == SingleProducer) {
+        raise()
+      }
+
+    def fencePoll(): Unit =
+      if (ct.consumerType == SingleConsumer) {
+        raise()
+      }
+
+    private def raise(): Unit = {
+      throw new IllegalAccessException("Unsafe.fullFence not supported on this platform! (please report bug)")
+    }
   }
 }

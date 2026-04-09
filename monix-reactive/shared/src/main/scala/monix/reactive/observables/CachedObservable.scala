@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +22,6 @@ import monix.reactive.Observable
 import monix.reactive.subjects.ReplaySubject
 import monix.reactive.observers.Subscriber
 import monix.execution.atomic.Atomic
-import scala.annotation.unchecked.uncheckedVariance
 
 /** A `CachedObservable` is an observable that wraps a regular
   * [[Observable]], initiating the connection on the first
@@ -37,8 +36,8 @@ import scala.annotation.unchecked.uncheckedVariance
   */
 final class CachedObservable[+A] private (source: Observable[A], maxCapacity: Int) extends Observable[A] {
 
-  private val isStarted = Atomic(false)
-  private val subject: ReplaySubject[A @uncheckedVariance] = {
+  private[this] val isStarted = Atomic(false)
+  private[this] val subject = {
     if (maxCapacity > 0) ReplaySubject.createLimited[A](maxCapacity)
     else
       ReplaySubject[A]()
@@ -46,9 +45,8 @@ final class CachedObservable[+A] private (source: Observable[A], maxCapacity: In
 
   def unsafeSubscribeFn(subscriber: Subscriber[A]): Cancelable = {
     import subscriber.scheduler
-    if (isStarted.compareAndSet(expect = false, update = true)) {
-      val _ = source.unsafeSubscribeFn(Subscriber(subject, scheduler))
-    }
+    if (isStarted.compareAndSet(expect = false, update = true))
+      source.unsafeSubscribeFn(Subscriber(subject, scheduler))
     subject.unsafeSubscribeFn(subscriber)
   }
 }

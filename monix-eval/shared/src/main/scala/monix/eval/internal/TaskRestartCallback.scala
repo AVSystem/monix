@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,31 +17,29 @@
 
 package monix.eval.internal
 
-import monix.eval.Task.{ Context, Error, Now }
-import monix.eval.internal.TaskRunLoop.{ startFull, Bind, CallStack }
+import monix.eval.Task.{Context, Error, Now}
+import monix.eval.internal.TaskRunLoop.{startFull, Bind, CallStack}
 import monix.eval.Task
 import monix.execution.Callback
 import monix.execution.misc.Local
 import monix.execution.schedulers.TrampolinedRunnable
-import scala.annotation.unused
 
 private[internal] abstract class TaskRestartCallback(contextInit: Context, callback: Callback[Throwable, Any])
   extends Callback[Throwable, Any] with TrampolinedRunnable {
 
   // Modified on prepare()
-  private var bFirst: Bind = null.asInstanceOf[Bind]
-  private var bRest: CallStack = null.asInstanceOf[CallStack]
-  private var register: (Context, Callback[Throwable, Any]) => Unit =
-    null.asInstanceOf[(Context, Callback[Throwable, Any]) => Unit]
+  private[this] var bFirst: Bind = _
+  private[this] var bRest: CallStack = _
+  private[this] var register: (Context, Callback[Throwable, Any]) => Unit = _
 
   // Mutated in onSuccess and onError, just before scheduling
   // onSuccessRun and onErrorRun
-  private var value: Any = null.asInstanceOf[Any]
-  private var error: Throwable = null.asInstanceOf[Throwable]
-  private var trampolineAfter: Boolean = true
+  private[this] var value: Any = _
+  private[this] var error: Throwable = _
+  private[this] var trampolineAfter: Boolean = true
 
   // Can change via ContextSwitch
-  private var context = contextInit
+  private[this] var context = contextInit
 
   final def contextSwitch(other: Context): Unit = {
     this.context = other
@@ -91,9 +89,9 @@ private[internal] abstract class TaskRestartCallback(contextInit: Context, callb
       // $COVERAGE-ON$
     }
 
-  protected def prepareStart(@unused task: Task.Async[?]): Unit = ()
+  protected def prepareStart(task: Task.Async[_]): Unit = ()
   protected def prepareCallback: Callback[Throwable, Any] = callback
-  private val wrappedCallback = prepareCallback
+  private[this] val wrappedCallback = prepareCallback
 
   protected def syncOnSuccess(value: Any): Unit = {
     val bFirst = this.bFirst
@@ -112,28 +110,30 @@ private[internal] abstract class TaskRestartCallback(contextInit: Context, callb
   }
 
   /** Reusable Runnable reference, to go lighter on memory allocations. */
-  private val onSuccessRun: TrampolinedRunnable = new TrampolinedRunnable {
-    def run(): Unit = {
-      val v = value
-      value = null
-      syncOnSuccess(v)
+  private[this] val onSuccessRun: TrampolinedRunnable =
+    new TrampolinedRunnable {
+      def run(): Unit = {
+        val v = value
+        value = null
+        syncOnSuccess(v)
+      }
     }
-  }
 
   /** Reusable Runnable reference, to go lighter on memory allocations. */
-  private val onErrorRun: TrampolinedRunnable = new TrampolinedRunnable {
-    def run(): Unit = {
-      val e = error
-      error = null
-      syncOnError(e)
+  private[this] val onErrorRun: TrampolinedRunnable =
+    new TrampolinedRunnable {
+      def run(): Unit = {
+        val e = error
+        error = null
+        syncOnError(e)
+      }
     }
-  }
 }
 
 private[internal] object TaskRestartCallback {
   /** Builder for [[TaskRestartCallback]], returning a specific instance
-  * optimized for the passed in `Task.Options`.
-  */
+    * optimized for the passed in `Task.Options`.
+    */
   def apply(context: Context, callback: Callback[Throwable, Any]): TaskRestartCallback = {
     if (context.options.localContextPropagation)
       new WithLocals(context, callback)
@@ -149,10 +149,10 @@ private[internal] object TaskRestartCallback {
   private final class WithLocals(context: Context, callback: Callback[Throwable, Any])
     extends TaskRestartCallback(context, callback) {
 
-    private var preparedLocals: Local.Context = null.asInstanceOf[Local.Context]
-    private var previousLocals: Local.Context = null.asInstanceOf[Local.Context]
+    private[this] var preparedLocals: Local.Context = _
+    private[this] var previousLocals: Local.Context = _
 
-    override protected def prepareStart(task: Task.Async[?]): Unit = {
+    override protected def prepareStart(task: Task.Async[_]): Unit = {
       preparedLocals = if (task.restoreLocals) Local.getContext() else null
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,13 +24,12 @@ import scala.util.control.NonFatal
 
 private[eval] object CoevalBracket {
   /**
-* Implementation for `Coeval.bracketE`.
-*/
+    * Implementation for `Coeval.bracketE`.
+    */
   def either[A, B](
     acquire: Coeval[A],
     use: A => Coeval[B],
-    release: (A, Either[Throwable, B]) => Coeval[Unit]
-  ): Coeval[B] = {
+    release: (A, Either[Throwable, B]) => Coeval[Unit]): Coeval[B] = {
 
     acquire.flatMap { a =>
       val next =
@@ -41,13 +40,12 @@ private[eval] object CoevalBracket {
   }
 
   /**
-* Implementation for `Coeval.bracketCase`.
-*/
+    * Implementation for `Coeval.bracketCase`.
+    */
   def exitCase[A, B](
     acquire: Coeval[A],
     use: A => Coeval[B],
-    release: (A, ExitCase[Throwable]) => Coeval[Unit]
-  ): Coeval[B] = {
+    release: (A, ExitCase[Throwable]) => Coeval[Unit]): Coeval[B] = {
 
     acquire.flatMap { a =>
       val next =

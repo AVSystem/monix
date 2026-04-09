@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,10 +22,10 @@ import minitest.TestSuite
 import monix.eval.Task
 import monix.execution.exceptions.DummyException
 import monix.execution.schedulers.TestScheduler
-import monix.reactive.{ Consumer, Observable }
+import monix.reactive.{Consumer, Observable}
 
 import scala.concurrent.Future
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 object ForeachAsyncConsumerSuite extends TestSuite[TestScheduler] {
   def setup(): TestScheduler = TestScheduler()
@@ -40,8 +40,7 @@ object ForeachAsyncConsumerSuite extends TestSuite[TestScheduler] {
     val f = obs
       .consumeWith(
         Consumer
-          .foreachEval(x => IO(sum += x))
-      )
+          .foreachEval(x => IO(sum += x)))
       .runToFuture
 
     s.tick()
@@ -56,8 +55,7 @@ object ForeachAsyncConsumerSuite extends TestSuite[TestScheduler] {
     val f = obs
       .consumeWith(
         Consumer
-          .foreachTask(x => Task.evalAsync(sum += x))
-      )
+          .foreachTask(x => Task.evalAsync(sum += x)))
       .runToFuture
 
     s.tick()
@@ -72,8 +70,7 @@ object ForeachAsyncConsumerSuite extends TestSuite[TestScheduler] {
     val f = obs
       .consumeWith(
         Consumer
-          .foreachTask(x => Task.evalAsync(sum += x))
-      )
+          .foreachTask(x => Task.evalAsync(sum += x)))
       .runToFuture
 
     s.tick()
@@ -97,8 +94,7 @@ object ForeachAsyncConsumerSuite extends TestSuite[TestScheduler] {
       .consumeWith(Consumer.foreachTask(_ =>
         Task.never.doOnCancel(Task {
           cancelled = true
-        })
-      ))
+        })))
       .runToFuture
 
     s.tick()

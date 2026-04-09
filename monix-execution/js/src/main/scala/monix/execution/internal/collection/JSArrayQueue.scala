@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,9 +28,10 @@ import scala.scalajs.js
 private[monix] final class JSArrayQueue[A] private (_size: Int, triggerEx: Int => Throwable = null)
   extends EvictingQueue[A] with LowLevelConcurrentQueue[A] {
 
-  private var queue = new js.Array[A]()
-  private var offset = 0
-  private val bufferSize = if (_size <= 0) 0 else nextPowerOf2(_size)
+  private[this] var queue = new js.Array[A]()
+  private[this] var offset = 0
+  private[this] val bufferSize =
+    if (_size <= 0) 0 else nextPowerOf2(_size)
 
   override def capacity: Int =
     if (bufferSize == 0) Int.MaxValue else bufferSize
@@ -52,7 +53,7 @@ private[monix] final class JSArrayQueue[A] private (_size: Int, triggerEx: Int =
       if (triggerEx != null) throw triggerEx(capacity)
       1 // rejecting new element as we are at capacity
     } else {
-      val _ = queue.push(elem)
+      queue.push(elem)
       0
     }
   }

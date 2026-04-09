@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,11 +21,9 @@ import minitest.SimpleTestSuite
 import minitest.laws.Checkers
 import monix.execution.Cancelable
 import monix.execution.atomic.PaddingStrategy.LeftRight256
-import scala.annotation.nowarn
 
 import scala.collection.mutable.ListBuffer
 
-@nowarn("msg=The syntax `x: _\\*` is no longer supported for vararg splices; use `x\\*` instead")
 object CompositeCancelableSuite extends SimpleTestSuite with Checkers {
   test("simple cancel") {
     val s = CompositeCancelable()
@@ -146,7 +144,7 @@ object CompositeCancelableSuite extends SimpleTestSuite with Checkers {
 
   test("reset") {
     val seq = for (_ <- 0 until 10) yield BooleanCancelable()
-    val cc = CompositeCancelable(seq*)
+    val cc = CompositeCancelable(seq: _*)
 
     cc.reset()
     cc.cancel()

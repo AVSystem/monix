@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,38 +17,35 @@
 
 package monix.reactive.observers.buffers
 
-import scala.annotation.nowarn
-import monix.execution.{ Ack, ChannelType }
-import monix.execution.Ack.{ Continue, Stop }
+import monix.execution.{Ack, ChannelType, Scheduler}
+import monix.execution.Ack.{Continue, Stop}
 import monix.execution.BufferCapacity.Unbounded
 import monix.execution.ChannelType._
-import monix.execution.Scheduler
 import monix.execution.atomic.Atomic
 import monix.execution.atomic.PaddingStrategy.LeftRight256
 import monix.execution.internal.collection.LowLevelConcurrentQueue
-import monix.execution.internal.{ math, Platform }
+import monix.execution.internal.{Platform, math}
 
 import scala.util.control.NonFatal
-import monix.reactive.observers.{ BufferedSubscriber, Subscriber }
+import monix.reactive.observers.{BufferedSubscriber, Subscriber}
 
 import scala.annotation.tailrec
-import scala.concurrent.{ Future, Promise }
-import scala.util.{ Failure, Success }
+import scala.concurrent.{Future, Promise}
+import scala.util.{Failure, Success}
 
 /** Shared internals between [[BackPressuredBufferedSubscriber]] and
   * [[BatchedBufferedSubscriber]].
   */
-@nowarn("msg=unused value of type")
 private[observers] abstract class AbstractBackPressuredBufferedSubscriber[A, R](
   out: Subscriber[R],
   _bufferSize: Int,
-  pt: ChannelType.ProducerSide
-) extends CommonBufferMembers with BufferedSubscriber[A] {
+  pt: ChannelType.ProducerSide)
+  extends CommonBufferMembers with BufferedSubscriber[A] {
 
   require(_bufferSize > 0, "bufferSize must be a strictly positive number")
 
-  private val bufferSize = math.nextPowerOf2(_bufferSize)
-  private val em = out.scheduler.executionModel
+  private[this] val bufferSize = math.nextPowerOf2(_bufferSize)
+  private[this] val em = out.scheduler.executionModel
   implicit final val scheduler: Scheduler = out.scheduler
 
   protected final val queue: LowLevelConcurrentQueue[A] =
@@ -58,9 +55,9 @@ private[observers] abstract class AbstractBackPressuredBufferedSubscriber[A, R](
       fenced = false
     )
 
-  private val itemsToPush =
+  private[this] val itemsToPush =
     Atomic.withPadding(0, LeftRight256)
-  private val backPressured =
+  private[this] val backPressured =
     Atomic.withPadding(null: Promise[Ack], LeftRight256)
 
   @tailrec
@@ -131,7 +128,7 @@ private[observers] abstract class AbstractBackPressuredBufferedSubscriber[A, R](
   protected def fetchNext(): R
   protected def fetchSize(r: R): Int
 
-  private val consumerRunLoop = new Runnable {
+  private[this] val consumerRunLoop = new Runnable {
     def run(): Unit = {
       fastLoop(lastIterationAck, 0, 0)
     }

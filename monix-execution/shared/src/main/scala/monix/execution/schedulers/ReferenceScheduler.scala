@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,11 +19,11 @@ package monix.execution.schedulers
 
 import monix.execution.cancelables.OrderedCancelable
 import monix.execution.schedulers.ReferenceScheduler.WrappedScheduler
-import monix.execution.{ Cancelable, Features, Scheduler, UncaughtExceptionReporter }
-import scala.concurrent.duration.{ MILLISECONDS, NANOSECONDS, TimeUnit }
+import monix.execution.{Cancelable, Features, Scheduler, UncaughtExceptionReporter}
+import scala.concurrent.duration.{MILLISECONDS, NANOSECONDS, TimeUnit}
 import monix.execution.internal.InterceptRunnable
 // Prevents conflict with the deprecated symbol
-import monix.execution.{ ExecutionModel => ExecModel }
+import monix.execution.{ExecutionModel => ExecModel}
 
 /** Helper for building a [[Scheduler]].
   *
@@ -46,11 +46,12 @@ trait ReferenceScheduler extends Scheduler {
         sub := scheduleOnce(
           initialDelay,
           unit,
-          () => {
-            r.run()
-            loop(delay, delay)
-          }
-        )
+          new Runnable {
+            def run(): Unit = {
+              r.run()
+              loop(delay, delay)
+            }
+          })
         ()
       }
     }
@@ -70,17 +71,19 @@ trait ReferenceScheduler extends Scheduler {
         sub := scheduleOnce(
           initialDelayMs,
           MILLISECONDS,
-          () => {
-            r.run()
+          new Runnable {
+            def run(): Unit = {
+              r.run()
 
-            val delay = {
-              val durationMillis = clockMonotonic(MILLISECONDS) - startedAtMillis
-              val d = periodMs - durationMillis
-              if (d >= 0) d else 0
+              val delay = {
+                val durationMillis = clockMonotonic(MILLISECONDS) - startedAtMillis
+                val d = periodMs - durationMillis
+                if (d >= 0) d else 0
+              }
+
+              // Recursive call
+              loop(delay, periodMs)
             }
-
-            // Recursive call
-            loop(delay, periodMs)
           }
         )
         ()
@@ -109,7 +112,7 @@ object ReferenceScheduler {
     override val executionModel: ExecModel,
     reporter: UncaughtExceptionReporter = null
   ) extends Scheduler {
-    private val reporterRef = if (reporter eq null) s else reporter
+    private[this] val reporterRef = if (reporter eq null) s else reporter
 
     override def execute(runnable: Runnable): Unit =
       s.execute(InterceptRunnable(runnable, reporter))

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,15 +18,14 @@
 package monix.reactive.internal.operators
 
 import monix.execution.Ack.Stop
-import monix.execution.Scheduler
 import monix.execution.cancelables.OrderedCancelable
-import monix.execution.{ Ack, Cancelable }
+import monix.execution.{Ack, Cancelable, Scheduler}
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
 
 import scala.concurrent.Future
 
-private[reactive] final class DelayExecutionWithTriggerObservable[A](source: Observable[A], trigger: Observable[?])
+private[reactive] final class DelayExecutionWithTriggerObservable[A](source: Observable[A], trigger: Observable[_])
   extends Observable[A] {
 
   def unsafeSubscribeFn(subscriber: Subscriber[A]): Cancelable = {
@@ -36,7 +35,7 @@ private[reactive] final class DelayExecutionWithTriggerObservable[A](source: Obs
       .asInstanceOf[Observable[Any]]
       .unsafeSubscribeFn(new Subscriber[Any] {
         implicit val scheduler: Scheduler = subscriber.scheduler
-        private var isDone = false
+        private[this] var isDone = false
 
         def onNext(elem: Any): Future[Ack] = {
           if (isDone) Stop

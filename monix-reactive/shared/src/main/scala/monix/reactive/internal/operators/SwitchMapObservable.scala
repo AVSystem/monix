@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,18 +17,16 @@
 
 package monix.reactive.internal.operators
 
-import scala.annotation.nowarn
-import monix.execution.Ack.{ Continue, Stop }
-import monix.execution.Scheduler
-import monix.execution.cancelables.{ CompositeCancelable, SerialCancelable, SingleAssignCancelable }
+import monix.execution.Ack.{Continue, Stop}
+import monix.execution.cancelables.{CompositeCancelable, SerialCancelable, SingleAssignCancelable}
+
 import scala.util.control.NonFatal
-import monix.execution.{ Ack, Cancelable }
+import monix.execution.{Ack, Cancelable, Scheduler}
 import monix.reactive.observers.Subscriber
-import monix.reactive.{ Observable, Observer }
+import monix.reactive.{Observable, Observer}
 
 import scala.concurrent.Future
 
-@nowarn("msg=unused value of type")
 private[reactive] final class SwitchMapObservable[A, B](source: Observable[A], f: A => Observable[B])
   extends Observable[B] {
 
@@ -40,13 +38,13 @@ private[reactive] final class SwitchMapObservable[A, B](source: Observable[A], f
     mainTask := source.unsafeSubscribeFn(new Subscriber.Sync[A] { self =>
       implicit val scheduler: Scheduler = out.scheduler
       // MUST BE synchronized by `self`
-      private var ack: Future[Ack] = Continue
+      private[this] var ack: Future[Ack] = Continue
       // MUST BE synchronized by `self`
-      private var activeChildIndex: Int = -1
+      private[this] var activeChildIndex: Int = -1
       // MUST BE synchronized by `self`
-      private var upstreamIsDone: Boolean = false
+      private[this] var upstreamIsDone: Boolean = false
       // MUST BE synchronized by `self`
-      private var lastChildIsDone: Boolean = false
+      private[this] var lastChildIsDone: Boolean = false
 
       def onNext(elem: A): Ack = self.synchronized {
         if (upstreamIsDone) Stop

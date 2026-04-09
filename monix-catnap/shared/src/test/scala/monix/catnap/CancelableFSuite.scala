@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,12 +16,10 @@
  */
 
 package monix.catnap
-import scala.annotation.nowarn
 
 import cats.effect.IO
 import minitest.SimpleTestSuite
 
-@nowarn
 object CancelableFSuite extends SimpleTestSuite {
   test("apply") {
     var effect = 0
@@ -61,7 +59,7 @@ object CancelableFSuite extends SimpleTestSuite {
   test("cancel multiple cancelables") {
     var effect = 0
     val seq = (0 until 100).map(_ => CancelableF.unsafeApply(IO { effect += 1 }))
-    val col = CancelableF.collection(seq*)
+    val col = CancelableF.collection(seq: _*)
 
     assertEquals(effect, 0)
     col.cancel.unsafeRunSync()
@@ -71,7 +69,7 @@ object CancelableFSuite extends SimpleTestSuite {
   test("cancel multiple tokens") {
     var effect = 0
     val seq = (0 until 100).map(_ => IO { effect += 1 })
-    val cancel = CancelableF.cancelAllTokens(seq*)
+    val cancel = CancelableF.cancelAllTokens(seq: _*)
 
     assertEquals(effect, 0)
     cancel.unsafeRunSync()

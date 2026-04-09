@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,20 +17,18 @@
 
 package monix.reactive.internal.operators
 
-import scala.annotation.nowarn
 import java.util.concurrent.TimeUnit
 
-import monix.execution.Ack.{ Continue, Stop }
-import monix.execution.cancelables.{ CompositeCancelable, MultiAssignCancelable, SingleAssignCancelable }
-import monix.execution.{ Ack, Cancelable, Scheduler }
+import monix.execution.Ack.{Continue, Stop}
+import monix.execution.cancelables.{CompositeCancelable, MultiAssignCancelable, SingleAssignCancelable}
+import monix.execution.{Ack, Cancelable, Scheduler}
 import monix.execution.exceptions.DownstreamTimeoutException
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
 
 import scala.concurrent.Future
-import scala.concurrent.duration.{ FiniteDuration, MILLISECONDS }
+import scala.concurrent.duration.{FiniteDuration, MILLISECONDS}
 
-@nowarn("msg=unused value of type")
 private[reactive] final class DownstreamTimeoutObservable[+A](source: Observable[A], timeout: FiniteDuration)
   extends Observable[A] {
 
@@ -42,13 +40,13 @@ private[reactive] final class DownstreamTimeoutObservable[+A](source: Observable
     mainTask := source.unsafeSubscribeFn(new Subscriber[A] with Runnable { self =>
       implicit val scheduler: Scheduler = downstream.scheduler
 
-      private val timeoutMillis = timeout.toMillis
+      private[this] val timeoutMillis = timeout.toMillis
       // MUST BE synchronized by `self`
-      private var isProcessingOnNext = false
+      private[this] var isProcessingOnNext = false
       // MUST BE synchronized by `self`
-      private var isDone = false
+      private[this] var isDone = false
       // MUST BE synchronized by `self`
-      private var lastEmittedMillis: Long =
+      private[this] var lastEmittedMillis: Long =
         scheduler.clockMonotonic(MILLISECONDS)
 
       locally {

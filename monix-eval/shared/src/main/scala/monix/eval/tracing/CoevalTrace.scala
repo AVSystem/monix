@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -122,12 +122,12 @@ private[eval] object CoevalTrace {
   private def demangleMethod(methodName: String): String =
     anonfunRegex.findFirstMatchIn(methodName) match {
       case Some(mat) => mat.group(1)
-      case None => methodName
+      case None      => methodName
     }
 
-  private val anonfunRegex = "^\\$+anonfun\\$+(.+)\\$+\\d+$".r
+  private[this] val anonfunRegex = "^\\$+anonfun\\$+(.+)\\$+\\d+$".r
 
-  private val stackTraceFilter = List(
+  private[this] val stackTraceFilter = List(
     "monix.",
     "cats.effect.",
     "cats.",

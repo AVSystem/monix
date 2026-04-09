@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,30 +16,28 @@
  */
 
 package monix.eval
-import scala.annotation.nowarn
 
 import cats.laws._
 import cats.laws.discipline._
 
-@nowarn
 object CoevalSequenceSuite extends BaseTestSuite {
-  test("Coeval.sequence") { _ =>
+  test("Coeval.sequence") { implicit s =>
     check1 { (numbers: List[Int]) =>
       val coeval = Coeval.sequence(numbers.map(x => Coeval(x)))
       coeval <-> Coeval(numbers)
     }
   }
 
-  test("Coeval.traverse") { _ =>
+  test("Coeval.traverse") { implicit s =>
     check1 { (numbers: List[Int]) =>
       val coeval = Coeval.traverse(numbers)(x => Coeval(x))
       coeval <-> Coeval(numbers)
     }
   }
 
-  test("Coeval.zipList") { _ =>
+  test("Coeval.zipList") { implicit s =>
     check1 { (numbers: List[Int]) =>
-      val coeval = Coeval.zipList(numbers.map(x => Coeval(x))*)
+      val coeval = Coeval.zipList(numbers.map(x => Coeval(x)): _*)
       coeval <-> Coeval(numbers)
     }
   }

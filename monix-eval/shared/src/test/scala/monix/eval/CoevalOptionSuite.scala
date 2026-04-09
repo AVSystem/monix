@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,13 +18,13 @@
 package monix.eval
 
 object CoevalOptionSuite extends BaseTestSuite {
-  test("Coeval.none should return a Now with a None") { _ =>
+  test("Coeval.none should return a Now with a None") { implicit s =>
     val c = Coeval.none[Int]
 
     assertEquals(c.value(), None)
   }
 
-  test("Coeval.some should return a Now with a Some") { _ =>
+  test("Coeval.some should return a Now with a Some") { implicit s =>
     val c = Coeval.some[Int](1)
 
     assertEquals(c.value(), Some(1))

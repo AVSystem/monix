@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,7 @@ package monix.execution.schedulers
 
 import monix.execution.UncaughtExceptionReporter
 
+import java.util.concurrent.ThreadFactory
 import scala.annotation.nowarn
 
 private[schedulers] object ThreadFactoryBuilder {
@@ -29,13 +30,17 @@ private[schedulers] object ThreadFactoryBuilder {
     * @param daemonic specifies whether the created threads should be daemonic
     *                 (non-daemonic threads are blocking the JVM process on exit).
     */
-  @nowarn("cat=deprecation")
-  def apply(name: String, reporter: UncaughtExceptionReporter, daemonic: Boolean): ThreadFactory =
-    (r: Runnable) => {
-      val thread = new Thread(r)
-      thread.setName(name + "-" + thread.getId)
-      thread.setDaemon(daemonic)
-      thread.setUncaughtExceptionHandler(reporter.asJava)
-      thread
+
+  def apply(name: String, reporter: UncaughtExceptionReporter, daemonic: Boolean): ThreadFactory = {
+    new ThreadFactory {
+      @nowarn("msg=deprecated")
+      def newThread(r: Runnable) = {
+        val thread = new Thread(r)
+        thread.setName(name + "-" + thread.getId)
+        thread.setDaemon(daemonic)
+        thread.setUncaughtExceptionHandler(reporter.asJava)
+        thread
+      }
     }
+  }
 }

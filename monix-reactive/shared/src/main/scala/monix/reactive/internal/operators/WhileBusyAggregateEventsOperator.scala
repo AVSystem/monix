@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,51 +17,47 @@
 
 package monix.reactive.internal.operators
 
-import scala.annotation.nowarn
-import monix.execution.Ack
-import monix.execution.Ack.{ Continue, Stop }
-import monix.execution.Scheduler
+import monix.execution.{Ack, Scheduler}
+import monix.execution.Ack.{Continue, Stop}
 import monix.reactive.Observable.Operator
 import monix.reactive.observers.Subscriber
 
 import scala.concurrent.Future
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
-@nowarn("msg=unused value of type")
-private[reactive] final class WhileBusyAggregateEventsOperator[A, S](seed: A => S, aggregate: (S, A) => S)
-  extends Operator[A, S] {
+private[reactive] final class WhileBusyAggregateEventsOperator[A, S](seed: A => S, aggregate: (S, A) => S) extends Operator[A, S] {
 
   def apply(downstream: Subscriber[S]): Subscriber.Sync[A] = {
     new Subscriber.Sync[A] {
       upstreamSubscriber =>
       implicit val scheduler: Scheduler = downstream.scheduler
 
-      private var aggregated: Option[S] = None
-      private var lastAck: Future[Ack] = Continue
-      private var pendingAck: Boolean = false
-      private var downstreamIsDone = false
+      private[this] var aggregated: Option[S] = None
+      private[this] var lastAck: Future[Ack] = Continue
+      private[this] var pendingAck: Boolean = false
+      private[this] var downstreamIsDone = false
 
       override def onNext(elem: A): Ack = {
         upstreamSubscriber.synchronized {
           if (downstreamIsDone) Stop
           else {
             if (!pendingAck) {
-              val downstreamAck =
-                try {
-                  downstream.onNext(seed(elem))
-                } catch {
-                  case ex if NonFatal(ex) =>
-                    downstream.onError(ex)
-                    Stop
-                }
+              val downstreamAck = try {
+                downstream.onNext(seed(elem))
+              } catch {
+                case ex if NonFatal(ex) =>
+                  downstream.onError(ex)
+                  Stop
+              }
               lastAck = downstreamAck
 
               if (downstreamAck == Continue) Continue
               else if (downstreamAck == Stop) {
                 downstreamIsDone = true
                 Stop
-              } else {
+              }
+              else {
                 pendingAck = true
                 emitAggregatedOnAckContinue(downstreamAck)
                 Continue
@@ -119,8 +115,8 @@ private[reactive] final class WhileBusyAggregateEventsOperator[A, S](seed: A => 
         }
       }
 
-      private def emitAggregatedOnAckContinue(ack: Future[Ack]): Unit =
-        ack.onComplete {
+      private def emitAggregatedOnAckContinue(ack: Future[Ack]): Unit = {
+        lastAck.onComplete {
           case Failure(ex) =>
             onError(ex)
           case Success(Stop) =>
@@ -128,6 +124,8 @@ private[reactive] final class WhileBusyAggregateEventsOperator[A, S](seed: A => 
           case Success(Continue) =>
             upstreamSubscriber.synchronized { emitAggregated() }
         }
+      }
+
     }
   }
 }

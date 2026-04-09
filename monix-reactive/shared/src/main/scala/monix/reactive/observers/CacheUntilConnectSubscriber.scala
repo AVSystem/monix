@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,15 +17,13 @@
 
 package monix.reactive.observers
 
-import monix.execution.Ack.{ Continue, Stop }
-import monix.execution.{ Ack, CancelableFuture }
-import monix.execution.Scheduler
+import monix.execution.Ack.{Continue, Stop}
+import monix.execution.{Ack, CancelableFuture, Scheduler}
 import monix.reactive.Observable
 
 import scala.collection.mutable
-import scala.concurrent.{ Future, Promise }
-import scala.util.{ Failure, Success }
-import scala.annotation.unchecked.uncheckedVariance
+import scala.concurrent.{Future, Promise}
+import scala.util.{Failure, Success}
 
 /** Wraps an `underlying` [[Subscriber]] into an implementation that caches
   * all events until the call to `connect()` happens. After being connected,
@@ -35,26 +33,26 @@ import scala.annotation.unchecked.uncheckedVariance
 final class CacheUntilConnectSubscriber[-A] private (downstream: Subscriber[A]) extends Subscriber[A] { self =>
   implicit val scheduler: Scheduler = downstream.scheduler
   // MUST BE synchronized by `self`, only available if isConnected == false
-  private var queue: mutable.ArrayBuffer[A @uncheckedVariance] = mutable.ArrayBuffer.empty
+  private[this] var queue = mutable.ArrayBuffer.empty[A]
   // MUST BE synchronized by `self`
-  private var isConnectionStarted = false
+  private[this] var isConnectionStarted = false
   // MUST BE synchronized by `self`, as long as isConnected == false
-  private var wasCanceled = false
+  private[this] var wasCanceled = false
 
   // Promise guaranteed to be fulfilled once isConnected is
   // seen as true and used for back-pressure.
   // MUST BE synchronized by `self`, only available if isConnected == false
-  private var connectedPromise = Promise[Ack]()
-  private var connectedFuture = connectedPromise.future
+  private[this] var connectedPromise = Promise[Ack]()
+  private[this] var connectedFuture = connectedPromise.future
 
   // Volatile that is set to true once the buffer is drained.
   // Once visible as true, it implies that the queue is empty
   // and has been drained and thus the onNext/onError/onComplete
   // can take the fast path
-  @volatile private var isConnected = false
+  @volatile private[this] var isConnected = false
 
   // Only accessible in `connect()`
-  private var connectionRef: CancelableFuture[Ack] = null.asInstanceOf[CancelableFuture[Ack]]
+  private[this] var connectionRef: CancelableFuture[Ack] = _
 
   /** Connects the underling observer to the upstream publisher.
     *
@@ -76,7 +74,7 @@ final class CacheUntilConnectSubscriber[-A] private (downstream: Subscriber[A]) 
         .fromIterable(queue)
         .unsafeSubscribeFn(new Subscriber[A] {
           implicit val scheduler: Scheduler = downstream.scheduler
-          private var ack: Future[Ack] = Continue
+          private[this] var ack: Future[Ack] = Continue
 
           bufferWasDrained.future.onComplete {
             case Success(Continue) =>
@@ -120,9 +118,11 @@ final class CacheUntilConnectSubscriber[-A] private (downstream: Subscriber[A]) 
           def onComplete(): Unit = {
             // Applying back-pressure, otherwise the next onNext might
             // break the back-pressure contract.
-            val _ = ack.syncOnContinue {
-              val _ = bufferWasDrained.trySuccess(Continue)
+            ack.syncOnContinue {
+              bufferWasDrained.trySuccess(Continue)
+              ()
             }
+            ()
           }
 
           def onError(ex: Throwable): Unit = {
@@ -164,8 +164,7 @@ final class CacheUntilConnectSubscriber[-A] private (downstream: Subscriber[A]) 
 
         connectedFuture
       }
-    }
-    else if (!wasCanceled) {
+    } else if (!wasCanceled) {
       // taking fast path :-)
       downstream.onNext(elem)
     } else {
@@ -183,8 +182,7 @@ final class CacheUntilConnectSubscriber[-A] private (downstream: Subscriber[A]) 
     */
   def onComplete(): Unit = {
     // we cannot take a fast path here
-    val _ = connectedFuture
-      .syncTryFlatten
+    connectedFuture.syncTryFlatten
       .syncOnContinue(downstream.onComplete())
     ()
   }
@@ -197,8 +195,7 @@ final class CacheUntilConnectSubscriber[-A] private (downstream: Subscriber[A]) 
     */
   def onError(ex: Throwable): Unit = {
     // we cannot take a fast path here
-    val _ = connectedFuture
-      .syncTryFlatten
+    connectedFuture.syncTryFlatten
       .syncOnContinue(downstream.onError(ex))
     ()
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2022 Monix Contributors.
+ * Copyright (c) 2014-2021 by The Monix Project Developers.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,17 +20,17 @@ package monix.eval.internal
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.locks.AbstractQueuedSynchronizer
 
-import monix.eval.Task.{ Async, Context, Error, Eval, FlatMap, Map, Now, Suspend, Trace }
+import monix.eval.Task.{Async, Context, Error, Eval, FlatMap, Map, Now, Suspend, Trace}
 import monix.eval.internal.TaskRunLoop._
 import monix.eval.Task
-import monix.eval.internal.TracingPlatform.{ enhancedExceptions, isStackTracing }
+import monix.eval.internal.TracingPlatform.{enhancedExceptions, isStackTracing}
 import monix.eval.tracing.TaskEvent
-import monix.execution.{ Callback, Scheduler }
+import monix.execution.{Callback, Scheduler}
 import monix.execution.internal.collection.ChunkedArrayStack
 
 import scala.annotation.nowarn
 import scala.concurrent.blocking
-import scala.concurrent.duration.{ Duration, FiniteDuration }
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.control.NonFatal
 
 private[eval] object TaskRunSyncUnsafe {
@@ -153,8 +153,7 @@ private[eval] object TaskRunSyncUnsafe {
     opts: Task.Options,
     bFirst: Bind,
     bRest: CallStack,
-    tracingCtx: StackTracedContext
-  ): A = {
+    tracingCtx: StackTracedContext): A = {
 
     val latch = new OneShotLatch
     val cb = new BlockingCallback[Any](latch)
@@ -188,8 +187,8 @@ private[eval] object TaskRunSyncUnsafe {
 
   private final class BlockingCallback[A](latch: OneShotLatch) extends Callback[Throwable, A] {
 
-    private var success: A = null.asInstanceOf[A]
-    private var error: Throwable = null.asInstanceOf[Throwable]
+    private[this] var success: A = _
+    private[this] var error: Throwable = _
 
     def value: A =
       error match {
