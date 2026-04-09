@@ -208,8 +208,20 @@ final class Semaphore[F[_]] private (provisioned: Long, ps: PaddingStrategy)(
     cats.effect.kernel.Resource.makeFull[F, Unit](poll => poll(acquire))(_ => release)
 
   override def mapK[G[_]](f: cats.arrow.FunctionK[F, G])(
-    implicit G: cats.effect.kernel.MonadCancel[G, _]): cats.effect.std.Semaphore[G] =
-    throw new UnsupportedOperationException("Monix Semaphore does not support mapK")
+    implicit G: cats.effect.kernel.MonadCancel[G, _]): cats.effect.std.Semaphore[G] = {
+    val self = this
+    new cats.effect.std.Semaphore[G] {
+      def available: G[Long] = f(self.available)
+      def count: G[Long] = f(self.count)
+      def acquireN(n: Long): G[Unit] = f(self.acquireN(n))
+      def tryAcquireN(n: Long): G[Boolean] = f(self.tryAcquireN(n))
+      def releaseN(n: Long): G[Unit] = f(self.releaseN(n))
+      def permit: cats.effect.kernel.Resource[G, Unit] = self.permit.mapK(f)
+      def mapK[H[_]](g: cats.arrow.FunctionK[G, H])(
+        implicit H: cats.effect.kernel.MonadCancel[H, _]): cats.effect.std.Semaphore[H] =
+        self.mapK(f.andThen(g))
+    }
+  }
 
   private[this] val underlying =
     new Semaphore.Impl[F](provisioned, ps)
