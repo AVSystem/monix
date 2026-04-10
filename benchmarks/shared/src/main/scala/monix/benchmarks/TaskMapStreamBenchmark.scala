@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-/*
 package monix.benchmarks
 
 import java.util.concurrent.TimeUnit
@@ -64,7 +63,7 @@ object TaskMapStreamBenchmark {
       stream = mapStream(addOne)(stream)
       i += 1
     }
-    Await.result(sum(0)(stream).runAsync, Duration.Inf)
+    Await.result(sum(0)(stream).runToFuture, Duration.Inf)
   }
 
   final case class Stream(value: Int, next: Task[Option[Stream]])
@@ -92,4 +91,3 @@ object TaskMapStreamBenchmark {
         Task.pure(acc)
     }
 }
- */

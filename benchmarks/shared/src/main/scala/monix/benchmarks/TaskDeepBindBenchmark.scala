@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-/*
 package monix.benchmarks
 
 import java.util.concurrent.TimeUnit
@@ -53,7 +52,7 @@ class TaskDeepBindBenchmark {
         _ <- if(j > size) Task.pure(j) else loop(j + 1)
       } yield j
 
-    Await.result(loop(0).runAsync, Duration.Inf)
+    Await.result(loop(0).runToFuture, Duration.Inf)
   }
 
   @Benchmark
@@ -64,7 +63,7 @@ class TaskDeepBindBenchmark {
         _ <- if(j > size) Task.eval(j) else loop(j + 1)
       } yield j
 
-    Await.result(loop(0).runAsync, Duration.Inf)
+    Await.result(loop(0).runToFuture, Duration.Inf)
   }
 
   @Benchmark
@@ -75,7 +74,6 @@ class TaskDeepBindBenchmark {
         _ <- if(j > size) Task.eval(j) else loop(j + 1)
       } yield j
 
-    Await.result(loop(0).runAsync, Duration.Inf)
+    Await.result(loop(0).runToFuture, Duration.Inf)
   }
 }
-*/

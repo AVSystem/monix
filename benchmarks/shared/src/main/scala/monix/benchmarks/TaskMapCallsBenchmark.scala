@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-/*
 package monix.benchmarks
 
 import java.util.concurrent.TimeUnit
@@ -71,4 +70,3 @@ object TaskMapCallsBenchmark {
     sum
   }
 }
-*/

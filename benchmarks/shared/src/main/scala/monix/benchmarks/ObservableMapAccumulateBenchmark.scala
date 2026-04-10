@@ -57,28 +57,28 @@ class ObservableMapAccumulateBenchmark {
       .runSyncUnsafe()
   }
 
-  @Benchmark
-  def fs2Stream() = {
-    FS2Stream
-      .emits(0 until n)
-      .mapAccumulate(0) { case (acc, i) =>
-        val added = acc + i
-        (added, added)
-      }
-      .compile
-      .drain
-  }
+//  @Benchmark
+//  def fs2Stream() = {
+//    FS2Stream
+//      .emits(0 until n)
+//      .mapAccumulate(0) { case (acc, i) =>
+//        val added = acc + i
+//        (added, added)
+//      }
+//      .compile
+//      .drain
+//  }
 
-  @Benchmark
-  def zioStream() = {
-    val stream = ZStream
-      .fromIterable(0 until n)
-      .mapAccum(0) { case (acc, i) =>
-        val added = acc + i
-        (added, added)
-      }
-      .runDrain
-
-    zioUntracedRuntime.unsafeRun(stream)
-  }
+//  @Benchmark
+//  def zioStream() = {
+//    val stream = ZStream
+//      .fromIterable(0 until n)
+//      .mapAccum(0) { case (acc, i) =>
+//        val added = acc + i
+//        (added, added)
+//      }
+//      .runDrain
+//
+//    zioUntracedRuntime.unsafeRun(stream)
+//  }
 }

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 
-/*
 package monix.benchmarks
 
 import java.util.concurrent.TimeUnit
@@ -49,7 +48,7 @@ import scala.concurrent.{Await, Promise}
 @OutputTimeUnit(TimeUnit.SECONDS)
 class ObservableMapTaskBenchmark {
   @Param(Array("10000"))
-  var size: Int = _
+  var size: Long = _
 
   @Benchmark
   def run(): Long = {
@@ -77,4 +76,3 @@ class ObservableMapTaskBenchmark {
     Await.result(p.future, Duration.Inf)
   }
 }
-*/
