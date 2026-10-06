@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,12 +16,12 @@
  */
 
 package monix.execution
-import cats.laws.discipline.{CoflatMapTests, MonadErrorTests}
-import cats.{Eval, Monad, MonadError}
+import cats.laws.discipline.{ CoflatMapTests, MonadErrorTests }
+import cats.{ Eval, Monad, MonadError }
 import monix.execution.exceptions.DummyException
 import monix.execution.schedulers.TestScheduler
 
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 object TypeClassLawsForCancelableFutureSuite extends BaseLawsSuite {
   checkAllAsync("CoflatMap[CancelableFuture]") { implicit ec =>
@@ -33,7 +33,7 @@ object TypeClassLawsForCancelableFutureSuite extends BaseLawsSuite {
   }
 
   test("adaptError") {
-    implicit val ec: TestScheduler = TestScheduler()
+    implicit val ec = TestScheduler()
     val F = MonadError[CancelableFuture, Throwable]
 
     val fa1 = F.catchNonFatal(1); ec.tick()
@@ -45,7 +45,7 @@ object TypeClassLawsForCancelableFutureSuite extends BaseLawsSuite {
   }
 
   test("adaptErrorEval") {
-    implicit val ec: TestScheduler = TestScheduler()
+    implicit val ec = TestScheduler()
     val F = MonadError[CancelableFuture, Throwable]
 
     val fa1 = F.catchNonFatalEval(Eval.always(1)); ec.tick()
@@ -57,7 +57,7 @@ object TypeClassLawsForCancelableFutureSuite extends BaseLawsSuite {
   }
 
   test("flatMap should be stack safe") {
-    implicit val s: TestScheduler = TestScheduler()
+    implicit val s = TestScheduler()
     val n = 100000
     val M = Monad[CancelableFuture]
     val f = M.tailRecM(0)(i => M.pure(if (i < n) Left(i + 1) else Right(i)))

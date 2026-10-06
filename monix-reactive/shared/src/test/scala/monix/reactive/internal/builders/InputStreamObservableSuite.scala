@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,21 +17,23 @@
 
 package monix.reactive.internal.builders
 
-import java.io.{ByteArrayInputStream, InputStream}
+import java.io.{ ByteArrayInputStream, InputStream }
+
 import minitest.SimpleTestSuite
 import minitest.laws.Checkers
 import monix.eval.Task
-import monix.execution.{Ack, Scheduler}
+import monix.execution.Ack
 import monix.execution.Ack.Continue
-import monix.execution.ExecutionModel.{AlwaysAsyncExecution, BatchedExecution, SynchronousExecution}
-import monix.execution.exceptions.{APIContractViolationException, DummyException}
+import monix.execution.ExecutionModel.{ AlwaysAsyncExecution, BatchedExecution, SynchronousExecution }
+import monix.execution.Scheduler
+import monix.execution.exceptions.{ APIContractViolationException, DummyException }
 import monix.execution.schedulers.TestScheduler
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
-import org.scalacheck.{Gen, Prop}
+import org.scalacheck.{ Gen, Prop }
 
 import scala.collection.mutable.ListBuffer
-import scala.util.{Failure, Random, Success}
+import scala.util.{ Failure, Random, Success }
 
 object InputStreamObservableSuite extends SimpleTestSuite with Checkers {
   test("fromInputStreamUnsafe yields a single subscriber observable") {
@@ -243,11 +245,44 @@ object InputStreamObservableSuite extends SimpleTestSuite with Checkers {
     assert(s.state.tasks.isEmpty, "should be left with no pending tasks")
   }
 
+  test("fromInputStream emits available bytes without waiting to fill the chunk") {
+    implicit val s = TestScheduler()
+    val bytes = Array[Byte](1, 2, 3)
+    var readCount = 0
+    val in = new InputStream {
+      def read(): Int =
+        throw DummyException("unexpected single-byte read")
+
+      override def read(buffer: Array[Byte], offset: Int, length: Int): Int = {
+        readCount += 1
+        if (readCount == 1) {
+          Array.copy(bytes, 0, buffer, offset, bytes.length)
+          bytes.length
+        } else {
+          throw DummyException("unexpected blocking read")
+        }
+      }
+
+      override def available(): Int = 0
+    }
+
+    val result = Observable
+      .fromInputStreamUnsafe(in, bytes.length + 1)
+      .runAsyncGetFirst
+      .map(_.map(_.toList))
+
+    s.tick()
+
+    assertEquals(result.value, Some(Success(Some(bytes.toList))))
+    assertEquals(readCount, 1)
+    assert(s.state.tasks.isEmpty, "should be left with no pending tasks")
+  }
+
   test("fromInputStream fills the buffer up to 'chunkSize' if possible") {
     implicit val s = TestScheduler()
 
     val gen = for {
-      byteSize <- Gen.choose(1, 4096)
+      byteSize  <- Gen.choose(1, 4096)
       chunkSize <- Gen.choose(Math.floorDiv(byteSize, 2).max(1), byteSize * 2)
     } yield {
       (byteSize, chunkSize)
@@ -284,12 +319,13 @@ object InputStreamObservableSuite extends SimpleTestSuite with Checkers {
         read(b, 0, forcedReadSize)
       override def read(b: Array[Byte], off: Int, len: Int): Int =
         underlying.read(b, off, forcedReadSize.min(len))
+      override def available(): Int = underlying.available()
     }
   }
 
   def inputWithError(ex: Throwable, whenToThrow: Int, onFinish: () => Unit): InputStream =
     new InputStream {
-      private[this] var callIdx = 0
+      private var callIdx = 0
 
       def read(): Int = {
         callIdx += 1

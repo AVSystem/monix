@@ -1,3 +1,46 @@
+## Version 3.5.0 (August 24, 2026)
+
+This is the first Monix release since 3.4.1. It updates the supported runtime and Scala versions and includes several concurrency and scheduler fixes.
+
+Breaking changes:
+
+- JDK `17` is now the minimum supported runtime and build target.
+- JDK `21` is now part of the validated support matrix.
+- Scala `2.12` support is dropped.
+- The supported Scala versions are now `2.13.18` and `3.3.7`.
+- Legacy `sun.misc.Unsafe`-based internals were removed in favor of JDK `VarHandle`-based implementations.
+
+Fixes and improvements:
+
+- Scheduled task failures are now reported to the configured `UncaughtExceptionReporter` by `ScheduledExecutorService`-backed schedulers and the Scala.js `AsyncScheduler` (#2036).
+- Forked `Trampoline` executions no longer share mutable, non-thread-safe queues across threads, preventing dropped or stuck tasks and memory consistency errors (#2031).
+- `Zip2Observable` through `Zip6Observable` now synchronize completion and error signaling at their call sites, avoiding re-entrant synchronization and stale reads (#2040).
+- `DynamicWorkerThreadFactory` delegates maximum thread-count management to `ForkJoinPool` (#1589).
+- Invalid-state errors from `MapTaskObservable` now include the mapping function to improve diagnostics (#2030).
+- Scala.js scheduling now uses `MacrotaskExecutor` (#1522).
+
+Modules and dependencies:
+
+- Added the `monix-execution-atomic` module (#1561).
+- Updated Cats to `2.13.0` and Cats Effect to `2.5.5`.
+- Updated Scala.js to `1.21.0` and JCTools to `4.0.6`.
+- Published artifacts now declare the `semver-spec` version scheme.
+
+Build and publishing:
+
+- Maven Central publishing now uses the Central Portal, including automatic snapshot publication from `main`.
+- Scaladoc JARs omit bundled fonts and Inkuire assets to reduce their size.
+
+This release was made possible by the work and feedback of:
+
+- Alexandru Nedelcu (@alexandru)
+- Mikołaj Bul (@mikkolaj)
+- Bartłomiej Kozak (@halotukozak)
+- Łukasz Petka (@lpetka)
+- Roman Janusz
+- Arman Bilge (@armanbilge)
+- Kenji Yoshida
+
 ## Version 3.4.1 (May 7, 2022)
 
 This is a minor bug-fixing release for the 3.x series.
@@ -1531,7 +1574,7 @@ Bug fixes:
 Build:
 
 - enabled the Scala
-  [Migration Manager](https://github.com/typesafehub/migration-manager)
+  [Migration Manager](https://github.com/lightbend/mima)
   (MiMa) in `build.sbt` to check for backwards compatibility problems
 - [Issue #322](https://github.com/monix/monix/issues/322):
   Switch projects which use `CrossVersion.full/"org.scala-lang"`

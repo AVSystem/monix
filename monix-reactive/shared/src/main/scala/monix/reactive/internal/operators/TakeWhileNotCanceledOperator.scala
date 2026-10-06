@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,14 +17,13 @@
 
 package monix.reactive.internal.operators
 
-import monix.execution.{Ack, Scheduler}
+import monix.execution.Ack
 import monix.execution.Ack.Stop
+import monix.execution.Scheduler
 import monix.execution.cancelables.BooleanCancelable
-
 import scala.util.control.NonFatal
 import monix.reactive.Observable.Operator
 import monix.reactive.observers.Subscriber
-
 import scala.concurrent.Future
 
 private[reactive] final class TakeWhileNotCanceledOperator[A](c: BooleanCancelable) extends Operator[A, A] {
@@ -32,7 +31,7 @@ private[reactive] final class TakeWhileNotCanceledOperator[A](c: BooleanCancelab
   def apply(out: Subscriber[A]): Subscriber[A] =
     new Subscriber[A] {
       implicit val scheduler: Scheduler = out.scheduler
-      private[this] var isActive = true
+      private var isActive = true
 
       def onNext(elem: A): Future[Ack] =
         if (!isActive) Stop

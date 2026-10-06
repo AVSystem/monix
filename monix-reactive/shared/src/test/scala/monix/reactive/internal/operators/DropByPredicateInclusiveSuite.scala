@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,8 +29,7 @@ object DropByPredicateInclusiveSuite extends BaseOperatorSuite {
     }
   }
 
-  def sum(sourceCount: Int): Long =
-    (1 until sourceCount * 2).drop(sourceCount - 1).sum.toLong
+  def sum(sourceCount: Int): Long = (1 until sourceCount * 2).drop(sourceCount - 1).sum.toLong
 
   def count(sourceCount: Int) =
     sourceCount

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,18 +17,18 @@
 
 package monix.execution.internal
 
-import monix.execution.internal.Trampoline.{ForkingTrampolineEC, ImmediateTrampolineEC, ResumeRun, TrampolineEC}
+import monix.execution.internal.Trampoline.{ ForkingTrampolineEC, ImmediateTrampolineEC, ResumeRun, TrampolineEC }
 import monix.execution.internal.collection.ChunkedArrayQueue
 
 import scala.annotation.tailrec
-import scala.concurrent.{BlockContext, CanAwait, ExecutionContext}
+import scala.concurrent.{ BlockContext, CanAwait, ExecutionContext }
 import scala.util.control.NonFatal
 
 private[execution] class Trampoline(
-  private[this] val fallbackTrampoline: Option[() => Trampoline] = None,
+  private val fallbackTrampoline: Option[() => Trampoline] = None,
 ) {
-  private[this] var immediateQueue: ChunkedArrayQueue[Runnable] = Trampoline.makeQueue()
-  private[this] var withinLoop: Boolean = false
+  private var immediateQueue: ChunkedArrayQueue[Runnable] = Trampoline.makeQueue()
+  private var withinLoop: Boolean = false
 
   def startLoop(runnable: Runnable, ec: TrampolineEC): Unit = {
     withinLoop = true

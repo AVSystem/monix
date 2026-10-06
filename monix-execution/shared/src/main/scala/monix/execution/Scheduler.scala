@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,14 +24,15 @@ import monix.execution.schedulers.SchedulerCompanionImpl
 
 import scala.annotation.implicitNotFound
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.{FiniteDuration, MILLISECONDS, TimeUnit}
+import scala.concurrent.duration.{ FiniteDuration, MILLISECONDS, TimeUnit }
 
 /** A Scheduler is an `scala.concurrent.ExecutionContext` that additionally can
   * schedule the execution of units of work to run with a delay or periodically.
   */
 @implicitNotFound(
   "Cannot find an implicit Scheduler, either " +
-    "import monix.execution.Scheduler.Implicits.global or use a custom one")
+    "import monix.execution.Scheduler.Implicits.global or use a custom one"
+)
 trait Scheduler extends ExecutionContext with UncaughtExceptionReporter with Executor {
   /** Schedules the given `command` for execution at some time in the future.
     *
@@ -66,6 +67,10 @@ trait Scheduler extends ExecutionContext with UncaughtExceptionReporter with Exe
     * after the given initial delay and subsequently with the given
     * delay between the termination of one execution and the
     * commencement of the next.
+    *
+    * If any execution of the task encounters an exception, subsequent executions
+    * are suppressed. Otherwise, the task will only terminate via cancellation or
+    * termination of the scheduler.
     *
     * For example the following schedules a message to be printed to
     * standard output every 10 seconds with an initial delay of 5
@@ -289,6 +294,10 @@ trait Scheduler extends ExecutionContext with UncaughtExceptionReporter with Exe
     * after the given initial delay and subsequently with the given
     * delay between the termination of one execution and the
     * commencement of the next.
+    *
+    * If any execution of the task encounters an exception, subsequent executions
+    * are suppressed. Otherwise, the task will only terminate via cancellation or
+    * termination of the scheduler.
     *
     * For example the following schedules a message to be printed to
     * standard output every 10 seconds with an initial delay of 5

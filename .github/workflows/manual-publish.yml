@@ -4,46 +4,42 @@ on:
   workflow_dispatch:
     inputs:
       ref_to_publish:
-        description: 'Ref (branch or tag)'
+        description: 'Git ref. Stable releases require refs/tags/vX.Y.Z'
         required: true
-        default: 'refs/heads/series/3.x'
       stable_version:
-        description: 'Stable version? (true=staging, false=snapshot)'
+        description: 'Stable release (version must not end in -SNAPSHOT)'
         required: true
-        default: "true"
+        type: boolean
+        default: true
 
 jobs:
   publish:
-    name: Publish to Sonatype (Request)
+    name: Publish to Maven Central
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 100
           ref: ${{ github.event.inputs.ref_to_publish }}
 
-      - uses: actions/setup-java@v4
+      - name: Setup JDK
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: 11
+          java-version: 27
+          cache: sbt
+
       - uses: sbt/setup-sbt@v1
 
-      - name: Install GnuPG2
+      - name: .github/scripts/release
         run: |
-          ./.github/scripts/setup-pgp
-
-      - name: sbt ci-release
-        run: |
-          git fetch --depth=100 origin +refs/tags/*:refs/tags/*
-          if [ "$PUBLISH_STABLE_VERSION" = "true" ]; then
-            sbt ci-release
-          else
-            sbt +clean +publishSigned
-          fi
+          .github/scripts/release
         env:
           PGP_KEY_HEX: ${{ secrets.PGP_KEY_HEX }}
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           PUBLISH_STABLE_VERSION: ${{ github.event.inputs.stable_version }}
+          RELEASE_REF: ${{ github.event.inputs.ref_to_publish }}

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,8 +20,8 @@ package schedulers
 
 import java.util.concurrent.TimeUnit
 
-import monix.execution.schedulers.JSTimer.{clearTimeout, setTimeout}
-import monix.execution.{ExecutionModel => ExecModel}
+import monix.execution.schedulers.JSTimer.{ clearTimeout, setTimeout }
+import monix.execution.{ ExecutionModel => ExecModel }
 
 import scala.concurrent.ExecutionContext
 import monix.execution.internal.InterceptRunnable
@@ -36,17 +36,14 @@ final class AsyncScheduler private (
 ) extends ReferenceScheduler with BatchingScheduler {
 
   protected def executeAsync(r: Runnable): Unit =
-    context.execute {
-      if (reporter ne null) InterceptRunnable(r, reporter)
-      else r
-    }
+    context.execute(InterceptRunnable(r, reporter))
 
   override def scheduleOnce(initialDelay: Long, unit: TimeUnit, r: Runnable): Cancelable = {
     val millis = {
       val v = TimeUnit.MILLISECONDS.convert(initialDelay, unit)
       if (v < 0) 0L else v
     }
-    val task = setTimeout(context, millis, r)
+    val task = setTimeout(context, millis, InterceptRunnable(r, reporter))
     Cancelable(() => clearTimeout(task))
   }
 

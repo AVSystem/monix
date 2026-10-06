@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,7 @@
 
 package monix.execution
 
-import monix.execution.Features.{Flag, Flags}
+import monix.execution.Features.{ Flag, Flags }
 
 /** `Features` describes a set of features described via
   * bitwise operators applied to ints, but made type safe.
@@ -54,8 +54,7 @@ final class Features(val flags: Flags) extends AnyVal with Serializable {
     new Features((flags | feature).asInstanceOf[Flags])
 
   /** Tests if a given feature is in the set. */
-  def contains(feature: Flag): Boolean =
-    (flags & feature) != (0L).asInstanceOf[Flag]
+  def contains(feature: Flag): Boolean = (flags & feature) != (0L).asInstanceOf[Flag]
 
   override def toString: String =
     s"Features($flags)"
