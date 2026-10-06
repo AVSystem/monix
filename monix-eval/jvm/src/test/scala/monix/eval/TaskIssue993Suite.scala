@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@
 package monix.eval
 
 import minitest.SimpleTestSuite
-import monix.execution.{ExecutionModel, Scheduler}
+import monix.execution.{ ExecutionModel, Scheduler }
 import monix.execution.schedulers.SchedulerService
 import monix.execution.misc.Local
 import scala.concurrent.Await
@@ -52,7 +52,7 @@ object TaskIssue993Suite extends SimpleTestSuite {
         r1 <- Task(Local.isolate {
           local.bind(100)(local.get)
         })
-        _ <- Task.shift
+        _  <- Task.shift
         r2 <- Task(Local.isolate {
           local.bind(200)(local.get)
         })

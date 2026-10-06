@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -129,8 +129,7 @@ object ExecutionModel {
     val recommendedBatchSize: Int = math.nextPowerOf2(batchSize)
     val batchedExecutionModulus: Int = recommendedBatchSize - 1
 
-    def nextFrameIndex(current: Int): Int =
-      (current + 1) & batchedExecutionModulus
+    def nextFrameIndex(current: Int): Int = (current + 1) & batchedExecutionModulus
   }
 
   /** Extension methods for [[ExecutionModel]]. */

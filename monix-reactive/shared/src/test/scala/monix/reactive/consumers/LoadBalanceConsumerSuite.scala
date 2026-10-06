@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,17 +21,17 @@ import cats.laws._
 import cats.laws.discipline._
 
 import monix.execution.Callback
-import monix.execution.Ack.{Continue, Stop}
-import monix.execution.atomic.{Atomic, AtomicInt, AtomicLong}
-import monix.execution.cancelables.{AssignableCancelable, BooleanCancelable, CompositeCancelable}
-import monix.execution.{Ack, Cancelable, Scheduler}
+import monix.execution.Ack.{ Continue, Stop }
+import monix.execution.atomic.{ Atomic, AtomicInt, AtomicLong }
+import monix.execution.cancelables.{ AssignableCancelable, BooleanCancelable, CompositeCancelable }
+import monix.execution.{ Ack, Cancelable, Scheduler }
 import monix.execution.exceptions.DummyException
 import monix.reactive.internal.consumers.LoadBalanceConsumer
 import monix.reactive.observers.Subscriber
-import monix.reactive.{BaseTestSuite, Consumer, Observable, Observer}
+import monix.reactive.{ BaseTestSuite, Consumer, Observable, Observer }
 
-import scala.concurrent.{Future, Promise}
-import scala.util.{Failure, Success}
+import scala.concurrent.{ Future, Promise }
+import scala.util.{ Failure, Success }
 
 object LoadBalanceConsumerSuite extends BaseTestSuite {
   test("trigger error when parallelism < 1") { implicit s =>
@@ -80,7 +80,7 @@ object LoadBalanceConsumerSuite extends BaseTestSuite {
       val justOne = Consumer.headOption[Int].map(_.getOrElse(0).toLong)
       val allConsumers = for (i <- 0 until parallelism) yield if (i % 2 == 0) fold else justOne
 
-      val consumer = Consumer.loadBalance(allConsumers: _*)
+      val consumer = Consumer.loadBalance(allConsumers*)
       val task1 = source.foldLeft(0L)(_ + _).firstL
       val task2 = source.consumeWith(consumer).map(_.sum)
       task1 <-> task2

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,14 +17,16 @@
 
 package monix.reactive.internal.builders
 
-import monix.execution.Ack.{Continue, Stop}
+import scala.annotation.nowarn
+import monix.execution.Ack.{ Continue, Stop }
 import monix.execution.cancelables.CompositeCancelable
-import monix.execution.{Ack, Cancelable, Scheduler}
+import monix.execution.{ Ack, Cancelable }
+import monix.execution.Scheduler
 import monix.reactive.Observable
 import monix.reactive.observers.Subscriber
+import scala.concurrent.{ Future, Promise }
 
-import scala.concurrent.{Future, Promise}
-
+@nowarn("msg=unused value of type")
 private[reactive] final class Interleave2Observable[+A](obsA1: Observable[A], obsA2: Observable[A])
   extends Observable[A] {
 
@@ -83,7 +85,8 @@ private[reactive] final class Interleave2Observable[+A](obsA1: Observable[A], ob
 
       def onNext(elem: A): Future[Ack] = lock.synchronized {
         def sendSignal(elem: A): Future[Ack] = lock.synchronized {
-          if (isDone) Stop else {
+          if (isDone) Stop
+          else {
             downstreamAck = out.onNext(elem)
             pauseA1 = Promise[Ack]()
             pauseA2.completeWith(downstreamAck)

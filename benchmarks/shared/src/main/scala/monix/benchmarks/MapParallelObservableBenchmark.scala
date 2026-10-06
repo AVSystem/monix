@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,9 +27,9 @@ import monix.reactive.observers.Subscriber
 import org.openjdk.jmh.annotations._
 
 import scala.concurrent.duration._
-import scala.concurrent.{Await, Promise}
+import scala.concurrent.{ Await, Promise }
 
-/** To do comparative benchmarks between versions:
+/** To run this benchmark:
   *
   *     benchmarks/run-benchmark MapParallelObservableBenchmark
   *
@@ -65,21 +65,21 @@ class MapParallelObservableBenchmark {
 
   @Benchmark
   def mapOrdered(): Long = {
-    val stream = Observable.range(0, size.toLong).mapParallelOrdered(parallelism)(x =>  Task.eval(x + 1))
+    val stream = Observable.range(0, size.toLong).mapParallelOrdered(parallelism)(x => Task.eval(x + 1))
     sum(stream)
   }
 
   @Benchmark
   def mapUnordered(): Long = {
-    val stream = Observable.range(0, size.toLong).mapParallelUnordered(parallelism)(x =>  Task.eval(x + 1))
+    val stream = Observable.range(0, size.toLong).mapParallelUnordered(parallelism)(x => Task.eval(x + 1))
     sum(stream)
   }
 
   def sum(stream: Observable[Long]): Long = {
     val p = Promise[Long]()
-    stream.unsafeSubscribeFn(new Subscriber.Sync[Long] {
+    val cancelable = stream.unsafeSubscribeFn(new Subscriber.Sync[Long] {
       val scheduler = global
-      private[this] var sum: Long = 0
+      private var sum: Long = 0
 
       def onError(ex: Throwable): Unit = {
         p.failure(ex)
@@ -96,6 +96,8 @@ class MapParallelObservableBenchmark {
         Continue
       }
     })
-    Await.result(p.future, Duration.Inf)
+    val result = Await.result(p.future, Duration.Inf)
+    cancelable.cancel()
+    result
   }
 }

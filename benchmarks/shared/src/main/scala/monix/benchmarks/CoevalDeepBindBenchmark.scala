@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2021 by The Monix Project Developers.
+ * Copyright (c) 2014-2022 Monix Contributors.
  * See the project homepage at: https://monix.io
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 import monix.eval.Coeval
 import org.openjdk.jmh.annotations._
 
-/** To do comparative benchmarks between versions:
+/** To run this benchmark:
   *
   *     benchmarks/run-benchmark CoevalDeepBindBenchmark
   *
@@ -57,7 +57,7 @@ class CoevalDeepBindBenchmark {
     def loop(i: Int): Coeval[Int] =
       for {
         j <- Coeval.pure(i)
-        _ <- if(j > size) Coeval.pure(j) else loop(j + 1)
+        _ <- if (j > size) Coeval.pure(j) else loop(j + 1)
       } yield j
 
     loop(0).value()
@@ -68,7 +68,7 @@ class CoevalDeepBindBenchmark {
     def loop(i: Int): Coeval[Int] =
       for {
         j <- Coeval(i)
-        _ <- if(j > size) Coeval(j) else loop(j + 1)
+        _ <- if (j > size) Coeval(j) else loop(j + 1)
       } yield j
 
     loop(0).value()
